@@ -1,6 +1,10 @@
 import numpy as np
 import functools as ft
 
+# from typing import 
+# from numpy.typing import ArrayLike
+
+from numpy.linalg import eigh
 from scipy.sparse import lil_matrix
 
 σ = [*map(lambda s: np.array(s, dtype=np.complex64),
@@ -12,7 +16,10 @@ from scipy.sparse import lil_matrix
     ))]
 
 class Hamiltonian(object):
-    """TODO"""
+    """Representation of the Hamiltonian matrix for a system.
+
+    This system assumes that 
+    """
     def __init__(self, size):
         # Allocate every member variable. These are consistently 
 
@@ -55,11 +62,30 @@ class Hamiltonian(object):
 
         return self.H
 
-G = Hamiltonian([1,2])
+    def __getitem__(self, *args):
+        """Accessor for ."""
+        # Calculate the corresponding flat indices.
+        # i = args[0] + args[1]*self.
+        return i
 
-G.μ[:, 0] = 1
-G.m[:, 1] = 2
-G.Δ[:, 0] = 3
 
-with np.printoptions(precision=0, suppress=True):
-    print(G.asmatrix())
+G = Hamiltonian([2,3,4])
+
+for n in range(2):
+    for m in range(3):
+        for k in range(4):
+            print(G[n, m, k])
+
+
+# G.μ[:, 0] = 1
+# G.m[:, 1] = 2
+# G.Δ[:, 0] = 3
+
+# with np.printoptions(precision=0, suppress=True):
+#     print(G.asmatrix())
+
+#     E, X = eigh(G.asmatrix())
+#     χ = [X[:,n] for n, E_n in enumerate(E) if E_n > 0]
+#     E = [E_n for E_n in E if E_n > 0]
+#     print(E)
+#     print(χ)
