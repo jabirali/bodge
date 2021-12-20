@@ -1,11 +1,17 @@
 """Utility functions that are not directly related to the physics."""
 
-import numba
+import numpy as np
 
+from numba import njit
 from typing import Tuple
 
+# Pauli matrices.
+σᵒ = np.array([[1,  0 ], [0,  1]], dtype=np.complex64)
+σˣ = np.array([[0,  1 ], [1,  0]], dtype=np.complex64)
+σʸ = np.array([[0, -1j], [1j, 0]], dtype=np.complex64)
+σᶻ = np.array([[1,  0 ], [0, -1]], dtype=np.complex64)
 
-@numba.njit
+@njit
 def coord2index(inds: Tuple[int, int, int], dims: Tuple[int, int, int]):
     """Convert a set of indices (iˣ, iʸ, iᶻ) into a single index i.
 
@@ -20,7 +26,7 @@ def coord2index(inds: Tuple[int, int, int], dims: Tuple[int, int, int]):
     return iˣ + iʸ * Nˣ + iᶻ * Nʸ * Nˣ
 
 
-@numba.njit
+@njit
 def index2coord(ind: int, dims: Tuple[int, int, int]):
     """Convert a single index i into a set of indices (iˣ, iʸ, iᶻ).
 
@@ -35,3 +41,16 @@ def index2coord(ind: int, dims: Tuple[int, int, int]):
     iᶻ = i
 
     return (iˣ, iʸ, iᶻ)
+
+@njit
+def vector2spinor(vec: Tuple[float, float, float]):
+    vˣ, vʸ, vᶻ = vec
+    return vˣ * σˣ + vʸ * σʸ + vᶻ * σᶻ
+
+@njit
+def scalar2spinor(num: float):
+    return num * σᵒ
+
+# def index2state(index: Tuple[int, int])
+# def state2index(state: Tuple[int, int, int, int]):
+#     pass
