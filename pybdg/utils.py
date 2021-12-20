@@ -11,6 +11,8 @@ from typing import Tuple
 σʸ = np.array([[0, -1j], [1j, 0]], dtype=np.complex64)
 σᶻ = np.array([[1,  0 ], [0, -1]], dtype=np.complex64)
 
+pauli = (σᵒ, σˣ, σʸ, σᶻ)
+
 @njit
 def coord2index(inds: Tuple[int, int, int], dims: Tuple[int, int, int]):
     """Convert a set of indices (iˣ, iʸ, iᶻ) into a single index i.

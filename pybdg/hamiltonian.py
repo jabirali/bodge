@@ -68,16 +68,36 @@ class Hamiltonian(object):
         return self.H
 
     def __setitem__(self, args, val):
-        """Human-readable getter for Hamiltonian matrix elements.
+        """Human-readable setter for Hamiltonian matrix elements.
 
-        This function defines the syntactic sugar so that we can:
-        - Specify positions via coords (iˣ, iʸ, iᶻ) instead of a flat index i;
-        - Specify spinor structure via a Pauli decomposition (σᵒ, σˣ, σʸ, σᶻ)
+        This method defines the syntactic sugar required so that we can:
+        - Specify positions via coords (x, y, z) instead of a flat index i;
+        - Specify spinor structure via a Pauli decomposition (σ⁰, σ¹, σ², σ³)
           instead of explicit matrix structures like [[0, -1j], [+1j, 0]];
-        - Specify one diagonal (electron) and off-diagonal (superconducting)
-          block of the Hamiltonian, and the others then follow from symmetry.
-        This greatly simplifies the getting and setting of elements
+        - Specify one normal (electronic) and off-diagonal (superconducting)
+          block of the Hamiltonian, and let the rest follow from symmetry.
         """
+        # Extract two sets of coordinates from the arguments.
+        (x_1, y_1, z_1), (x_2, y_2, z_2), spin, anomal = args
+
+        # Convert the positional coordinates to flat indices.
+        i = coord2index((x_1, y_1, z_1), self.dims)
+        j = coord2index((x_2, y_2, z_2), self.dims)
+
+        # Construct the appropriate matrix in spin space.
+        H = val * pauli[spin]
+
+        # Append the new matrix elements.
+        if not anomal:
+            # Normal contribution (electron-electron term).
+            self.H[4*i + 0 : 4*i + 2, 4*j + 0 : 4*j + 2] += H
+            self.H[4*i + 2 : 4*i + 4, 4*j + 2 : 4*j + 4] -= H.conj()
+        else:
+            # Anomalous contribution (superconductivity)
+            self.H[4*i + 0 : 4*i + 2, 4*j + 2 : 4*j + 4] = +H
+            self.H[4*i + 2 : 4*i + 4, 4*j + 0 : 4*j + 2] = +H.T.conj()
+
+
     def __getitem__(self, args):
         """Human-readable getter for Hamiltonian matrix elements.
 
@@ -115,13 +135,13 @@ class Hamiltonian(object):
         # return((i, j))
 
 
-G = Hamiltonian([2, 3, 4])
+G = Hamiltonian([2, 1, 1])
 
-for z in range(2-1):
-    for y in range(3):
-        for x in range(4):
-            for s in range(4):
-                print(G[(x, y, z, s), (x, y, z, s)])
+G[(0, 0, 0), (0, 0, 0), 2, 0] = 1
+G[(1, 0, 0), (1, 0, 0), 2, 0] = 2
+G[(0, 0, 0), (1, 0, 0), 0, 1] = 3
+G[(1, 0, 0), (0, 0, 0), 0, 1] = 4
+print(G.H)
 
 
 # G.μ[:, 0] = 1
