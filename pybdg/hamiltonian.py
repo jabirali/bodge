@@ -48,12 +48,10 @@ class Hamiltonian(object):
         # Handle the diagonal terms.
         for i in range(N):
             # Calculate the electronic contribution.
-            H_ii = -(
-                self.μ[i, 0] * σ[0]
-                + self.m[i, 0] * σ[1]
-                + self.m[i, 1] * σ[2]
-                + self.m[i, 2] * σ[3]
-            )
+            self[(i, 0, 0), (i, 0, 0), 0, 0] = self.μ[i, 0]
+            self[(i, 0, 0), (i, 0, 0), 1, 0] = self.m[i, 0]
+            self[(i, 0, 0), (i, 0, 0), 2, 0] = self.m[i, 1]
+            self[(i, 0, 0), (i, 0, 0), 3, 0] = self.m[i, 2]
 
             Δ_ii = self.Δ[i, 0] * (1j * σ[2])
 
@@ -66,6 +64,10 @@ class Hamiltonian(object):
         # TODO: Handle hopping.
 
         return self.H
+
+    def __iter__(self):
+        """Return an iterator over all coordinate pairs."""
+        pass
 
     def __setitem__(self, args, val):
         """Human-readable setter for Hamiltonian matrix elements.
@@ -97,6 +99,13 @@ class Hamiltonian(object):
             self.H[4*i + 0 : 4*i + 2, 4*j + 2 : 4*j + 4] = +H
             self.H[4*i + 2 : 4*i + 4, 4*j + 0 : 4*j + 2] = +H.T.conj()
 
+    # def __setattr__(self, key, val):
+    #     """Setter for physical fields."""
+    #     if key in self.__dict__:
+    #         self.__dict__[key] = val
+    #     else:
+    #         if key == 'Δs':
+    #             self[*key, 1] = val
 
     def __getitem__(self, args):
         """Human-readable getter for Hamiltonian matrix elements.
@@ -137,10 +146,12 @@ class Hamiltonian(object):
 
 G = Hamiltonian([2, 1, 1])
 
-G[(0, 0, 0), (0, 0, 0), 2, 0] = 1
-G[(1, 0, 0), (1, 0, 0), 2, 0] = 2
-G[(0, 0, 0), (1, 0, 0), 0, 1] = 3
-G[(1, 0, 0), (0, 0, 0), 0, 1] = 4
+# G.H[(0, 0, 0), (0, 0, 0), 2].H = 1
+
+# G[(0, 0, 0), (0, 0, 0), 2, 0] = 1
+# G[(1, 0, 0), (1, 0, 0), 2, 0] = 2
+# G[(0, 0, 0), (1, 0, 0), 0, 1] = 3
+# G[(1, 0, 0), (0, 0, 0), 0, 1] = 4
 print(G.H)
 
 
