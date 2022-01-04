@@ -56,3 +56,14 @@ class Lattice:
 				for y in range(self.dims[1]):
 					for z in range(self.dims[2]-1):
 						yield (x, y, z), (x, y, z+1)
+
+	def relevant(self):
+		"""Generator for all relevant coordinate pairs in the lattice.
+
+		This simplifies cases where one might want to loop over both on-site
+		interactions (i, i) and nearest-neighbor interactions (i, j).
+		"""
+		for ind in self.sites():
+			yield (ind, ind)
+		for inds in self.neighbors():
+			yield inds
