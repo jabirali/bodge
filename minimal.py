@@ -42,9 +42,8 @@ for r1, r2 in lat.neighbors():
 H = sys.asarray()
 
 E, X = eigh(H, driver='evr', subset_by_value=(0, np.inf))
-N = 1000
-χ = X.T.reshape((2*N, N, 2, 2))  # Indices: n, i, eh, ↑↓
-print(χ[:, -1, 0, 0])
+χ = X.T.reshape((E.size, -1, 2, 2))  # Indices: n, i, eh, ↑↓
+print(χ.shape)
 
 # print(E.shape)  # 4000/2 positive eigenvalues
 # # print(X.shape)
