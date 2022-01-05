@@ -4,6 +4,18 @@ from pybdg.lattice import *
 from pybdg.system import *
 
 class TestSystem:
+	def test_pauli(self):
+		# Test that the quaternion identities hold.
+		assert np.allclose(σˣ @ σˣ, σᵒ)
+		assert np.allclose(σʸ @ σʸ, σᵒ)
+		assert np.allclose(σᶻ @ σᶻ, σᵒ)
+
+		assert np.allclose(σˣ @ σʸ, 1j * σᶻ)
+		assert np.allclose(σʸ @ σᶻ, 1j * σˣ)
+		assert np.allclose(σᶻ @ σˣ, 1j * σʸ)
+
+		assert np.allclose(σˣ @ σʸ @ σᶻ, 1j * σᵒ)
+
 	def test_hermitian(self):
 		# Instantiate a relatively dense complex Hamiltonian.
 		lat = Lattice((3,5,7))

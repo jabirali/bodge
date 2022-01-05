@@ -1,5 +1,10 @@
 import numpy as np
 
+σᵒ = np.array([[+1,  0 ], [ 0, +1]], dtype=np.complex64)
+σˣ = np.array([[ 0, +1 ], [+1,  0]], dtype=np.complex64)
+σʸ = np.array([[ 0, -1j], [+1j, 0]], dtype=np.complex64)
+σᶻ = np.array([[+1,  0 ], [ 0, -1]], dtype=np.complex64)
+
 class System:
 	"""Representation of a physical system in the tight-binding limit.
 
