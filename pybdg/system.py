@@ -16,28 +16,30 @@ class System:
 		# Number of lattice points that the system has in total.
 		self.dim = np.prod(lat.dims)
 
-		# Hamiltonian datarix used in the tight-binding treatment. This is
-		# a 4N×4N datarix, where we assume particle-hole and spin degrees
+		# Hamiltonian matrix used in the tight-binding treatment. This is
+		# a 4N×4N matrix, where we assume particle-hole and spin degrees
 		# of freedom, and the remaining N is the number of lattice points.
 		self.data = np.zeros((4*self.dim, 4*self.dim), dtype=np.complex64)
 
-		# Simplified accessors for the diagonal and anomalous datarix parts.
-		# Only these need to be explicitly defined, since the class is smart
-		# enough to construct the remaining terms via symmetry considerations.
-		self.ham = {}
-		self.gap = {}
+		# Simplified accessors for electron-electron (normal electrons) and
+		# electron-hole (superconducting pairing) blocks in the Hamiltonian
+		# matrix. These include only forward hopping, i.e. from low to high
+		# indices. Only these terms need to be explicitly specified, since
+		# the rest can be figured out automatically via symmetries.
+		self.elec = {}
+		self.pair = {}
 		for r_i, r_j in self.lat.relevant():
 			# Convert indices from coordinate form.
 			i, j = self.lat[r_i], self.lat[r_j]
 
 			# Two-index notation for every interaction.
-			self.ham[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2]
-			self.gap[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4]
+			self.elec[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2]
+			self.pair[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4]
 
 			# One-index notation for on-site interactions.
 			if r_i == r_j:
-				self.ham[r_i] = self.ham[r_j, r_j]
-				self.gap[r_i] = self.gap[r_j, r_j]
+				self.elec[r_i] = self.elec[r_j, r_j]
+				self.pair[r_i] = self.pair[r_j, r_j]
 
 	def asarray(self, copy=False):
 		"""Represent the Hamiltonian of the system as a dense array.
@@ -63,7 +65,7 @@ class System:
 			# Convert indices from coordinate form.
 			i, j = self.lat[r_i], self.lat[r_j]
 
-			# Neighbor hopping symmetry.   
+			# Inverse neighbor hopping from symmetry.
 			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
 				+self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
 

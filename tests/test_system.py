@@ -10,12 +10,12 @@ class TestSystem:
 		sys = System(lat)
 
 		for r in lat.sites():
-			sys.ham[r][:, :] = [[+1, -2j], [+2j, -1]]  # 1σ₃ + 2σ₂
-			sys.gap[r][:, :] = [[+5, +3j], [-3j, +5]]  # 5σ₀ - 3σ₂
+			sys.elec[r][:, :] = [[+1, -2j], [+2j, -1]]  # 1σ₃ + 2σ₂
+			sys.pair[r][:, :] = [[+5, +3j], [-3j, +5]]  # 5σ₀ - 3σ₂
 
 		for r1, r2 in lat.neighbors():
-			sys.ham[r1, r2][:, :] = [[+3, +4j], [-4j, +3]]  # 3σ₀ - 4σ₂
-			sys.gap[r1, r2][:, :] = [[+2, -5j], [+5j, -2]]  # 2σ₃ + 5σ₂
+			sys.elec[r1, r2][:, :] = [[+3, +4j], [-4j, +3]]  # 3σ₀ - 4σ₂
+			sys.pair[r1, r2][:, :] = [[+2, -5j], [+5j, -2]]  # 2σ₃ + 5σ₂
 		
 		mat = sys.asarray()
 
