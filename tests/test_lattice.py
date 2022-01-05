@@ -8,9 +8,9 @@ class TestLattice:
             assert ind == lat[site]
 
             # Verify that index bounds are satisfied.
-            assert site[0] >= 0 and site[0] < lat.dims[0]
-            assert site[1] >= 0 and site[1] < lat.dims[1]
-            assert site[2] >= 0 and site[2] < lat.dims[2]
+            assert site[0] >= 0 and site[0] < lat.shape[0]
+            assert site[1] >= 0 and site[1] < lat.shape[1]
+            assert site[2] >= 0 and site[2] < lat.shape[2]
 
         # Verify that number of elements is correct.
         assert ind == 3*5*7 - 1
