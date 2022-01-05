@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import Tuple
+
 class Lattice:
 	"""Representation of a cubic atomic lattice in three dimensions.
 
@@ -10,7 +12,7 @@ class Lattice:
 	using flat indices while retaining the convenience of coordinates.
 	"""
 
-	def __init__(self, shape):
+	def __init__(self, shape: Tuple[int, int, int]):
 		self.shape = shape
 		self.size = np.prod(shape)
 

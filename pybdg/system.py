@@ -1,12 +1,19 @@
 import numpy as np
 from scipy.sparse import lil_matrix
 
+from .lattice import Lattice
+
 
 # Define the Pauli matrices used to represent spin.
-σᵒ = np.array([[+1,  0 ], [ 0, +1]], dtype=np.complex64)
-σˣ = np.array([[ 0, +1 ], [+1,  0]], dtype=np.complex64)
-σʸ = np.array([[ 0, -1j], [+1j, 0]], dtype=np.complex64)
-σᶻ = np.array([[+1,  0 ], [ 0, -1]], dtype=np.complex64)
+σ0 = np.array([[+1,  0 ], [ 0, +1]], dtype=np.complex64)
+σ1 = np.array([[ 0, +1 ], [+1,  0]], dtype=np.complex64)
+σ2 = np.array([[ 0, -1j], [+1j, 0]], dtype=np.complex64)
+σ3 = np.array([[+1,  0 ], [ 0, -1]], dtype=np.complex64)
+
+jσ0 = 1j * σ0
+jσ1 = 1j * σ1
+jσ2 = 1j * σ2
+jσ3 = 1j * σ3
 
 
 class System:
@@ -19,7 +26,7 @@ class System:
 	autofilled via symmetries. Moreover, it allows you to use `Lattice`
 	coordinates instead of matrix indices to fill out these elements.
 	"""
-	def __init__(self, lattice):
+	def __init__(self, lattice: Lattice):
 		# Lattice instance used as basis coordinates for the system.
 		self.lattice = lattice
 
@@ -28,12 +35,11 @@ class System:
 		self.shape = (4*lattice.size, 4*lattice.size)
 
 		# Hamiltonian matrix used in the tight-binding treatment.
-		self.data = np.zeros(self.shape, dtype=np.complex64)
+		self.data = np.zeros(self.shape, dtype=np.complex128)
 
 		# Convenience accessors for electron-electron and electron-hole blocks
 		# in the Hamiltonian matrix at each site. Note that the hole-electron
 		# and hole-hole blocks are autofilled using the Hamiltonian symmetries.
-		self.site = {}
 		self.hopp = {}
 		self.pair = {}
 		for r_i, r_j in self.lattice.relevant():
@@ -46,8 +52,10 @@ class System:
 
 			# One-index notation for on-site interactions.
 			if r_i == r_j:
-				self.site[r_i] = self.hopp[r_j, r_j]
+				self.hopp[r_i] = self.hopp[r_j, r_j]
 				self.pair[r_i] = self.pair[r_j, r_j]
+
+		# TODO: Create separate places to store the physical fields.
 
 	def asarray(self, copy=False):
 		"""Represent the Hamiltonian of the system as a dense array.
