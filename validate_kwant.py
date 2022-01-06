@@ -20,28 +20,30 @@ L = 10
 R = 1.5
 Rpos = (3, 4)
 μ = 0.4
-Δ = 1
+Δ = 2
 Δpos = 6
 t = 1.0
 
 # Construct a system with the square lattice.
-lat = Lattice((W, L, 1))
+lat = Lattice((10, 10, 3))
 sys = System(lat)
 
 for x, y, z in lat.sites():
 	# At every site, we add a diagonal term 4t-μ.
-	sys.hopp[x, y, z] += (4*t - μ) * σ0
+	sys.hopp[x, y, z][:, :] += (-0.9) * σ0
 
 	# Superconductivity is included only for x>Δpos.
-	if x > Δpos:
-		sys.pair[x, y, z] += Δ * jσ2
+	# if x > Δpos:
+	# m = 0.1
+	# sys.hopp[x, y, z] += m * σ1
+	sys.pair[x, y, z][:, :] += 0.5 * jσ2
 
 	# Barrier is located between Rpos coordinates.
-	if x >= Rpos[0] and x < Rpos[1]:
-		sys.hopp[x, y, z] += R * σ0
+	# if x >= Rpos[0] and x < Rpos[1]:
+		# sys.hopp[x, y, z] += R * σ0
 
 for r1, r2 in lat.neighbors():
-	sys.hopp[r1, r2] = -t * σ0
+	sys.hopp[r1, r2][:, :] = -t * σ0
 
 # Obtain the Hamiltonian.
 sys.finalize()
@@ -50,21 +52,18 @@ sys.diagonalize()
 E, χ = sys.eigval, sys.eigvec
 
 def delta(x):
-	w = 0.05
+	w = 0.03
 	return np.exp(-x**2/(2*w**2)) / (w*np.sqrt(2*np.pi))
 
-newval = np.arange(0, 6, 0.01)
-dos = np.zeros((len(newval), W))
+newval = np.arange(-E.max(), E.max(), E.max()/100)
+dos = np.zeros_like(newval)
 for n, E_n in enumerate(sys.eigval):
+	X = (np.abs(χ[n, :, :, :])**2).sum(axis=-1).sum(axis=-1).mean() / 2
 	for m, E_m in enumerate(newval):
-		for j in range(W):
-			X = (np.abs(χ[n, lat[j, 5, 0], :, :])**2).sum()
-			D = delta(E_n/2 - E_m)
+		dos[m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X
 
-			if X > 0 and D > 0:
-				dos[m, j] += D * X
-
-sns.heatmap(dos, vmin=0)
+plt.plot(newval, dos)
+# sns.heatmap(dos, vmin=0, vmax=2)
 plt.show()
 # N = 1000
 # dos = np.zeros((N, 10))
