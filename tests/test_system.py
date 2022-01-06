@@ -30,7 +30,7 @@ class TestSystem:
 			sys.hopp[r1, r2][:, :] = [[+3, +4j], [-4j, +3]]  # 3σ₀ - 4σ₂
 			sys.pair[r1, r2][:, :] = [[+2, -5j], [+5j, -2]]  # 2σ₃ + 5σ₂
 		
-		mat = sys.asarray()
+		mat = sys.hamiltonian()
 
 		# Verify that the result is Hermitian.
 		assert np.allclose(mat, mat.T.conj())

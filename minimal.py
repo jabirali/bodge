@@ -4,6 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from scipy.linalg import eigh
 
@@ -34,13 +35,13 @@ for x, y, z in lat.sites():
 
 	# Barrier is located between Rpos coordinates.
 	if x >= Rpos[0] and x < Rpos[1]:
-		sys.hopp[x, y, z] += R
+		sys.hopp[x, y, z] += R * σ0
 
 for r1, r2 in lat.neighbors():
 	sys.hopp[r1, r2] = -t * σ0
 
 # Obtain the Hamiltonian.
-H = sys.asarray()
+H = sys.hamiltonian()
 
 E, X = eigh(H, driver='evr', subset_by_value=(0, np.inf))
 χ = X.T.reshape((E.size, -1, 2, 2))  # Indices: n, i, eh, ↑↓
@@ -48,7 +49,9 @@ E, X = eigh(H, driver='evr', subset_by_value=(0, np.inf))
 # print(np.sum(np.abs(χ[1,:,1,0])))
 X = np.zeros((W, L))
 for x, y, z in lat.sites():
-	X[x, y] += np.abs(χ[:, lat[x, y, z], 0, :]).sum(axis=0).sum(axis=-1)
+	X[x, y] += np.abs(χ[:, lat[x, y, z], 0, 0].sum())
 
-plt.imshow(X.T)
+print(E)
+# plt.imshow(X.T)
+sns.heatmap(X.T, vmin=0, vmax=1)
 plt.show()

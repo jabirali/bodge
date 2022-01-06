@@ -57,12 +57,12 @@ class System:
 
 		# TODO: Create separate places to store the physical fields.
 
-	def asarray(self, copy=False):
+	def hamiltonian(self):
 		"""Represent the Hamiltonian of the system as a dense array.
 
 		This method also ensures that the matrix is finalized, i.e. that e.g.
 		particle-hole and hopping symmetries are ensured. One should always
-		explicitly call `.asarray()` to access Hamiltonian matrix, as using
+		explicitly call this method to access Hamiltonian matrix, as using
 		the `.data` field directly may leave matrix elements out-of-date.
 		"""
 		for r_i, r_j in self.lattice.relevant():
@@ -85,7 +85,11 @@ class System:
 			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
 				+self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
 
-		if not copy:
-			return self.data
-		else:
-			return self.data.copy()
+		# Scaling due to adding particle-hole symmetry.
+		self.data /= 2
+
+		# Verify that the matrix is Hermitian.
+		if not np.allclose(self.data, self.data.T.conj()):
+			raise RuntimeError("Error: Hamiltonian is not Hermitian!")
+
+		return self.data
