@@ -102,7 +102,7 @@ class System:
 		the particle-hole symmetry, only the positive eigenvalues are calculated.
 		"""
 		# Calculate the relevant eigenvalues and eigenvectors.
-		self.eigval, self.eigvec = eigh(self.data, driver='evr', subset_by_value=(0, np.inf))
+		self.eigval, self.eigvec = eigh(self.data, subset_by_value=(0, np.inf))
 
 		# Restructure the eigenvectors to have the format eigvec[n, i, e, s],
 		# where n corresponds to eigenvalue E[n], i is a position index, e is
