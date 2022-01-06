@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-# Minimal validation example based on Sec. 2.6 of the Kwant documentation.
+"""
+This script is based on Sec. 2.6 of the Kwant documentation, where a simple 2D
+system is tested using the BdG equations. It consists of a normal metal and a
+superconductor with a barrier, and the differential conductance is calculated.
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,17 +45,14 @@ for r1, r2 in lat.neighbors():
 	sys.hopp[r1, r2] = -t * σ0
 
 # Obtain the Hamiltonian.
-H = sys.hamiltonian()
+sys.finalize()
+sys.diagonalize()
 
-E, X = eigh(H, driver='evr', subset_by_value=(0, np.inf))
-χ = X.T.reshape((E.size, -1, 2, 2))  # Indices: n, i, eh, ↑↓
 
-# print(np.sum(np.abs(χ[1,:,1,0])))
 X = np.zeros((W, L))
 for x, y, z in lat.sites():
-	X[x, y] += np.abs(χ[:, lat[x, y, z], 0, 0].sum())
+	X[x, y] += np.abs(sys.eigvec[:, lat[x, y, z], 0, 0].sum())
 
-print(E)
-# plt.imshow(X.T)
+print(sys.eigval)
 sns.heatmap(X.T, vmin=0, vmax=1)
 plt.show()

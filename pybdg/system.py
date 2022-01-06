@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.sparse import lil_matrix
+
+from scipy.linalg import eigh
 
 from .lattice import Lattice
 
@@ -57,7 +58,7 @@ class System:
 
 		# TODO: Create separate places to store the physical fields.
 
-	def hamiltonian(self):
+	def finalize(self):
 		"""Represent the Hamiltonian of the system as a dense array.
 
 		This method also ensures that the matrix is finalized, i.e. that e.g.
@@ -93,3 +94,17 @@ class System:
 			raise RuntimeError("Error: Hamiltonian is not Hermitian!")
 
 		return self.data
+
+	def diagonalize(self):
+		"""Diagonalize the Hamiltonian of the system.
+
+		This calculates the eigenvalues and eigenvectors of the system. Due to
+		the particle-hole symmetry, only the positive eigenvalues are calculated.
+		"""
+		# Calculate the relevant eigenvalues and eigenvectors.
+		self.eigval, self.eigvec = eigh(self.data, driver='evr', subset_by_value=(0, np.inf))
+
+		# Restructure the eigenvectors to have the format eigvec[n, i, e, s],
+		# where n corresponds to eigenvalue E[n], i is a position index, e is
+		# electron (0) or hole (1), and s is spin-up (0) or spin-down (1).
+		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 2, 2))

@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.linalg import eigh
+
 from pybdg.lattice import *
 from pybdg.system import *
 
@@ -30,7 +32,46 @@ class TestSystem:
 			sys.hopp[r1, r2][:, :] = [[+3, +4j], [-4j, +3]]  # 3σ₀ - 4σ₂
 			sys.pair[r1, r2][:, :] = [[+2, -5j], [+5j, -2]]  # 2σ₃ + 5σ₂
 		
-		mat = sys.hamiltonian()
+		mat = sys.finalize()
 
 		# Verify that the result is Hermitian.
 		assert np.allclose(mat, mat.T.conj())
+
+	def test_eigenvectors(self):
+		# Instantiate a system with superconductivity and a barrier.
+		lat = Lattice((10, 10, 1))
+		sys = System(lat)
+
+		for x, y, z in lat.sites():
+			sys.hopp[x, y, z] += 4 * σ0
+			if x > 5:
+				sys.pair[x, y, z] += 1 * jσ2
+			elif x > 3:
+				sys.hopp[x, y, z] += 6 * σ0
+		for r1, r2 in lat.neighbors():
+			sys.hopp[r1, r2] = -1 * σ0
+
+		# Create two copies of the Hamiltonian.
+		H = sys.finalize()
+
+		# Calculate the eigenvalues the manual way.
+		E, X = eigh(H, subset_by_value=(0, np.inf))
+		X = X.T
+
+		# Confirm that we got positive eigenvalues and that we have
+		# interpreted the corresponding eigenvector matrix correctly.
+		assert E.size == 200
+		for n, E_n in enumerate(E):
+			assert E_n > 0
+			assert np.allclose(H @ X[n, :], E_n * X[n, :])
+
+		# Calculate the same eigenvalues via the package, and ensure
+		# that the eigenvalues and eigenvectors are consistent.
+		sys.diagonalize()
+		assert np.allclose(sys.eigval, E)
+		for n, E_n in enumerate(E):
+			for m in range(100):
+				assert np.allclose(sys.eigvec[n, m, 0, 0], X[n, 4*m+0])
+				assert np.allclose(sys.eigvec[n, m, 0, 1], X[n, 4*m+1])
+				assert np.allclose(sys.eigvec[n, m, 1, 0], X[n, 4*m+2])
+				assert np.allclose(sys.eigvec[n, m, 1, 1], X[n, 4*m+3])
