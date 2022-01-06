@@ -25,17 +25,17 @@ Rpos = (3, 4)
 t = 1.0
 
 # Construct a system with the square lattice.
-lat = Lattice((10, 10, 3))
+lat = Lattice((20, 20, 1))
 sys = System(lat)
 
 for x, y, z in lat.sites():
 	# At every site, we add a diagonal term 4t-μ.
-	sys.hopp[x, y, z][:, :] += (-0.9) * σ0
+	sys.hopp[x, y, z][:, :] += -1 * σ0
 
 	# Superconductivity is included only for x>Δpos.
 	# if x > Δpos:
 	# m = 0.1
-	# sys.hopp[x, y, z] += m * σ1
+	sys.hopp[x, y, z] += 0.2 * σ1
 	sys.pair[x, y, z][:, :] += 0.5 * jσ2
 
 	# Barrier is located between Rpos coordinates.
@@ -52,7 +52,7 @@ sys.diagonalize()
 E, χ = sys.eigval, sys.eigvec
 
 def delta(x):
-	w = 0.03
+	w = E.max()/100
 	return np.exp(-x**2/(2*w**2)) / (w*np.sqrt(2*np.pi))
 
 newval = np.arange(-E.max(), E.max(), E.max()/100)
