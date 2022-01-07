@@ -108,3 +108,7 @@ class System:
 		# where n corresponds to eigenvalue E[n], i is a position index, e is
 		# electron (0) or hole (1), and s is spin-up (0) or spin-down (1).
 		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 2, 2))
+
+	def green(self):
+		"""Calculate the single-particle Green function."""
+		pass
