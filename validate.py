@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 """
-This script is based on Sec. 2.6 of the Kwant documentation, where a simple 2D
-system is tested using the BdG equations. It consists of a normal metal and a
-superconductor with a barrier, and the differential conductance is calculated.
+This is a test script that constructs a simple tight-binding Hamiltonian for
+a superconducting system and subsequently calculates the density of states.
 """
 import numpy as np
 import matplotlib.pyplot as plt
