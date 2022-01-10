@@ -27,8 +27,8 @@ system = System(lattice)
 
 with system as (H, Δ):
 	for i in lattice.sites():
-		H[i] = -μ * σ0 - m3 * σ3
-		Δ[i] = Δ0 * jσ2
+		H[i, i] = -μ * σ0 - m3 * σ3
+		Δ[i, i] = Δ0 * jσ2
 
 	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
@@ -42,35 +42,35 @@ with system as (H, Δ):
 # I = csc_matrix(np.identity(system.data.shape[0]))
 
 # Green function solution.
-H = system.data
-I = np.identity(H.shape[0])
+# H = system.data
+# I = np.identity(H.shape[0])
 
-ε = np.arange(0, 3, 0.01)
-i = 3
-N = np.zeros_like(ε)
-for n, ε_n in tqdm(enumerate(ε)):
-	G = (1j/np.pi) * inv((ε_n + 0.05j) * I - H)
-	N[n] = np.real(G[4*i, 4*i] + G[4*i+1, 4*i+1])
+# ε = np.arange(0, 3, 0.01)
+# i = 3
+# N = np.zeros_like(ε)
+# for n, ε_n in tqdm(enumerate(ε)):
+# 	G = (1j/np.pi) * inv((ε_n + 0.05j) * I - H)
+# 	N[n] = np.real(G[4*i, 4*i] + G[4*i+1, 4*i+1])
 
-E = np.hstack([-ε[::-1], ε])
-N = np.hstack([N[::-1], N])
-plt.plot(E, N)
-plt.show()
+# E = np.hstack([-ε[::-1], ε])
+# N = np.hstack([N[::-1], N])
+# plt.plot(E, N)
+# plt.show()
 
 # Diagonalization solution.
-# system.diagonalize()
-# E, χ = system.eigval, system.eigvec
+system.diagonalize()
+E, χ = system.eigval, system.eigvec
 
-# def delta(x):
-# 	w = E.max()/100
-# 	return np.exp(-x**2/(2*w**2)) / (w*np.sqrt(2*np.pi))
+def delta(x):
+	w = E.max()/100
+	return np.exp(-x**2/(2*w**2)) / (w*np.sqrt(2*np.pi))
 
-# newval = np.arange(-E.max(), E.max(), E.max()/100)
-# dos = np.zeros_like(newval)
-# for n, E_n in enumerate(system.eigval):
-# 	X = (np.abs(χ[n, :, :, :])**2).sum(axis=-1).sum(axis=-1).mean() / 2
-# 	for m, E_m in enumerate(newval):
-# 		dos[m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X
+newval = np.arange(-E.max(), E.max(), E.max()/100)
+dos = np.zeros_like(newval)
+for n, E_n in enumerate(system.eigval):
+	X = (np.abs(χ[n, :, :, :])**2).sum(axis=-1).sum(axis=-1).mean() / 2
+	for m, E_m in enumerate(newval):
+		dos[m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X
 
-# plt.plot(newval, dos)
-# plt.show()
+plt.plot(newval, dos)
+plt.show()

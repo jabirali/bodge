@@ -26,8 +26,8 @@ class TestSystem:
 
 		with system as (H, Δ):
 			for i in lattice.sites():
-				H[i] = 1*σ3 + 2*σ2
-				Δ[i] = 5*σ0 - 3*σ2
+				H[i, i] = 1*σ3 + 2*σ2
+				Δ[i, i] = 5*σ0 - 3*σ2
 
 			for i, j in lattice.neighbors():
 				H[i, j] = 3*σ0 - 4*σ2
@@ -42,14 +42,14 @@ class TestSystem:
 		system = System(lattice)
 
 		with system as (H, Δ):
-			for x, y, z in lattice.sites():
-				H[x, y, z] = 4 * σ0
-				if x > 5:
-					Δ[x, y, z] = 1 * jσ2
-				elif x > 3:
-					H[x, y, z] += 6 * σ0
-			for r1, r2 in lattice.neighbors():
-				H[r1, r2] = -1 * σ0
+			for i in lattice.sites():
+				H[i, i] = 4 * σ0
+				if i[0] > 5:
+					Δ[i, i] = 1 * jσ2
+				elif i[0] > 3:
+					H[i, i] += 6 * σ0
+			for i, j in lattice.neighbors():
+				H[i, j] = -1 * σ0
 
 		# Calculate the eigenvalues the manual way.
 		E, X = eigh(system.data, subset_by_value=(0, np.inf))

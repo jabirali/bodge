@@ -60,57 +60,34 @@ class System:
 		This part of the implementation takes care of finalizing the Hamiltonian
 		matrix, which means that the symmetries of the matrix are taken care of.
 		"""
-		# Process hopping: H[i] and H[i, j].
+		# Process hopping: H[i, j].
 		for key, val in self.hopp.items():
-			if len(key) == 3:
-				i = self.lattice[key]
-				j = i
-			else:
-				i = self.lattice[key[0]]
-				j = self.lattice[key[1]]
-			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = val / 2
+			# Decode the coordinates.
+			i, j = self.lattice[key[0]], self.lattice[key[1]]
 
-		# Process pairing: Δ[i] and Δ[i, j].
+			# Set the electron-electron block.
+			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val / 2
+
+			# Set the hole-hole block.
+			self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj() / 2
+
+		# Process pairing: Δ[i, j].
 		for key, val in self.pair.items():
-			if len(key) == 2:
-				i, j = self.lattice[key[0]], self.lattice[key[1]]
-			else:
-				i = self.lattice[key]
-				j = i
-			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = val / 2
+			# Decode the coordinates.
+			i, j = self.lattice[key[0]], self.lattice[key[1]]
 
-		# Process symmetries.
-		self.finalize()
+			# Set the electron-hole block.
+			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val / 2
 
-		# Reset accessors.
-		self.hopp = {}
-		self.pair = {}
+			# Set the hole-electron block.
+			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj() / 2
 
-	def finalize(self):
-		"""Represent the Hamiltonian of the system as a dense array.
+		# Process inverse hopping.
+		for key in self.lattice.neighbors():
+			# Decode the coordinates.
+			i, j = self.lattice[key[0]], self.lattice[key[1]]
 
-		This method also ensures that the matrix is finalized, i.e. that e.g.
-		particle-hole and hopping symmetries are ensured. One should always
-		explicitly call this method to access Hamiltonian matrix, as using
-		the `.data` field directly may leave matrix elements out-of-date.
-		"""
-		for r_i, r_j in self.lattice.relevant():
-			# Convert indices from coordinate form.
-			i, j = self.lattice[r_i], self.lattice[r_j]
-
-			# Diagonal particle-hole symmetry.
-			self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = \
-				-self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2].conj()
-
-			# Anomalous particle-hole symmetry.
-			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = \
-				+self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4].T.conj()
-		
-		for r_i, r_j in self.lattice.neighbors():
-			# Convert indices from coordinate form.
-			i, j = self.lattice[r_i], self.lattice[r_j]
-
-			# Inverse neighbor hopping from symmetry.
+			# Symmetry between hopping terms.
 			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
 				+self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
 
@@ -118,7 +95,9 @@ class System:
 		if not np.allclose(self.data, self.data.T.conj()):
 			raise RuntimeError("Error: Hamiltonian is not Hermitian!")
 
-		return self.data
+		# Reset accessors.
+		self.hopp = {}
+		self.pair = {}
 
 	def diagonalize(self):
 		"""Diagonalize the Hamiltonian of the system.
