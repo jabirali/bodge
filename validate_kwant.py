@@ -22,16 +22,16 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((10, 10, 10))
+lattice = Cubic((10, 10, 20))
 system = System(lattice)
 
 with system as (H, Δ):
 	for i in lattice.sites():
-		H[i][...] = -μ * σ0 - m3 * σ3
-		Δ[i][...] = Δ0 * jσ2
+		H[i] = -μ * σ0 - m3 * σ3
+		Δ[i] = Δ0 * jσ2
 
 	for i, j in lattice.neighbors():
-		H[i, j][...] = -t * σ0
+		H[i, j] = -t * σ0
 
 
 # Obtain the Hamiltonian.

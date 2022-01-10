@@ -38,23 +38,9 @@ class System:
 		# Hamiltonian matrix used in the tight-binding treatment.
 		self.data = np.zeros(self.shape, dtype=np.complex128)
 
-		# Convenience accessors for electron-electron and electron-hole blocks
-		# in the Hamiltonian matrix at each site. Note that the hole-electron
-		# and hole-hole blocks are autofilled using the Hamiltonian symmetries.
+		# Placeholders for accesors.
 		self.hopp = {}
 		self.pair = {}
-		for r_i, r_j in self.lattice.relevant():
-			# Convert indices from coordinate form.
-			i, j = self.lattice[r_i], self.lattice[r_j]
-
-			# Two-index notation for every interaction.
-			self.hopp[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2]
-			self.pair[r_i, r_j] = self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4]
-
-			# One-index notation for on-site interactions.
-			if r_i == r_j:
-				self.hopp[r_i] = self.hopp[r_j, r_j]
-				self.pair[r_i] = self.pair[r_j, r_j]
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -74,7 +60,31 @@ class System:
 		This part of the implementation takes care of finalizing the Hamiltonian
 		matrix, which means that the symmetries of the matrix are taken care of.
 		"""
+		# Process hopping: H[i] and H[i, j].
+		for key, val in self.hopp.items():
+			if len(key) == 3:
+				i = self.lattice[key]
+				j = i
+			else:
+				i = self.lattice[key[0]]
+				j = self.lattice[key[1]]
+			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = val / 2
+
+		# Process pairing: Δ[i] and Δ[i, j].
+		for key, val in self.pair.items():
+			if len(key) == 2:
+				i, j = self.lattice[key[0]], self.lattice[key[1]]
+			else:
+				i = self.lattice[key]
+				j = i
+			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = val / 2
+
+		# Process symmetries.
 		self.finalize()
+
+		# Reset accessors.
+		self.hopp = {}
+		self.pair = {}
 
 	def finalize(self):
 		"""Represent the Hamiltonian of the system as a dense array.
@@ -103,9 +113,6 @@ class System:
 			# Inverse neighbor hopping from symmetry.
 			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
 				+self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
-
-		# Scaling due to adding particle-hole symmetry.
-		self.data /= 2
 
 		# Verify that the matrix is Hermitian.
 		if not np.allclose(self.data, self.data.T.conj()):
