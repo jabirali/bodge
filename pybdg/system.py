@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.linalg import eigh
 
-from .lattice import Lattice
+from .lattice import Cubic
 
 
 # Define the Pauli matrices used to represent spin.
@@ -27,7 +27,7 @@ class System:
 	autofilled via symmetries. Moreover, it allows you to use `Lattice`
 	coordinates instead of matrix indices to fill out these elements.
 	"""
-	def __init__(self, lattice: Lattice):
+	def __init__(self, lattice: Cubic):
 		# Lattice instance used as basis coordinates for the system.
 		self.lattice = lattice
 
@@ -56,7 +56,25 @@ class System:
 				self.hopp[r_i] = self.hopp[r_j, r_j]
 				self.pair[r_i] = self.pair[r_j, r_j]
 
-		# TODO: Create separate places to store the physical fields.
+	def __enter__(self):
+		"""Implement a context manager interface for the class.
+
+		This lets us write compact `with` blocks like the below, which is more
+		convenient than explicitly referring to e.g. `system.pair[i, j][...]`.
+
+			>>> with system as (H, Δ):
+			>>>     H[i, j][...] = ...
+			>>>     Δ[i, j][...] = ...
+		"""
+		return self.hopp, self.pair
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		"""Implement a context manager interface for the class.
+
+		This part of the implementation takes care of finalizing the Hamiltonian
+		matrix, which means that the symmetries of the matrix are taken care of.
+		"""
+		self.finalize()
 
 	def finalize(self):
 		"""Represent the Hamiltonian of the system as a dense array.

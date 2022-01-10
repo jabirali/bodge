@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import Tuple
 
-class Lattice:
+class Cubic:
 	"""Representation of a cubic atomic lattice in three dimensions.
 
 	This class provides convenience methods for iterating over all sites

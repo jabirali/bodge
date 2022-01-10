@@ -21,7 +21,7 @@ class TestSystem:
 	def test_hermitian(self):
 		# Instantiate a somewhat dense complex Hamiltonian. Note that
 		# the submatrices need to be Hermitian for the whole to be so.
-		lat = Lattice((3,5,7))
+		lat = Cubic((3,5,7))
 		sys = System(lat)
 
 		for r in lat.sites():
@@ -39,7 +39,7 @@ class TestSystem:
 
 	def test_eigenvectors(self):
 		# Instantiate a system with superconductivity and a barrier.
-		lat = Lattice((10, 10, 1))
+		lat = Cubic((10, 10, 1))
 		sys = System(lat)
 
 		for x, y, z in lat.sites():

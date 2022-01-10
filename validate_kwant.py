@@ -17,26 +17,21 @@ from tqdm import tqdm
 from pybdg import *
 
 
-# Parameters used in the example.
-W = 10
-L = 10
-R = 1.5
-Rpos = (3, 4)
-μ = 1
-Δ = 0.5
 t = 1.0
-m = 0.2
+μ = t/2
+Δ0 = t/2
+m3 = t/5
 
-# Construct a system with the square lattice.
-lat = Lattice((20, 20, 1))
-sys = System(lat)
+lattice = Cubic((10, 10, 10))
+system = System(lattice)
 
-for i in lat.sites():
-	sys.hopp[i][...] -= μ*σ0 + m*σ3
-	sys.pair[i][...] += Δ*jσ2
+with system as (H, Δ):
+	for i in lattice.sites():
+		H[i][...] = -μ * σ0 - m3 * σ3
+		Δ[i][...] = Δ0 * jσ2
 
-for i, j in lat.neighbors():
-	sys.hopp[i, j][...] -= t*σ0
+	for i, j in lattice.neighbors():
+		H[i, j][...] = -t * σ0
 
 
 # Obtain the Hamiltonian.
@@ -53,9 +48,9 @@ for i, j in lat.neighbors():
 # plt.plot(ε, N)
 # plt.show()
 
-sys.finalize()
-sys.diagonalize()
-E, χ = sys.eigval, sys.eigvec
+# sys.finalize()
+system.diagonalize()
+E, χ = system.eigval, system.eigvec
 
 def delta(x):
 	w = E.max()/100
@@ -63,7 +58,7 @@ def delta(x):
 
 newval = np.arange(-E.max(), E.max(), E.max()/100)
 dos = np.zeros_like(newval)
-for n, E_n in enumerate(sys.eigval):
+for n, E_n in enumerate(system.eigval):
 	X = (np.abs(χ[n, :, :, :])**2).sum(axis=-1).sum(axis=-1).mean() / 2
 	for m, E_m in enumerate(newval):
 		dos[m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X
