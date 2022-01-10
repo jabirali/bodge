@@ -21,11 +21,11 @@ class System:
 	"""Representation of a physical system in the tight-binding limit.
 
 	This can be used to construct Hamiltonian matrices for condensed matter
-	systems that exhibit particle-hole and spin degrees of freedom. Instead
-	of explicitly constructing the whole matrix, this class allows you to
-	specify the minimum number of matrix elements required as the rest are
-	autofilled via symmetries. Moreover, it allows you to use `Lattice`
-	coordinates instead of matrix indices to fill out these elements.
+	systems with particle-hole and spin degrees of freedom. Instead of
+	explicitly constructing the matrix, this class allows you to specify the
+	minimum number of matrix elements required via a `with` block, and the
+	the rest are autofilled via symmetries. Moreover, it allows you to use
+	`Lattice` coordinates instead of matrix indices to fill out the elements.
 	"""
 	def __init__(self, lattice: Cubic):
 		# Lattice instance used as basis coordinates for the system.
@@ -45,20 +45,26 @@ class System:
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
 
-		This lets us write compact `with` blocks like the below, which is more
-		convenient than explicitly referring to e.g. `system.pair[i, j][...]`.
+		This lets us write compact `with` blocks like the below, which is much
+		more convenient than having to construct the matrix elements explicitly.
 
 			>>> with system as (H, Δ):
-			>>>     H[i, j][...] = ...
-			>>>     Δ[i, j][...] = ...
+			>>>     H[i, j] = ...
+			>>>     Δ[i, j] = ...
+
+		Note that the `__exit__` method is responsible for actually transferring
+		all the elements of H and Δ to the correct locations in the Hamiltonian.
 		"""
 		return self.hopp, self.pair
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		"""Implement a context manager interface for the class.
 
-		This part of the implementation takes care of finalizing the Hamiltonian
-		matrix, which means that the symmetries of the matrix are taken care of.
+		This part of the implementation takes care of finalizing the Hamiltonian:
+
+		- Transferring elements from the context manager dicts to the actual matrix;
+		- Ensuring that particle-hole and nearest-neighbor symmetries are respected;
+		- Verifying that the constructed Hamiltonian is actually Hermitian.
 		"""
 		# Process hopping: H[i, j].
 		for key, val in self.hopp.items():
@@ -93,7 +99,7 @@ class System:
 
 		# Verify that the matrix is Hermitian.
 		if not np.allclose(self.data, self.data.T.conj()):
-			raise RuntimeError("Error: Hamiltonian is not Hermitian!")
+			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
 		# Reset accessors.
 		self.hopp = {}
@@ -112,7 +118,3 @@ class System:
 		# where n corresponds to eigenvalue E[n], i is a position index, e is
 		# electron (0) or hole (1), and s is spin-up (0) or spin-down (1).
 		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 2, 2))
-
-	def green(self):
-		"""Calculate the single-particle Green function."""
-		pass
