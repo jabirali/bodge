@@ -68,7 +68,7 @@ class TestSystem:
 		assert np.allclose(system.eigval, E)
 		for n, E_n in enumerate(E):
 			for m in range(100):
-				assert np.allclose(system.eigvec[n, m, 0, 0], X[n, 4*m+0])
-				assert np.allclose(system.eigvec[n, m, 0, 1], X[n, 4*m+1])
-				assert np.allclose(system.eigvec[n, m, 1, 0], X[n, 4*m+2])
-				assert np.allclose(system.eigvec[n, m, 1, 1], X[n, 4*m+3])
+				assert np.allclose(system.eigvec[n, m, 0], X[n, 4*m+0])
+				assert np.allclose(system.eigvec[n, m, 1], X[n, 4*m+1])
+				assert np.allclose(system.eigvec[n, m, 2], X[n, 4*m+2])
+				assert np.allclose(system.eigvec[n, m, 3], X[n, 4*m+3])

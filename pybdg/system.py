@@ -114,7 +114,7 @@ class System:
 		# Calculate the relevant eigenvalues and eigenvectors.
 		self.eigval, self.eigvec = eigh(self.data, subset_by_value=(0, np.inf))
 
-		# Restructure the eigenvectors to have the format eigvec[n, i, e, s],
-		# where n corresponds to eigenvalue E[n], i is a position index, e is
-		# electron (0) or hole (1), and s is spin-up (0) or spin-down (1).
-		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 2, 2))
+		# Restructure the eigenvectors to have the format eigvec[n, i, α],
+		# where n corresponds to eigenvalue E[n], i is a position index, and
+		# α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
+		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 4))
