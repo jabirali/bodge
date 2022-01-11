@@ -4,6 +4,7 @@
 This is a test script that constructs a simple tight-binding Hamiltonian for
 a superconducting system and subsequently calculates the density of states.
 """
+import enum
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -22,13 +23,16 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((10, 10, 10))
+lattice = Cubic((10, 10, 20))
 system = System(lattice)
 
 with system as (H, Δ):
 	for i in lattice.sites():
-		H[i, i] = -μ * σ0 - m3 * σ3
-		Δ[i, i] = Δ0 * jσ2
+		x, y, z = i
+		H[i, i] = -μ * σ0 #- m3 * σ3
+
+		if x >= 5:
+			Δ[i, i] = Δ0 * jσ2
 
 	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
@@ -39,18 +43,27 @@ system.diagonalize()
 E, χ = system.eigval, system.eigvec
 
 def delta(x):
-	w = E.max()/100
+	w = E.max()/75
 	return np.exp(-x**2/(2*w**2)) / (w*np.sqrt(2*np.pi))
 
-newval = np.arange(-E.max(), E.max(), E.max()/150)
-dos = np.zeros_like(newval)
+newval = np.arange(-2.0, 2.0, 2.0/100)
+dos = np.zeros((10, 200))
 for n, E_n in enumerate(system.eigval):
-	X = (np.abs(χ[n, :, :])**2).sum(axis=-1).mean() / 2
-	for m, E_m in enumerate(newval):
-		dos[m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X
+	X = np.zeros((10,))
+	for i in lattice.sites():
+		x, y, z = i
+		i = lattice[i]
 
-plt.plot(newval, dos)
+		X[x] += (np.abs(χ[n, i, :])**2).sum(axis=-1) / 2
+	for m, E_m in enumerate(newval):
+		for x in range(10):
+			dos[x, m] += (delta(E_n - E_m) + delta(E_n + E_m)) * X[x]
+
+sns.heatmap(dos)
 plt.show()
+
+# plt.plot(newval, dos)
+# plt.show()
 
 # Sparse matrices.
 # H = bsr_matrix(system.data, blocksize=(4,4))
