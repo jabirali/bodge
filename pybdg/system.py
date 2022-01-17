@@ -72,10 +72,10 @@ class System:
 			i, j = self.lattice[key[0]], self.lattice[key[1]]
 
 			# Set the electron-electron block.
-			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val / 2
+			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val
 
 			# Set the hole-hole block.
-			self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj() / 2
+			self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
 
 		# Process pairing: Δ[i, j].
 		for key, val in self.pair.items():
@@ -83,10 +83,10 @@ class System:
 			i, j = self.lattice[key[0]], self.lattice[key[1]]
 
 			# Set the electron-hole block.
-			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val / 2
+			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val
 
 			# Set the hole-electron block.
-			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj() / 2
+			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj()
 
 		# Process inverse hopping.
 		for key in self.lattice.neighbors():
