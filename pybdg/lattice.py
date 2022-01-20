@@ -8,7 +8,7 @@ class Cubic:
 	This class provides convenience methods for iterating over all sites
 	or neighbors in a lattice, as well as methods for converting between
 	index (i1, i2) and coordinate ((x1, y1, z1), (x2, y2, z2)) notations.
-	This simplfies the process of preparing lattice Hamiltonian matrices
+	This simplifies the process of preparing lattice Hamiltonian matrices
 	using flat indices while retaining the convenience of coordinates.
 	"""
 

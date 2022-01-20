@@ -38,10 +38,6 @@ class System:
 		# Hamiltonian matrix used in the tight-binding treatment.
 		self.data = np.zeros(self.shape, dtype=np.complex128)
 
-		# Placeholders for accesors.
-		self.hopp = {}
-		self.pair = {}
-
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
 
@@ -55,6 +51,9 @@ class System:
 		Note that the `__exit__` method is responsible for actually transferring
 		all the elements of H and Δ to the correct locations in the Hamiltonian.
 		"""
+		self.hopp = {}
+		self.pair = {}
+
 		return self.hopp, self.pair
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
@@ -67,20 +66,20 @@ class System:
 		- Verifying that the constructed Hamiltonian is actually Hermitian.
 		"""
 		# Process hopping: H[i, j].
-		for key, val in self.hopp.items():
+		for (_i, _j), val in self.hopp.items():
 			# Decode the coordinates.
-			i, j = self.lattice[key[0]], self.lattice[key[1]]
+			i, j = self.lattice[_i], self.lattice[_j]
 
 			# Set the electron-electron block.
 			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val
 
 			# Set the hole-hole block.
-			self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
+			self.data[4*ih2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
 
 		# Process pairing: Δ[i, j].
-		for key, val in self.pair.items():
+		for (_i, _j), val in self.pair.items():
 			# Decode the coordinates.
-			i, j = self.lattice[key[0]], self.lattice[key[1]]
+			i, j = self.lattice[_i], self.lattice[_j]
 
 			# Set the electron-hole block.
 			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val
@@ -89,9 +88,9 @@ class System:
 			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj()
 
 		# Process inverse hopping.
-		for key in self.lattice.neighbors():
+		for (_i, _j) in self.lattice.neighbors():
 			# Decode the coordinates.
-			i, j = self.lattice[key[0]], self.lattice[key[1]]
+			i, j = self.lattice[_i], self.lattice[_j]
 
 			# Symmetry between hopping terms.
 			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
