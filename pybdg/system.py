@@ -2,6 +2,9 @@ import numpy as np
 
 from scipy.linalg import eigh
 
+from scipy.sparse import lil_matrix
+from scipy.sparse.linalg import eigsh
+
 from .lattice import Cubic
 
 
@@ -35,8 +38,21 @@ class System:
 		# the lattice size are the local degrees of freedom at each lattice site.
 		self.shape = (4*lattice.size, 4*lattice.size)
 
-		# Hamiltonian matrix used in the tight-binding treatment.
-		self.data = np.zeros(self.shape, dtype=np.complex128)
+		# Construct the most general 4N×4N Hamiltonian as a sparse matrix. The
+		# LIL format is easy to construct but the BSR format is more efficient.
+		self.data = lil_matrix(self.shape, dtype=np.complex128)
+		for i, j in lattice.relevant():
+			self.data[4*lattice[i], 4*lattice[j]] = 1
+		self.data = self.data.tobsr(blocksize=(4, 4))
+		self.data.data[...] = 0
+
+	def __getitem__(self, keys):
+		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
+		i, j = keys
+		js = self.data.indices[self.data.indptr[i]:self.data.indptr[i+1]]
+		k = self.data.indptr[i] + np.where(js == j)
+
+		return self.data.data[k][0, 0]
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -71,38 +87,43 @@ class System:
 			i, j = self.lattice[_i], self.lattice[_j]
 
 			# Set the electron-electron block.
-			self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val
+			# self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val
 
 			# Set the hole-hole block.
-			self.data[4*ih2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
+			# self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
 
-		# Process pairing: Δ[i, j].
-		for (_i, _j), val in self.pair.items():
-			# Decode the coordinates.
-			i, j = self.lattice[_i], self.lattice[_j]
+		# # Process pairing: Δ[i, j].
+		# for (_i, _j), val in self.pair.items():
+		# 	# Decode the coordinates.
+		# 	i, j = self.lattice[_i], self.lattice[_j]
 
-			# Set the electron-hole block.
-			self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val
+		# 	# Set the electron-hole block.
+		# 	self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val
 
-			# Set the hole-electron block.
-			self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj()
+		# 	# Set the hole-electron block.
+		# 	self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj()
 
-		# Process inverse hopping.
-		for (_i, _j) in self.lattice.neighbors():
-			# Decode the coordinates.
-			i, j = self.lattice[_i], self.lattice[_j]
+		# # Process inverse hopping.
+		# for (_i, _j) in self.lattice.neighbors():
+		# 	# Decode the coordinates.
+		# 	i, j = self.lattice[_i], self.lattice[_j]
 
-			# Symmetry between hopping terms.
-			self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
-				+self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
+		# 	# Symmetry between hopping terms.
+		# 	self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
+		# 		self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
 
-		# Verify that the matrix is Hermitian.
-		if not np.allclose(self.data, self.data.T.conj()):
-			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
+		# # Verify that the matrix is Hermitian.
+		# # if not np.allclose(self.data, self.data.T.conj()):
+		# # 	raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
-		# Reset accessors.
-		self.hopp = {}
-		self.pair = {}
+		# # Scale the matrix so all eigenvalues are in (-1, +1).
+		# # For numerical stability, we add a 1% safety margin.
+		# self.scale = 1.01 * np.abs(eigsh(self.data, 1)[0][0])
+		# self.data /= self.scale
+
+		# # Reset accessors.
+		# self.hopp = {}
+		# self.pair = {}
 
 	def diagonalize(self):
 		"""Diagonalize the Hamiltonian of the system.
