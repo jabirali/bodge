@@ -1,9 +1,11 @@
+from matplotlib import style
+from matplotlib.pyplot import colorbar
 import numpy as np
-from numpy.core.arrayprint import dtype_is_implied
 
 from scipy.linalg import eigh
 
-from scipy.sparse import dok_matrix, coo_matrix
+from scipy.sparse import coo_matrix
+from scipy.sparse.bsr import bsr_matrix
 from scipy.sparse.linalg import eigsh
 
 from .lattice import Cubic
@@ -39,43 +41,57 @@ class System:
 		# the lattice size are the local degrees of freedom at each lattice site.
 		self.shape = (4*lattice.size, 4*lattice.size)
 
-		# Construct the most general 4N×4N Hamiltonian as a sparse matrix. The
-		# COO format is easy and fast to construct, but BSR is more efficient
-		# for matrix multiplication when we have a 4x4 dense substructure.
-		adjacency = 6
-		rows = np.empty((adjacency+2)*lattice.size, dtype=np.int64)
-		cols = np.empty((adjacency+2)*lattice.size, dtype=np.int64)
+		# Construct the most general 4N×4N Hamiltonian for the given lattice as
+		# a sparse matrix. The fastest way to do so for a general lattice is
+		# the COO format, so we use this to initialize the sparse matrix.
+		pairs = (1+lattice.bonds)*lattice.size
 
-		site = 0
+		rows = np.zeros(pairs, dtype=np.int64)
+		cols = np.zeros(pairs, dtype=np.int64)
+		data = np.repeat(np.complex128(1), pairs)
+
+		k = 0
 		for _i, _j in lattice.relevant():
-			i, j = lattice[_i], lattice[_j]
+			i, j = 4*lattice[_i], 4*lattice[_j]
 
-			rows[site] = i
-			cols[site] = j
-			site += 1
+			rows[k] = i
+			cols[k] = j
+			k += 1
 
-			rows[site] = j
-			cols[site] = i
-			site += 1
+			if i != j:
+				rows[k] = j
+				cols[k] = i
+				k += 1
 
-		rows = rows[:site]
-		cols = cols[:site]
-		data = np.repeat(1.0, site)
+		rows, cols, data = rows[:k], cols[:k], data[:k]
+		self.matrix = coo_matrix((data, (rows, cols)))
 
-		self.data = coo_matrix((data, (rows, cols))).tobsr(blocksize=(4, 4))
-		self.data.data[...] = 0
+		# Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
+		# most efficient format for handling matrix-vector multiplications in numerics.
+		self.matrix = coo_matrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
 
-		raise RuntimeError("HERE")
+		# Discard the dummy entries used during matrix construction.
+		self.matrix.data[...] = 0
 
 	def __getitem__(self, keys):
 		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
 		_i, _j = keys
 		i, j = self.lattice[_i], self.lattice[_j]
 
-		js = self.data.indices[self.data.indptr[i]:self.data.indptr[i+1]]
-		k = self.data.indptr[i] + np.where(js == j)
+		js = self.matrix.indices[self.matrix.indptr[i]:self.matrix.indptr[i+1]]
+		k = self.matrix.indptr[i] + np.where(js == j)
 
-		return self.data.data[k]
+		return self.matrix.data[k]
+
+	def __setitem__(self, keys, val):
+		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
+		_i, _j = keys
+		i, j = self.lattice[_i], self.lattice[_j]
+
+		js = self.matrix.indices[self.matrix.indptr[i]:self.matrix.indptr[i+1]]
+		k = self.matrix.indptr[i] + np.where(js == j)
+
+		self.matrix.data[k, ...] = val
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -105,10 +121,10 @@ class System:
 		- Verifying that the constructed Hamiltonian is actually Hermitian.
 		"""
 		# Process hopping: H[i, j].
-		# for (i, j), val in self.hopp.items():
-			# Extract matrix block.
-			# self[i, j][0,0,0,0] = 100
-			# H = self[i, j]
+		for (i, j), val in self.hopp.items():
+			Extract matrix block.
+			self[i, j][0,0,0,0] = 100
+			H = self[i, j]
 			# print(H)
 
 			# Set the electron-electron block.
@@ -149,6 +165,21 @@ class System:
 		# # Reset accessors.
 		# self.hopp = {}
 		# self.pair = {}
+		pass
+
+	def index(self, row, col):
+		"""Determine the sparse matrix index corresponding to block (row, col).
+
+		This can be used to access `self.matrix.data[index, :, :]` when direct
+		changes to the encapsulated BSR sparse matrix are required.
+		"""
+		indices, indptr = self.matrix.indices, self.matrix.indptr
+
+		i, j = self.lattice[row], self.lattice[col]
+		js = indices[indptr[i]:indptr[i+1]]
+		k = indptr[i] + np.where(js == j)
+
+		return k
 
 	def diagonalize(self):
 		"""Diagonalize the Hamiltonian of the system.
@@ -163,3 +194,21 @@ class System:
 		# where n corresponds to eigenvalue E[n], i is a position index, and
 		# α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
 		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 4))
+
+	def plot(self):
+		"""Visualize the sparsity structure of the generated matrix."""
+		import matplotlib.pyplot as plt
+
+		plt.figure(figsize=(8, 8))
+		plt.spy(self.matrix, precision='present', markersize=1, marker='o', color='k')
+		plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
+		plt.xticks([4*i-0.5 for i in range(self.lattice.size)])
+		plt.yticks([4*i-0.5 for i in range(self.lattice.size)])
+		plt.grid()
+
+		ax = plt.gca()
+		ax.set_xticklabels([])
+		ax.set_yticklabels([])
+
+		plt.tight_layout()
+		plt.show()
