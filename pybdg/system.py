@@ -1,12 +1,8 @@
-from matplotlib import style
-from matplotlib.pyplot import colorbar
 import numpy as np
 
 from scipy.linalg import eigh
-
-from scipy.sparse import coo_matrix
-from scipy.sparse.bsr import bsr_matrix
-from scipy.sparse.linalg import eigsh
+from scipy.sparse import coo_matrix, bsr_matrix
+from scipy.sparse.linalg import norm
 
 from .lattice import Cubic
 
@@ -41,9 +37,12 @@ class System:
 		# the lattice size are the local degrees of freedom at each lattice site.
 		self.shape = (4*lattice.size, 4*lattice.size)
 
-		# Construct the most general 4N×4N Hamiltonian for the given lattice as
-		# a sparse matrix. The fastest way to do so for a general lattice is
-		# the COO format, so we use this to initialize the sparse matrix.
+		# Scale factor used to compress the Hamiltonian spectrum to (-1, +1).
+		# This must be set to an upper bound for the Hamiltonian spectral radius.
+		self.scale = 1.0
+
+		# Initialize the most general 4N×4N Hamiltonian for this lattice as a
+		# sparse matrix. The fastest alternative for this is the COO format.
 		pairs = (1+lattice.bonds)*lattice.size
 
 		rows = np.zeros(pairs, dtype=np.int64)
@@ -64,34 +63,16 @@ class System:
 				k += 1
 
 		rows, cols, data = rows[:k], cols[:k], data[:k]
-		self.matrix = coo_matrix((data, (rows, cols)))
+		self.matrix = coo_matrix((data, (rows, cols)), shape=self.shape)
 
 		# Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
-		# most efficient format for handling matrix-vector multiplications in numerics.
-		self.matrix = coo_matrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
-
-		# Discard the dummy entries used during matrix construction.
+		# most efficient format for handling matrix-vector multiplications numerically.
+		# We can then discard all the dummy entries used during matrix construction.
+		self.matrix = self.matrix.tobsr((4, 4))
 		self.matrix.data[...] = 0
 
-	def __getitem__(self, keys):
-		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
-		_i, _j = keys
-		i, j = self.lattice[_i], self.lattice[_j]
-
-		js = self.matrix.indices[self.matrix.indptr[i]:self.matrix.indptr[i+1]]
-		k = self.matrix.indptr[i] + np.where(js == j)
-
-		return self.matrix.data[k]
-
-	def __setitem__(self, keys, val):
-		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
-		_i, _j = keys
-		i, j = self.lattice[_i], self.lattice[_j]
-
-		js = self.matrix.indices[self.matrix.indptr[i]:self.matrix.indptr[i+1]]
-		k = self.matrix.indptr[i] + np.where(js == j)
-
-		self.matrix.data[k, ...] = val
+		# Simplify direct access to the underlying data structure.
+		self.data = self.matrix.data
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -105,7 +86,12 @@ class System:
 
 		Note that the `__exit__` method is responsible for actually transferring
 		all the elements of H and Δ to the correct locations in the Hamiltonian.
+
 		"""
+		# Restore the Hamiltonian energy scale.
+		self.data *= self.scale
+
+		# Prepare storage for the context manager.
 		self.hopp = {}
 		self.pair = {}
 
@@ -119,53 +105,49 @@ class System:
 		- Transferring elements from the context manager dicts to the actual matrix;
 		- Ensuring that particle-hole and nearest-neighbor symmetries are respected;
 		- Verifying that the constructed Hamiltonian is actually Hermitian.
+
+		All of these operations are done directly using a sparse matrix format.
 		"""
 		# Process hopping: H[i, j].
 		for (i, j), val in self.hopp.items():
-			Extract matrix block.
-			self[i, j][0,0,0,0] = 100
-			H = self[i, j]
-			# print(H)
+			# Find this matrix block.
+			k = self.index(i, j)
 
-			# Set the electron-electron block.
-			# self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val
+			# Update electron-electron and hole-hole parts.
+			self.data[k, 0:2, 0:2] = +val
+			self.data[k, 2:4, 2:4] = -val.conj()
 
-			# Set the hole-hole block.
-			# self.data[4*i+2 : 4*i+4, 4*j+2 : 4*j+4] = -val.conj()
+		# Process pairing: Δ[i, j].
+		for (i, j), val in self.pair.items():
+			# Find this matrix block.
+			k = self.index(i, j)
 
-		# # Process pairing: Δ[i, j].
-		# for (_i, _j), val in self.pair.items():
-		# 	# Decode the coordinates.
-		# 	i, j = self.lattice[_i], self.lattice[_j]
+			# Update electron-hole and hole-electron parts.
+			self.data[k, 0:2, 2:4] = +val
+			self.data[k, 2:4, 0:2] = +val.T.conj()
 
-		# 	# Set the electron-hole block.
-		# 	self.data[4*i+0 : 4*i+2, 4*j+2 : 4*j+4] = +val
+		# Process inverse hopping.
+		for (i, j) in self.lattice.neighbors():
+			# Find these matrix blocks.
+			k1 = self.index(i, j)
+			k2 = self.index(j, i)
 
-		# 	# Set the hole-electron block.
-		# 	self.data[4*i+2 : 4*i+4, 4*j+0 : 4*j+2] = +val.T.conj()
+			# Enforce symmetry of hopping terms.
+			self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
 
-		# # Process inverse hopping.
-		# for (_i, _j) in self.lattice.neighbors():
-		# 	# Decode the coordinates.
-		# 	i, j = self.lattice[_i], self.lattice[_j]
+		# Verify that the matrix is Hermitian.
+		if np.max(self.matrix - self.matrix.getH()) > 1e-6:
+			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
-		# 	# Symmetry between hopping terms.
-		# 	self.data[4*j+0 : 4*j+4, 4*i+0 : 4*i+4] = \
-		# 		self.data[4*i+0 : 4*i+4, 4*j+0 : 4*j+4].T.conj()
+		# Scale the matrix so all eigenvalues are in (-1, +1). We here use
+		# the theorem that the spectral radius is bounded by any matrix norm;
+		# the 1-norm is a particularly efficient upper bound in test systems.
+		self.scale = norm(self.matrix, 1)
+		self.matrix /= self.scale
 
-		# # Verify that the matrix is Hermitian.
-		# # if not np.allclose(self.data, self.data.T.conj()):
-		# # 	raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
-
-		# # Scale the matrix so all eigenvalues are in (-1, +1).
-		# # For numerical stability, we add a 1% safety margin.
-		# self.scale = 1.01 * np.abs(eigsh(self.data, 1)[0][0])
-		# self.data /= self.scale
-
-		# # Reset accessors.
-		# self.hopp = {}
-		# self.pair = {}
-		pass
+		# Reset accessors.
+		self.hopp = {}
+		self.pair = {}
 
 	def index(self, row, col):
 		"""Determine the sparse matrix index corresponding to block (row, col).
@@ -185,10 +167,13 @@ class System:
 		"""Diagonalize the Hamiltonian of the system.
 
 		This calculates the eigenvalues and eigenvectors of the system. Due to
-		the particle-hole symmetry, only the positive eigenvalues are calculated.
+		the particle-hole symmetry, only positive eigenvalues are calculated.
+
+		Note that this method is quite inefficient since it uses dense matrices;
+		it is meant as a benchmark, not for actual large-scale calculations.
 		"""
 		# Calculate the relevant eigenvalues and eigenvectors.
-		self.eigval, self.eigvec = eigh(self.data, subset_by_value=(0, np.inf))
+		self.eigval, self.eigvec = eigh(self.matrix.todense(), subset_by_value=(0, np.inf))
 
 		# Restructure the eigenvectors to have the format eigvec[n, i, α],
 		# where n corresponds to eigenvalue E[n], i is a position index, and

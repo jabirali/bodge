@@ -13,8 +13,14 @@ class Cubic:
 	"""
 
 	def __init__(self, shape: Tuple[int, int, int]):
+		# Number of atoms per lattice dimension.
 		self.shape = shape
+
+		# Number of atoms in the lattice.
 		self.size = np.prod(shape)
+
+		# Number of nearest neighbors per atom.
+		self.bonds = np.sum([2 for s in shape if s > 1], dtype=np.int64)
 
 	def __getitem__(self, index):
 		"""Convert between coordinate and index notations."""

@@ -34,7 +34,8 @@ class TestSystem:
 				Δ[i, j] = 2*σ3 + 5*σ2
 		
 		# Verify that the result is Hermitian.
-		assert np.allclose(system.data, system.data.T.conj())
+		H = system.matrix.todense()
+		assert np.allclose(H, H.T.conj())
 
 	def test_eigenvectors(self):
 		# Instantiate a system with superconductivity and a barrier.
@@ -52,7 +53,8 @@ class TestSystem:
 				H[i, j] = -1 * σ0
 
 		# Calculate the eigenvalues the manual way.
-		E, X = eigh(system.data, subset_by_value=(0, np.inf))
+		H = system.matrix.todense()
+		E, X = eigh(H, subset_by_value=(0, np.inf))
 		X = X.T
 
 		# Confirm that we got positive eigenvalues and that we have
@@ -60,7 +62,7 @@ class TestSystem:
 		assert E.size == 200
 		for n, E_n in enumerate(E):
 			assert E_n > 0
-			assert np.allclose(system.data @ X[n, :], E_n * X[n, :])
+			assert np.allclose(H @ X[n, :], E_n * X[n, :])
 
 		# Calculate the same eigenvalues via the package, and ensure
 		# that the eigenvalues and eigenvectors are consistent.
