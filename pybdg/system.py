@@ -1,8 +1,9 @@
 import numpy as np
+from numpy.core.arrayprint import dtype_is_implied
 
 from scipy.linalg import eigh
 
-from scipy.sparse import lil_matrix
+from scipy.sparse import dok_matrix, coo_matrix
 from scipy.sparse.linalg import eigsh
 
 from .lattice import Cubic
@@ -39,20 +40,42 @@ class System:
 		self.shape = (4*lattice.size, 4*lattice.size)
 
 		# Construct the most general 4N×4N Hamiltonian as a sparse matrix. The
-		# LIL format is easy to construct but the BSR format is more efficient.
-		self.data = lil_matrix(self.shape, dtype=np.complex128)
-		for i, j in lattice.relevant():
-			self.data[4*lattice[i], 4*lattice[j]] = 1
-		self.data = self.data.tobsr(blocksize=(4, 4))
+		# COO format is easy and fast to construct, but BSR is more efficient
+		# for matrix multiplication when we have a 4x4 dense substructure.
+		adjacency = 6
+		rows = np.empty((adjacency+2)*lattice.size, dtype=np.int64)
+		cols = np.empty((adjacency+2)*lattice.size, dtype=np.int64)
+
+		site = 0
+		for _i, _j in lattice.relevant():
+			i, j = lattice[_i], lattice[_j]
+
+			rows[site] = i
+			cols[site] = j
+			site += 1
+
+			rows[site] = j
+			cols[site] = i
+			site += 1
+
+		rows = rows[:site]
+		cols = cols[:site]
+		data = np.repeat(1.0, site)
+
+		self.data = coo_matrix((data, (rows, cols))).tobsr(blocksize=(4, 4))
 		self.data.data[...] = 0
+
+		raise RuntimeError("HERE")
 
 	def __getitem__(self, keys):
 		"""Accessor for 4x4 block at coordinates (row, col) of the Hamiltonian."""
-		i, j = keys
+		_i, _j = keys
+		i, j = self.lattice[_i], self.lattice[_j]
+
 		js = self.data.indices[self.data.indptr[i]:self.data.indptr[i+1]]
 		k = self.data.indptr[i] + np.where(js == j)
 
-		return self.data.data[k][0, 0]
+		return self.data.data[k]
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -82,9 +105,11 @@ class System:
 		- Verifying that the constructed Hamiltonian is actually Hermitian.
 		"""
 		# Process hopping: H[i, j].
-		for (_i, _j), val in self.hopp.items():
-			# Decode the coordinates.
-			i, j = self.lattice[_i], self.lattice[_j]
+		# for (i, j), val in self.hopp.items():
+			# Extract matrix block.
+			# self[i, j][0,0,0,0] = 100
+			# H = self[i, j]
+			# print(H)
 
 			# Set the electron-electron block.
 			# self.data[4*i+0 : 4*i+2, 4*j+0 : 4*j+2] = +val

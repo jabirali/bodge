@@ -11,5 +11,10 @@ Initially, I was hesitant about using Python for this project for performance re
 ## Sparse matrices
 To be able to solve systems with a large number of lattice point, it is essential to use *sparse matrices*, as implemented by e.g. the `scipy.sparse` library. I've decided to go for the `bsr_matrix` format for these reasons:
 
+* Creation of 100x100x100 lattice:
+	- COO matrix converted to BSR: 3.9 s.
+	- LIL matrix converted to BSR: 14.4 s.
+	- DOK matrix converted to BSR: 39.1 s.
+
 * The Chebyshev expansion requires a large number of matrix-vector multiplications, which are operations that the row-ordered sparse matrices (`csr` and `bsr`) do well.
 * The Hamiltonian and the Green function will likely both consist of 4x4 or 8x8 dense submatrices, due to the number of degrees of freedom associated with each lattice site. Block formats (like `bsr`) does this well.
