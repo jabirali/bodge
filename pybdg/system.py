@@ -28,6 +28,9 @@ class System:
 	minimum number of matrix elements required via a `with` block, and the
 	the rest are autofilled via symmetries. Moreover, it allows you to use
 	`Lattice` coordinates instead of matrix indices to fill out the elements.
+
+	Internally, this constructs a block-sparse matrix (BSR format), enabling
+	the construction of very large physical systems (e.g. 10⁶ lattice points).
 	"""
 	def __init__(self, lattice: Cubic):
 		# Lattice instance used as basis coordinates for the system.
@@ -102,11 +105,10 @@ class System:
 
 		This part of the implementation takes care of finalizing the Hamiltonian:
 
-		- Transferring elements from the context manager dicts to the actual matrix;
+		- Transferring elements from the context manager dicts to the sparse matrix;
 		- Ensuring that particle-hole and nearest-neighbor symmetries are respected;
-		- Verifying that the constructed Hamiltonian is actually Hermitian.
-
-		All of these operations are done directly using a sparse matrix format.
+		- Verifying that the constructed Hamiltonian is actually Hermitian;
+		- Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
 		"""
 		# Process hopping: H[i, j].
 		for (i, j), val in self.hopp.items():
@@ -140,8 +142,7 @@ class System:
 			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
 		# Scale the matrix so all eigenvalues are in (-1, +1). We here use
-		# the theorem that the spectral radius is bounded by any matrix norm;
-		# the 1-norm is a particularly efficient upper bound in test systems.
+		# the theorem that the spectral radius is bounded by any matrix norm.
 		self.scale = norm(self.matrix, 1)
 		self.matrix /= self.scale
 
@@ -152,8 +153,8 @@ class System:
 	def index(self, row, col):
 		"""Determine the sparse matrix index corresponding to block (row, col).
 
-		This can be used to access `self.matrix.data[index, :, :]` when direct
-		changes to the encapsulated BSR sparse matrix are required.
+		This can be used to access `self.data[index, :, :]` when direct
+		changes to the encapsulated block-sparse matrix are required.
 		"""
 		indices, indptr = self.matrix.indices, self.matrix.indptr
 
@@ -173,12 +174,14 @@ class System:
 		it is meant as a benchmark, not for actual large-scale calculations.
 		"""
 		# Calculate the relevant eigenvalues and eigenvectors.
-		self.eigval, self.eigvec = eigh(self.matrix.todense(), subset_by_value=(0, np.inf))
+		eigval, eigvec = eigh(self.matrix.todense(), subset_by_value=(0, np.inf))
 
 		# Restructure the eigenvectors to have the format eigvec[n, i, α],
 		# where n corresponds to eigenvalue E[n], i is a position index, and
 		# α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
-		self.eigvec = self.eigvec.T.reshape((self.eigval.size, -1, 4))
+		eigvec = eigvec.T.reshape((eigval.size, -1, 4))
+
+		return eigval, eigvec
 
 	def plot(self):
 		"""Visualize the sparsity structure of the generated matrix."""

@@ -4,6 +4,7 @@
 This is a test script that constructs a simple tight-binding Hamiltonian for
 a superconducting system and subsequently calculates the density of states.
 """
+from time import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -19,8 +20,14 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((100, 100, 10))
+t0 = time()
+lattice = Cubic((70, 1, 10))
 system = System(lattice)
+t1 = time()
+
+# print("Stored elements", system.data.size)
+# print("Skeleton", t1 - t0)
+
 # system.plot()
 
 with system as (H, Δ):
@@ -33,8 +40,26 @@ with system as (H, Δ):
 		# if i[0] > 10:
 			# Δ[i, j] = Δ0 * jσ2 * 1j
 
-# system.diagonalize()
-# print(np.max(np.abs(system.eigval)))
+# print("Construction", t2 - t1)
+
+
+Y = system.matrix.todense()
+
+t1 = time()
+X = Y*Y
+t2 = time()
+
+print("Matmul", t2-t1)
+
+# X = system.matrix * system.matrix
+
+# t3 = time()
+# print("Matrix multiplication", t3 - t2)
+
+
+
+# E, x = system.diagonalize()
+# print(np.max(np.abs(E)))
 
 # system[0,0] = 1
 # print(system[0,0])
