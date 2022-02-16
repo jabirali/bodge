@@ -183,16 +183,20 @@ class System:
 
 		return eigval, eigvec
 
-	def plot(self):
+	def plot(self, grid=False):
 		"""Visualize the sparsity structure of the generated matrix."""
 		import matplotlib.pyplot as plt
 
 		plt.figure(figsize=(8, 8))
 		plt.spy(self.matrix, precision='present', markersize=1, marker='o', color='k')
 		plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
-		plt.xticks([4*i-0.5 for i in range(self.lattice.size)])
-		plt.yticks([4*i-0.5 for i in range(self.lattice.size)])
-		plt.grid()
+		plt.xticks([])
+		plt.yticks([])
+
+		if grid:
+			plt.xticks([4*i-0.5 for i in range(self.lattice.size)])
+			plt.yticks([4*i-0.5 for i in range(self.lattice.size)])
+			plt.grid()
 
 		ax = plt.gca()
 		ax.set_xticklabels([])
