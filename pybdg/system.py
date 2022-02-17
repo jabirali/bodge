@@ -3,7 +3,7 @@ import numpy as np
 from scipy.linalg import eigh
 from scipy.sparse import coo_matrix, identity
 from scipy.sparse.linalg import norm
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from rich import print
 
 from .lattice import Cubic
@@ -159,7 +159,7 @@ class System:
 		self.hamiltonian /= self.scale
 
 		# Reset accessors.
-		print(' -> done!')
+		print(' -> done!\n')
 		self.hopp = {}
 		self.pair = {}
 
@@ -195,6 +195,25 @@ class System:
 		eigvec = eigvec.T.reshape((eigval.size, -1, 4))
 
 		return eigval, eigvec
+
+	def invert(self, energies):
+		"""Calculate the exact Green function of the system."""
+		raise NotImplementedError("This method is not yet implemented.")
+
+	def chebyshev(self):
+		"""Local Chebyshev expansion of the Green function."""
+		H = self.hamiltonian
+		I = self.identity
+
+		print("[green]:: Chebyshev expansion of the Green function[/green]")
+		G1, G0 = H, I
+		for n in trange(100, unit='mom'):
+			# Calculate the next Chebyshev matrices
+			G1, G0 = 2*H @ G1 - G0, G1
+
+			# Prune small matrix elements.
+			G1.data[G1.data < 1e-6] = 0
+			G1.eliminate_zeros()
 
 	def plot(self, grid=False):
 		"""Visualize the sparsity structure of the generated matrix."""

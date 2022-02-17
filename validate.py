@@ -19,30 +19,31 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((100, 100, 10))
+lattice = Cubic((100, 10, 1))
 system = System(lattice)
 with system as (H, Δ):
 	for i in lattice.sites():
 		H[i, i] = -μ * σ0 - m3 * σ3
 		Δ[i, i] = Δ0 * jσ2
 
-	for i, j in lattice.neighbors(axis=0):
+	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
 
-	for i, j in lattice.neighbors(axis=1):
-		H[i, j] = -1e-10 * σ0
+	# for i, j in lattice.neighbors(axis=1):
+	# 	H[i, j] = -1e-10 * σ0
 
+system.chebyshev()
 
-I = system.identity
-H = system.hamiltonian
-G = H @ I
-print(I.nnz)
-print(H.nnz)
-print(G.nnz)
+# I = system.identity
+# H = system.hamiltonian
+# G = H @ I
+# print(I.nnz)
+# print(H.nnz)
+# print(G.nnz)
 
-G.eliminate_zeros()
-print(G.nnz)
+# G.eliminate_zeros()
+# print(G.nnz)
 
-G.data[np.abs(G.data) < 1e-8] = 0
-G.eliminate_zeros()
-G.eliminate_zeros()
+# G.data[np.abs(G.data) < 1e-8] = 0
+# G.eliminate_zeros()
+# G.eliminate_zeros()
