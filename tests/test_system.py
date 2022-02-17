@@ -66,11 +66,11 @@ class TestSystem:
 
 		# Calculate the same eigenvalues via the package, and ensure
 		# that the eigenvalues and eigenvectors are consistent.
-		system.diagonalize()
-		assert np.allclose(system.eigval, E)
+		eigval, eigvec = system.diagonalize()
+		assert np.allclose(eigval, E)
 		for n, E_n in enumerate(E):
 			for m in range(100):
-				assert np.allclose(system.eigvec[n, m, 0], X[n, 4*m+0])
-				assert np.allclose(system.eigvec[n, m, 1], X[n, 4*m+1])
-				assert np.allclose(system.eigvec[n, m, 2], X[n, 4*m+2])
-				assert np.allclose(system.eigvec[n, m, 3], X[n, 4*m+3])
+				assert np.allclose(eigvec[n, m, 0], X[n, 4*m+0])
+				assert np.allclose(eigvec[n, m, 1], X[n, 4*m+1])
+				assert np.allclose(eigvec[n, m, 2], X[n, 4*m+2])
+				assert np.allclose(eigvec[n, m, 3], X[n, 4*m+3])

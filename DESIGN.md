@@ -19,6 +19,8 @@ To be able to solve systems with a large number of lattice points, it is essenti
 * The Hamiltonian and Green function both consist of 4x4 dense submatrices due to the electron-hole and spin degrees of freedom at each site. Block formats (BSR) handles this.
 * In self-consistent calculations, we need to repeatedly update the Hamiltonian. It's therefore best to use the BSR format and not the COO format in the context manager.
 
+For now, I have chosen to use `bsr_matrix` over `bsr_array`, even though this interface is deprecated by `scipy`. The reason is simply that many useful functions like `norm` and `eye` have not yet been ported to use the new `array` interface.
+
 ## Spectral radius
 To use the Chebyshev expansion of the Green function, we need to compress the eigenvalue spectrum of the Hamiltonian to (-1, +1). There are many bounds available for this *spectral radius*, but a particularly efficient one turns out to be the 1-norm of the matrix. In realistic test cases on a 100x100x10 lattice, it takes only 0.2s to calculate this quantity, yet the highest eigenvalue is in practice 92-98% of this upper bound.
 

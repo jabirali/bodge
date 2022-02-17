@@ -10,3 +10,5 @@ dependencies:
   - scipy
   - matplotlib
   - openblas
+  - seaborn
+  - tqdm

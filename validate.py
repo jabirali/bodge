@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-from scipy.linalg import inv
 from tqdm import tqdm
 
 from pybdg import *
@@ -19,7 +18,7 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((30, 10, 30))
+lattice = Cubic((100, 100, 100))
 system = System(lattice)
 with system as (H, Δ):
 	for i in lattice.sites():
@@ -28,3 +27,5 @@ with system as (H, Δ):
 
 	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
+
+print(system.matrix @ system.matrix)

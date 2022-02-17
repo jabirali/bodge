@@ -1,8 +1,10 @@
 import numpy as np
 
 from scipy.linalg import eigh
-from scipy.sparse import coo_matrix, bsr_matrix
+from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import norm
+from tqdm import tqdm
+from rich import print
 
 from .lattice import Cubic
 
@@ -46,6 +48,7 @@ class System:
 
 		# Initialize the most general 4N×4N Hamiltonian for this lattice as a
 		# sparse matrix. The fastest alternative for this is the COO format.
+		print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
 		pairs = (1+lattice.bonds)*lattice.size
 
 		rows = np.zeros(pairs, dtype=np.int64)
@@ -98,6 +101,7 @@ class System:
 		self.hopp = {}
 		self.pair = {}
 
+		print("[green]:: Collecting new contributions to the Hamiltonian[/green]")
 		return self.hopp, self.pair
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
@@ -111,42 +115,47 @@ class System:
 		- Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
 		"""
 		# Process hopping: H[i, j].
-		for (i, j), val in self.hopp.items():
+		print("[green]:: Updating the matrix elements of the Hamiltonian[/green]")
+		for (i, j), val in tqdm(self.hopp.items(), desc=' -> hopping', unit='', unit_scale=True):
 			# Find this matrix block.
-			k = self.index(i, j)
+			k1 = self.index(i, j)
 
 			# Update electron-electron and hole-hole parts.
-			self.data[k, 0:2, 0:2] = +val
-			self.data[k, 2:4, 2:4] = -val.conj()
+			self.data[k1, 0:2, 0:2] = +val
+			self.data[k1, 2:4, 2:4] = -val.conj()
+
+			# Inverse process for non-diagonal contributions.
+			if i != j:
+				k2 = self.index(j, i)
+				self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
 
 		# Process pairing: Δ[i, j].
-		for (i, j), val in self.pair.items():
+		for (i, j), val in tqdm(self.pair.items(), desc=' -> pairing', unit='', unit_scale=True):
 			# Find this matrix block.
-			k = self.index(i, j)
+			k1 = self.index(i, j)
 
 			# Update electron-hole and hole-electron parts.
-			self.data[k, 0:2, 2:4] = +val
-			self.data[k, 2:4, 0:2] = +val.T.conj()
+			self.data[k1, 0:2, 2:4] = +val
+			self.data[k1, 2:4, 0:2] = +val.T.conj()
 
-		# Process inverse hopping.
-		for (i, j) in self.lattice.neighbors():
-			# Find these matrix blocks.
-			k1 = self.index(i, j)
-			k2 = self.index(j, i)
-
-			# Enforce symmetry of hopping terms.
-			self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
+			# Inverse process for non-diagonal contributions.
+			if i != j:
+				k2 = self.index(j, i)
+				self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
 
 		# Verify that the matrix is Hermitian.
+		print(' -> checking that the matrix is hermitian')
 		if np.max(self.matrix - self.matrix.getH()) > 1e-6:
 			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
 		# Scale the matrix so all eigenvalues are in (-1, +1). We here use
 		# the theorem that the spectral radius is bounded by any matrix norm.
+		print(' -> normalizing the spectral radius')
 		self.scale = norm(self.matrix, 1)
 		self.matrix /= self.scale
 
 		# Reset accessors.
+		print(' -> done!')
 		self.hopp = {}
 		self.pair = {}
 
