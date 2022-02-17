@@ -34,7 +34,7 @@ class TestSystem:
 				Δ[i, j] = 2*σ3 + 5*σ2
 		
 		# Verify that the result is Hermitian.
-		H = system.matrix.todense()
+		H = system.hamiltonian.todense()
 		assert np.allclose(H, H.T.conj())
 
 	def test_eigenvectors(self):
@@ -53,7 +53,7 @@ class TestSystem:
 				H[i, j] = -1 * σ0
 
 		# Calculate the eigenvalues the manual way.
-		H = system.matrix.todense()
+		H = system.hamiltonian.todense()
 		E, X = eigh(H, subset_by_value=(0, np.inf))
 		X = X.T
 
@@ -74,3 +74,28 @@ class TestSystem:
 				assert np.allclose(eigvec[n, m, 1], X[n, 4*m+1])
 				assert np.allclose(eigvec[n, m, 2], X[n, 4*m+2])
 				assert np.allclose(eigvec[n, m, 3], X[n, 4*m+3])
+
+	def test_sparsity(self):
+		# Instantiate a somewhat random test system.
+		lattice = Cubic((3,5,7))
+		system = System(lattice)
+
+		with system as (H, Δ):
+			for i in lattice.sites():
+				H[i, i] = 1*σ3 + 2*σ2
+				Δ[i, i] = 5*σ0 - 3*σ2
+
+			for i, j in lattice.neighbors():
+				H[i, j] = 3*σ0 - 4*σ2
+				Δ[i, j] = 2*σ3 + 5*σ2
+
+		# Calculate a matrix product using internal matrices.
+		H = system.hamiltonian
+		I = system.identity
+		G = H @ I
+
+		# Ensure that the Hamiltonian H has a 4x4 BSR representation,
+		# and that the identity I preserves both the value and format.
+		assert H.blocksize == (4, 4)
+		assert G.blocksize == (4, 4)
+		assert np.allclose(G.todense(), H.todense())

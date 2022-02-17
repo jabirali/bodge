@@ -4,6 +4,7 @@
 This is a test script that constructs a simple tight-binding Hamiltonian for
 a superconducting system and subsequently calculates the density of states.
 """
+import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -28,4 +29,5 @@ with system as (H, Δ):
 	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
 
-print(system.matrix @ system.matrix)
+X = system.hamiltonian @ system.identity
+print(X.blocksize)

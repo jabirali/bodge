@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.linalg import eigh
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, identity
 from scipy.sparse.linalg import norm
 from tqdm import tqdm
 from rich import print
@@ -69,16 +69,20 @@ class System:
 				k += 1
 
 		rows, cols, data = rows[:k], cols[:k], data[:k]
-		self.matrix = coo_matrix((data, (rows, cols)), shape=self.shape)
+		self.hamiltonian = coo_matrix((data, (rows, cols)), shape=self.shape)
 
 		# Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
 		# most efficient format for handling matrix-vector multiplications numerically.
 		# We can then discard all the dummy entries used during matrix construction.
-		self.matrix = self.matrix.tobsr((4, 4))
-		self.matrix.data[...] = 0
+		self.hamiltonian = self.hamiltonian.tobsr((4, 4))
+		self.hamiltonian.data[...] = 0
 
 		# Simplify direct access to the underlying data structure.
-		self.data = self.matrix.data
+		self.data = self.hamiltonian.data
+
+		# Prepare a compatible identity matrix for later use. We explicitly
+		# convert to BSR so matrix products retain the 4x4 block structure.
+		self.identity = identity(4*lattice.size, dtype=np.int8).tobsr((4, 4))
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -145,14 +149,14 @@ class System:
 
 		# Verify that the matrix is Hermitian.
 		print(' -> checking that the matrix is hermitian')
-		if np.max(self.matrix - self.matrix.getH()) > 1e-6:
+		if np.max(self.hamiltonian - self.hamiltonian.getH()) > 1e-6:
 			raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
 		# Scale the matrix so all eigenvalues are in (-1, +1). We here use
 		# the theorem that the spectral radius is bounded by any matrix norm.
 		print(' -> normalizing the spectral radius')
-		self.scale = norm(self.matrix, 1)
-		self.matrix /= self.scale
+		self.scale = norm(self.hamiltonian, 1)
+		self.hamiltonian /= self.scale
 
 		# Reset accessors.
 		print(' -> done!')
@@ -165,7 +169,7 @@ class System:
 		This can be used to access `self.data[index, :, :]` when direct
 		changes to the encapsulated block-sparse matrix are required.
 		"""
-		indices, indptr = self.matrix.indices, self.matrix.indptr
+		indices, indptr = self.hamiltonian.indices, self.hamiltonian.indptr
 
 		i, j = self.lattice[row], self.lattice[col]
 		js = indices[indptr[i]:indptr[i+1]]
@@ -183,7 +187,7 @@ class System:
 		it is meant as a benchmark, not for actual large-scale calculations.
 		"""
 		# Calculate the relevant eigenvalues and eigenvectors.
-		eigval, eigvec = eigh(self.matrix.todense(), subset_by_value=(0, np.inf))
+		eigval, eigvec = eigh(self.hamiltonian.todense(), subset_by_value=(0, np.inf))
 
 		# Restructure the eigenvectors to have the format eigvec[n, i, α],
 		# where n corresponds to eigenvalue E[n], i is a position index, and
@@ -197,7 +201,7 @@ class System:
 		import matplotlib.pyplot as plt
 
 		plt.figure(figsize=(8, 8))
-		plt.spy(self.matrix, precision='present', markersize=1, marker='o', color='k')
+		plt.spy(self.hamiltonian, precision='present', markersize=1, marker='o', color='k')
 		plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
 		plt.xticks([])
 		plt.yticks([])
