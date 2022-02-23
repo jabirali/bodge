@@ -4,11 +4,12 @@ channels:
   - defaults
 dependencies:
   - python
-  - pytest
-  - numpy
-  - numba
-  - scipy
   - matplotlib
+  - numba
+  - numpy
   - openblas
+  - pytest
+  - rich
+  - scipy
   - seaborn
   - tqdm

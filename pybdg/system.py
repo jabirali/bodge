@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.linalg import eigh
+from scipy.linalg import eigh, inv
 from scipy.sparse import coo_matrix, identity
 from scipy.sparse.linalg import norm
 from tqdm import tqdm, trange
@@ -178,7 +178,7 @@ class System:
 		return k
 
 	def diagonalize(self):
-		"""Diagonalize the Hamiltonian of the system.
+		"""Calculate the exact eigenstates of the system via direct diagonalization.
 
 		This calculates the eigenvalues and eigenvectors of the system. Due to
 		the particle-hole symmetry, only positive eigenvalues are calculated.
@@ -187,7 +187,9 @@ class System:
 		it is meant as a benchmark, not for actual large-scale calculations.
 		"""
 		# Calculate the relevant eigenvalues and eigenvectors.
-		eigval, eigvec = eigh(self.hamiltonian.todense(), subset_by_value=(0, np.inf))
+		print("[green]:: Calculating eigenstates via direct diagonalization[/green]")
+		H = self.scale * self.hamiltonian.todense()
+		eigval, eigvec = eigh(H, subset_by_value=(0, np.inf))
 
 		# Restructure the eigenvectors to have the format eigvec[n, i, α],
 		# where n corresponds to eigenvalue E[n], i is a position index, and
@@ -196,9 +198,26 @@ class System:
 
 		return eigval, eigvec
 
-	def invert(self, energies):
-		"""Calculate the exact Green function of the system."""
-		raise NotImplementedError("This method is not yet implemented.")
+	def spectralize(self, energies, resolution=1e-4):
+		"""Calculate the exact spectral function of the system via direct inversion."""
+		# Restore the Hamiltonian scale and switch to dense matrices.
+		H = self.scale * self.hamiltonian.todense()
+		I = self.identity.todense()
+
+		# The resolution is controlled by the imaginary energy.
+		η = resolution * 1j
+
+		# Calculate the spectral function via direct inversion.
+		spectral = []
+		print("[green]:: Calculating spectral function via direct inversion[/green]")
+		for ω in tqdm(energies, desc=' -> energies', unit='', unit_scale=True):
+			Gᴿ = inv((ω+η)*I - H)
+			Gᴬ = inv((ω-η)*I - H)
+			A = (1j/(2*np.pi)) * (Gᴿ - Gᴬ)
+
+			spectral.append(A)
+
+		return spectral
 
 	def chebyshev(self):
 		"""Local Chebyshev expansion of the Green function."""
@@ -209,11 +228,16 @@ class System:
 		G1, G0 = H, I
 		for n in trange(100, unit='mom'):
 			# Calculate the next Chebyshev matrices
+			# TODO: Switch to Chebyshev vectors here
+			# TODO: Consider 4x4N vectors instead?
 			G1, G0 = 2*H @ G1 - G0, G1
 
 			# Prune small matrix elements.
 			G1.data[G1.data < 1e-6] = 0
 			G1.eliminate_zeros()
+
+		# for j in range(H.shape[0]):
+		# 	e = unitvector()
 
 	def plot(self, grid=False):
 		"""Visualize the sparsity structure of the generated matrix."""
