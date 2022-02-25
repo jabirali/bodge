@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.linalg import eigh, inv
-from scipy.sparse import coo_matrix, identity
+from scipy.sparse import coo_matrix, bsr_matrix, identity
 from scipy.sparse.linalg import norm
 from tqdm import tqdm, trange
 from rich import print
@@ -177,6 +177,11 @@ class System:
 
 		return k
 
+	def basis(self):
+		"""Generate all the unit vectors of the Hamiltonian as sparse matrices."""
+		for j in range(self.shape[1]):
+			yield coo_matrix(((1,), ((j,), (0,))), shape=(self.shape[0], 1))
+
 	def diagonalize(self):
 		"""Calculate the exact eigenstates of the system via direct diagonalization.
 
@@ -223,18 +228,50 @@ class System:
 		"""Local Chebyshev expansion of the Green function."""
 		H = self.hamiltonian
 		I = self.identity
+		N = self.lattice.size
 
 		print("[green]:: Chebyshev expansion of the Green function[/green]")
-		G1, G0 = H, I
-		for n in trange(100, unit='mom'):
-			# Calculate the next Chebyshev matrices
-			# TODO: Switch to Chebyshev vectors here
-			# TODO: Consider 4x4N vectors instead?
-			G1, G0 = 2*H @ G1 - G0, G1
+		for e_j in tqdm(self.basis(), unit=' DOF', total=self.shape[1]):
+			# g_j = H @ (H @ (H @ (H @ (H @ e_j))))
+			# print(g_j.blocksize)
+			# print("---")
 
-			# Prune small matrix elements.
-			G1.data[G1.data < 1e-6] = 0
-			G1.eliminate_zeros()
+			# TODO: Still slow. Maybe divide into 4Nx4K blocks?
+			# For L links and A adjacency, O(A^L) elements
+
+			L = 2
+
+			g_j1, g_j0 = H @ e_j, e_j
+			for n in range(L-1):
+				g_j1, g_j0 = 2*H @ g_j1, g_j1
+				# print(g_j1.nnz)
+
+				# print(g_j1.nnz)
+
+			mask = bsr_matrix(g_j1, dtype=np.int8)
+			# mask = g_j1 > 0
+			mask.data[...] = 1
+
+			for n in range(100-L-1):
+				# Chebyshev expansion of next vector.
+				g_j1, g_j0 = 2*H @ g_j1, g_j1
+
+				# Discard elements not in the mask/
+				g_j1 = g_j1.multiply(mask)
+
+				# g_j1 = g_j1.eliminate_zeros()
+				# print(g_j1.nnz)
+				# print(g_j1.nnz)
+
+				# Calculate the next Chebyshev matrices
+				# TODO: Switch to Chebyshev vectors here
+				# TODO: Consider 4x4N vectors instead?
+				# g_1, g_0
+				# G1, G0 = 2*H @ G1 - G0, G1
+
+				# # Prune small matrix elements.
+				# G1.data[G1.data < 1e-6] = 0
+				# G1.eliminate_zeros()
 
 		# for j in range(H.shape[0]):
 		# 	e = unitvector()

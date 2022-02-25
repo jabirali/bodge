@@ -19,7 +19,7 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((10, 10, 10))
+lattice = Cubic((1000, 1, 1))
 system = System(lattice)
 with system as (H, Δ):
 	for i in lattice.sites():
@@ -32,9 +32,10 @@ with system as (H, Δ):
 	# for i, j in lattice.neighbors(axis=1):
 	# 	H[i, j] = -1e-10 * σ0
 
-X = system.diagonalize()
-Y = system.spectralize([0.0, 1.0, 2.0])
-# system.chebyshev()
+
+# X = system.diagonalize()
+# Y = system.spectralize([0.0, 1.0, 2.0])
+system.chebyshev()
 
 # I = system.identity
 # H = system.hamiltonian
