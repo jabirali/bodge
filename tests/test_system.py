@@ -53,7 +53,7 @@ class TestSystem:
 				H[i, j] = -1 * σ0
 
 		# Calculate the eigenvalues the manual way.
-		H = system.hamiltonian.todense()
+		H = system.scale * system.hamiltonian.todense()
 		E, X = eigh(H, subset_by_value=(0, np.inf))
 		X = X.T
 

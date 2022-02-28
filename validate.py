@@ -19,8 +19,12 @@ t = 1.0
 Δ0 = t/2
 m3 = t/5
 
-lattice = Cubic((1000, 1, 1))
+lattice = Cubic((64, 64, 8))
 system = System(lattice)
+
+# for e_j in system.partition(2):
+# 	print(e_j.todense())
+
 with system as (H, Δ):
 	for i in lattice.sites():
 		H[i, i] = -μ * σ0 - m3 * σ3
@@ -31,6 +35,7 @@ with system as (H, Δ):
 
 	# for i, j in lattice.neighbors(axis=1):
 	# 	H[i, j] = -1e-10 * σ0
+
 
 
 # X = system.diagonalize()

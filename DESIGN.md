@@ -21,6 +21,11 @@ To be able to solve systems with a large number of lattice points, it is essenti
 
 For now, I have chosen to use `bsr_matrix` over `bsr_array`, even though this interface is deprecated by `scipy`. The reason is simply that many useful functions like `norm` and `eye` have not yet been ported to use the new `array` interface.
 
+## Blockwise expansion
+When it comes to the Chebyshev expansion, the conceptually easiest approach is to generate the Chebyshev expansion for the whole matrix simultaneously. However, as the intermediate matrices are usually hundreds of times larger than the Hamiltonian, memory becomes a problem for large systems. The other extreme is to process one unit vector at a time instead of the whole identity matrix, as done by e.g. Nagai (2020). However, using a high-level language like Python, the sparse matrix construction cost becomes dominant, and the numerics slow to a crawl.
+
+In this implementation, I've therefore implemented a blockwise expansion. This works well.
+
 ## Spectral radius
 To use the Chebyshev expansion of the Green function, we need to compress the eigenvalue spectrum of the Hamiltonian to (-1, +1). There are many bounds available for this *spectral radius*, but a particularly efficient one turns out to be the 1-norm of the matrix. In realistic test cases on a 100x100x10 lattice, it takes only 0.2s to calculate this quantity, yet the highest eigenvalue is in practice 92-98% of this upper bound.
 

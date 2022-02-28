@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.linalg import eigh, inv
-from scipy.sparse import coo_matrix, bsr_matrix, identity
+from scipy.sparse import coo_matrix, bsr_matrix, dia_matrix, identity, hstack
 from scipy.sparse.linalg import norm
 from tqdm import tqdm, trange
 from rich import print
@@ -79,10 +79,6 @@ class System:
 
 		# Simplify direct access to the underlying data structure.
 		self.data = self.hamiltonian.data
-
-		# Prepare a compatible identity matrix for later use. We explicitly
-		# convert to BSR so matrix products retain the 4x4 block structure.
-		self.identity = identity(4*lattice.size, dtype=np.int8).tobsr((4, 4))
 
 	def __enter__(self):
 		"""Implement a context manager interface for the class.
@@ -177,10 +173,63 @@ class System:
 
 		return k
 
-	def basis(self):
-		"""Generate all the unit vectors of the Hamiltonian as sparse matrices."""
-		for j in range(self.shape[1]):
-			yield coo_matrix(((1,), ((j,), (0,))), shape=(self.shape[0], 1))
+	@property
+	def identity(self):
+		"""Generate an identity matrix with similar dimensions as the Hamiltonian."""
+		return identity(self.shape[1], 'int8').tobsr((4, 4))
+
+	def subspace(self, radius=4):
+		"""Generator used for Local Krylov subspace expansion of matrix polynomials.
+
+		For a given radius R, this function determines an appropriate block size M,
+		such that 4N×4N matrices are split into 4N×4M matrices with M≤N. For each
+		such block, the generator then returns the following matrices:
+		* I_k [4N×4M] is the k'th slice of the full identity matrix [4N×4N]. This
+		  can be used as a starting point for e.g. iterative inversion of matrices.
+		* H_k [4N×4M] has ones where the k'th slice of the Hamiltonian has non-zero
+		  elements and zeros elsewhere. Element-wise multiplication by this matrix
+		  will discard all terms but on-site and nearest-neighbor interactions.
+		* P_k [4N×4M] has one-blocks where the k'th slice of H^R has nonzero elements
+		  and zeros elsewhere. Element-wise multiplication by this matrix projects
+		  matrices onto the Local Krylov subspace, effectively discarding all matrix
+		  elements corresponding to (R+1)'th nearest-neighbor interactions and up.
+
+		The blocksize M is determined such that the density of a general matrix G in
+		the Local Krylov subspace P_m * G is similar to the sparse Hamiltonian H.
+		Since the volume of the subspace is V = (4/3)πR^3 ≈ 4R³, we can set the
+		blocksize to M ≈ N/V = N/4R³, resulting in a matrix width of 4M = N/R³.
+		"""
+		# Determine block size and number of blocks from the subspace radius.
+		if radius < 1:
+			raise RuntimeError("Invalid radius. The subspace radius should be at least one.")
+
+		blocksize = 2 ** round(np.log2(self.shape[1] / radius**3))
+		blocks = self.shape[1] // blocksize
+
+		if blocks * blocksize != self.shape[1]:
+			raise RuntimeError("Invalid blocksize. Is the system dimension a power of two?")
+
+		# Prepare a cheap surrogate from the Hamiltonian.
+		H = bsr_matrix(self.hamiltonian, dtype=np.int8)
+		H.data[...] = 1
+
+		# Prepare matrices for the subspace expansion.
+		diag = np.repeat(np.int8(1), blocksize)
+		for k in trange(blocks, unit='block'):
+			# Generate the k'th slice of the identity matrix.
+			I_k = dia_matrix((diag, [-k*blocksize]), (self.shape[0], blocksize)).tobsr((4, 4))
+
+			# Generate the k'th slice of the Hamiltonian mask.
+			H_k = H @ I_k
+			H_k.data[...] = 1
+
+			# Generate the k'th slice of the projection mask.
+			P_k = H_k
+			for r in range(2, radius):
+				P_k = H @ P_k
+			P_k.data[...] = 1
+
+			yield (I_k, H_k, P_k)
 
 	def diagonalize(self):
 		"""Calculate the exact eigenstates of the system via direct diagonalization.
@@ -227,54 +276,57 @@ class System:
 	def chebyshev(self):
 		"""Local Chebyshev expansion of the Green function."""
 		H = self.hamiltonian
-		I = self.identity
-		N = self.lattice.size
+		N = 200
+
+		# Chebyshev nodes {ω_m} where we calculate the Green function.
+		k = np.arange(2*N)
+		ω = np.cos(np.pi * (2*k + 1) / (4*N))
+
+		# Calculate the corresponding Chebyshev transform coefficients.
+		# TODO: Incorporate the relevant Lorentz kernel factors here.
+		n = np.arange(N)
+		F = np.cos(n[None,:] * np.arccos(ω[:, None])) / (np.pi * np.sqrt(1 - ω[:, None]**2))
+		F[:, 1:] *= 2
+
+		# Prepare storage for the Green functions G(ω_m) at Chebyshev nodes ω_m.
+		G = [[] for m in range(2*N)]
 
 		print("[green]:: Chebyshev expansion of the Green function[/green]")
-		for e_j in tqdm(self.basis(), unit=' DOF', total=self.shape[1]):
-			# g_j = H @ (H @ (H @ (H @ (H @ e_j))))
-			# print(g_j.blocksize)
-			# print("---")
+		for I_k, H_k, P_k in self.subspace():
+			# Initialize the first two Chebyshev matrices needed to start recursion.
+			G_k0 = I_k
+			G_kn = H @ I_k
 
-			# TODO: Still slow. Maybe divide into 4Nx4K blocks?
-			# For L links and A adjacency, O(A^L) elements
+			# Green function slices G_k(ω_m) at the Chebyshev nodes ω_m. These are
+			# initialized using the first two Chebyshev matrices defined above. No
+			# projection is needed here since H_k and G_kn have the same structure.
+			G_k = [F[m, 0] * G_k0 + F[m, 1] * G_kn for m in range(2*N)]
 
-			L = 2
+			# Multiply the projection operator by 2x to fit the recursion relation.
+			P_k *= 2
 
-			g_j1, g_j0 = H @ e_j, e_j
-			for n in range(L-1):
-				g_j1, g_j0 = 2*H @ g_j1, g_j1
-				# print(g_j1.nnz)
+			# Chebyshev expansion of the next elements.
+			for n in range(2, N):
+				# Chebyshev expansion of next vector. Element-wise multiplication
+				# by P_k projects the result back into the Local Krylov subspace.
+				G_kn, G_k0 = (H @ G_kn).multiply(P_k) - G_k0, G_kn
 
-				# print(g_j1.nnz)
+				# Perform the Chebyshev transformation. Element-wise multiplication
+				# by H_k preserves only on-site and nearest-neighbor interactions.
+				# WARNING: This has been optimized to ignore SciPy wrapper checks.
+				GH_kn = G_kn.multiply(H_k)
+				for m, G_km in enumerate(G_k):
+					G_km.data += F[m, n] * GH_kn.data
 
-			mask = bsr_matrix(g_j1, dtype=np.int8)
-			# mask = g_j1 > 0
-			mask.data[...] = 1
+			# Accumulate the results.
+			for m, G_km in enumerate(G_k):
+				G[m].append(G_km)
 
-			for n in range(100-L-1):
-				# Chebyshev expansion of next vector.
-				g_j1, g_j0 = 2*H @ g_j1, g_j1
+		# Stack the slices [G_k(ω_m)] into full matrices G(ω_m).
+		for m, G_m in enumerate(G):
+			G[m] = hstack(G_m, 'bsr')
 
-				# Discard elements not in the mask/
-				g_j1 = g_j1.multiply(mask)
-
-				# g_j1 = g_j1.eliminate_zeros()
-				# print(g_j1.nnz)
-				# print(g_j1.nnz)
-
-				# Calculate the next Chebyshev matrices
-				# TODO: Switch to Chebyshev vectors here
-				# TODO: Consider 4x4N vectors instead?
-				# g_1, g_0
-				# G1, G0 = 2*H @ G1 - G0, G1
-
-				# # Prune small matrix elements.
-				# G1.data[G1.data < 1e-6] = 0
-				# G1.eliminate_zeros()
-
-		# for j in range(H.shape[0]):
-		# 	e = unitvector()
+		print(G)
 
 	def plot(self, grid=False):
 		"""Visualize the sparsity structure of the generated matrix."""
