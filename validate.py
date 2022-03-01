@@ -22,9 +22,6 @@ m3 = t/5
 lattice = Cubic((64, 64, 8))
 system = System(lattice)
 
-# for e_j in system.partition(2):
-# 	print(e_j.todense())
-
 with system as (H, Δ):
 	for i in lattice.sites():
 		H[i, i] = -μ * σ0 - m3 * σ3
@@ -33,25 +30,6 @@ with system as (H, Δ):
 	for i, j in lattice.neighbors():
 		H[i, j] = -t * σ0
 
-	# for i, j in lattice.neighbors(axis=1):
-	# 	H[i, j] = -1e-10 * σ0
-
-
-
 # X = system.diagonalize()
 # Y = system.spectralize([0.0, 1.0, 2.0])
 system.chebyshev()
-
-# I = system.identity
-# H = system.hamiltonian
-# G = H @ I
-# print(I.nnz)
-# print(H.nnz)
-# print(G.nnz)
-
-# G.eliminate_zeros()
-# print(G.nnz)
-
-# G.data[np.abs(G.data) < 1e-8] = 0
-# G.eliminate_zeros()
-# G.eliminate_zeros()

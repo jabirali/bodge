@@ -273,20 +273,21 @@ class System:
 
 		return spectral
 
-	def chebyshev(self):
+	def chebyshev(self, moments=200):
 		"""Local Chebyshev expansion of the Green function."""
 		H = self.hamiltonian
-		N = 200
+		N = moments
 
 		# Chebyshev nodes {ω_m} where we calculate the Green function.
 		k = np.arange(2*N)
 		ω = np.cos(np.pi * (2*k + 1) / (4*N))
+		print([2 * self.scale * ω_m for ω_m in ω])
 
 		# Calculate the corresponding Chebyshev transform coefficients.
 		# TODO: Incorporate the relevant Lorentz kernel factors here.
 		n = np.arange(N)
-		F = np.cos(n[None,:] * np.arccos(ω[:, None])) / (np.pi * np.sqrt(1 - ω[:, None]**2))
-		F[:, 1:] *= 2
+		T = np.cos(n[None,:] * np.arccos(ω[:, None])) / (np.pi * np.sqrt(1 - ω[:, None]**2))
+		T[:, 1:] *= 2
 
 		# Prepare storage for the Green functions G(ω_m) at Chebyshev nodes ω_m.
 		G = [[] for m in range(2*N)]
@@ -300,7 +301,7 @@ class System:
 			# Green function slices G_k(ω_m) at the Chebyshev nodes ω_m. These are
 			# initialized using the first two Chebyshev matrices defined above. No
 			# projection is needed here since H_k and G_kn have the same structure.
-			G_k = [F[m, 0] * G_k0 + F[m, 1] * G_kn for m in range(2*N)]
+			G_k = [T[m, 0] * G_k0 + T[m, 1] * G_kn for m in range(2*N)]
 
 			# Multiply the projection operator by 2x to fit the recursion relation.
 			P_k *= 2
@@ -316,7 +317,7 @@ class System:
 				# WARNING: This has been optimized to ignore SciPy wrapper checks.
 				GH_kn = G_kn.multiply(H_k)
 				for m, G_km in enumerate(G_k):
-					G_km.data += F[m, n] * GH_kn.data
+					G_km.data += T[m, n] * GH_kn.data
 
 			# Accumulate the results.
 			for m, G_km in enumerate(G_k):
@@ -326,7 +327,9 @@ class System:
 		for m, G_m in enumerate(G):
 			G[m] = hstack(G_m, 'bsr')
 
-		print(G)
+		# Return the Green function as a function of energy.
+		# TODO: Scale this to have the right energy units.
+		return G, ω
 
 	def plot(self, grid=False):
 		"""Visualize the sparsity structure of the generated matrix."""
