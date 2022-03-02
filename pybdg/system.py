@@ -1,5 +1,6 @@
 import numpy as np
 
+from multiprocessing import Pool
 from scipy.linalg import eigh, inv
 from scipy.sparse import coo_matrix, bsr_matrix, dia_matrix, identity, hstack
 from scipy.sparse.linalg import norm
@@ -273,7 +274,7 @@ class System:
 
 		return spectral
 
-	def chebyshev(self, moments=200):
+	def chebyshev(self, moments=100):
 		"""Local Chebyshev expansion of the Green function."""
 		H = self.hamiltonian
 		N = moments
@@ -281,19 +282,18 @@ class System:
 		# Chebyshev nodes {ω_m} where we calculate the Green function.
 		k = np.arange(2*N)
 		ω = np.cos(np.pi * (2*k + 1) / (4*N))
-		print([2 * self.scale * ω_m for ω_m in ω])
 
 		# Calculate the corresponding Chebyshev transform coefficients.
 		# TODO: Incorporate the relevant Lorentz kernel factors here.
 		n = np.arange(N)
-		T = np.cos(n[None,:] * np.arccos(ω[:, None])) / (np.pi * np.sqrt(1 - ω[:, None]**2))
-		T[:, 1:] *= 2
+		T = (2.0/np.pi) * np.cos(n[None,:] * np.arccos(ω[:, None])) / np.sqrt(1 - ω[:, None]**2)
+		T[:, 0] /= 2
 
-		# Prepare storage for the Green functions G(ω_m) at Chebyshev nodes ω_m.
-		G = [[] for m in range(2*N)]
+		# Perform a Chebyshev expansion for a given Green function block.
+		def expand(args):
+			# Unpack the provided arguments
+			I_k, H_k, P_k = args
 
-		print("[green]:: Chebyshev expansion of the Green function[/green]")
-		for I_k, H_k, P_k in self.subspace():
 			# Initialize the first two Chebyshev matrices needed to start recursion.
 			G_k0 = I_k
 			G_kn = H @ I_k
@@ -319,9 +319,14 @@ class System:
 				for m, G_km in enumerate(G_k):
 					G_km.data += T[m, n] * GH_kn.data
 
-			# Accumulate the results.
-			for m, G_km in enumerate(G_k):
-				G[m].append(G_km)
+			return G_k
+
+		# Perform the actual Chebyshev expansion.
+		print("[green]:: Chebyshev expansion of the Green function[/green]")
+		G = [*map(expand, self.subspace())]
+
+		# Transpose G[k][m] into G[m][k].
+		G = [*map(list, zip(*G))]
 
 		# Stack the slices [G_k(ω_m)] into full matrices G(ω_m).
 		for m, G_m in enumerate(G):
