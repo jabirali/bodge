@@ -1,24 +1,6 @@
 #!/usr/bin/env python
 
-"""
-This is a test script that constructs a simple tight-binding Hamiltonian for
-a superconducting system and subsequently calculates the density of states.
-"""
-from multiprocessing import Pool
-import sys
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-
-from tqdm import tqdm
-
 from pybdg import *
-
-
-
-
-# X = system.diagonalize()
-# Y = system.spectralize([0.0, 1.0, 2.0])
 
 if __name__ == "__main__":
 	t = 1.0
@@ -37,8 +19,7 @@ if __name__ == "__main__":
 		for i, j in lattice.neighbors():
 			H[i, j] = -t * σ0
 
-	kernel, blocks = system.chebyshev(200)
-	with Pool(4) as p:
-		G = p.map(kernel, blocks)
+	solver = Solver(system)
+	G = solver.run(8)
 
 	print(G)
