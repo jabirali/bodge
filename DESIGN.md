@@ -26,6 +26,9 @@ When it comes to the Chebyshev expansion, the conceptually easiest approach is t
 
 In this implementation, I've therefore implemented a blockwise expansion. This works well.
 
+## Parallelization
+I've tried `joblib` with all backends and `multiprocessing` library. The time used by these two are the same with the `multiprocessing` backend, while the `loky` backend is \~6% faster and the `threading` backend is \~30% slower. However, no `__main__` guard is required by `loky`, and `joblib` is perhaps easier to tune.
+
 ## Spectral radius
 To use the Chebyshev expansion of the Green function, we need to compress the eigenvalue spectrum of the Hamiltonian to (-1, +1). There are many bounds available for this *spectral radius*, but a particularly efficient one turns out to be the 1-norm of the matrix. In realistic test cases on a 100x100x10 lattice, it takes only 0.2s to calculate this quantity, yet the highest eigenvalue is in practice 92-98% of this upper bound.
 

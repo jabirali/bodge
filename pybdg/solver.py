@@ -1,5 +1,5 @@
 from scipy.sparse import bsr_matrix, dia_matrix
-from multiprocessing import Pool
+from joblib import Parallel, delayed
 
 import numpy as np
 
@@ -10,7 +10,7 @@ class Solver:
 	expansion, `moments` sets the number of Chebyshev matrices to include in
 	the expansion, and `system` provides a previously configured Hamiltonian.
 	"""
-	def __init__(self, system, moments=200, radius=4, blocksize=1024):
+	def __init__(self, system, moments=200, radius=4, blocksize=512):
 		# Sanity checks for the arguments.
 		if radius < 1:
 			raise RuntimeError("Invalid radius: Must be a positive integer.")
@@ -99,8 +99,7 @@ class Solver:
 		return G_k
 
 	def run(self, proc=4):
-		with Pool(proc) as p:
-			G = p.map(self, range(self.blocks))
+		G = Parallel(n_jobs=proc, backend='loky')(delayed(self)(block) for block in range(self.blocks))
 
 		# Transpose G
 
