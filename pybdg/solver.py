@@ -1,5 +1,6 @@
 from scipy.sparse import bsr_matrix, dia_matrix
-from joblib import Parallel, delayed
+from multiprocessing import Pool, cpu_count
+from tqdm import trange
 
 import numpy as np
 
@@ -10,7 +11,7 @@ class Solver:
 	expansion, `moments` sets the number of Chebyshev matrices to include in
 	the expansion, and `system` provides a previously configured Hamiltonian.
 	"""
-	def __init__(self, system, moments=200, radius=4, blocksize=512):
+	def __init__(self, system, moments=200, radius=4, blocksize=1024):
 		# Sanity checks for the arguments.
 		if radius < 1:
 			raise RuntimeError("Invalid radius: Must be a positive integer.")
@@ -96,13 +97,21 @@ class Solver:
 			for m, G_km in enumerate(G_k):
 				G_km.data += T[m, n] * GH_kn.data
 
-		return G_k
+		return k, G_k
 
-	def run(self, proc=4):
-		G = Parallel(n_jobs=proc, backend='loky')(delayed(self)(block) for block in range(self.blocks))
+	def run(self, jobs=None):
+		if jobs is None:
+			jobs = cpu_count()
 
-		# Transpose G
+		G = {}
+		with Pool(jobs) as p:
+			for k, G_k in p.imap(self, trange(self.blocks)):
+				G[k] = G_k
 
-		# Hstack G
+		# TODO: Transpose G[k][m]
+
+		# TODO: Hstack G[m][:]
+
+		# TODO: Save to HDF5.
 
 		return G
