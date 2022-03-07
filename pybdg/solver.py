@@ -9,7 +9,14 @@ from .lattice import *
 from .system import *
 
 class Solver:
-    """This class facilitates a Chebyshev expansion of the Green functions.
+    """This class facilitates a Chebyshev expansion of Green functions.
+
+    Specifically, it calculates the scaled function `a(ω) = A(ω) / Nπ sqrt(1-ω²)`,
+    where `A(ω) = [Gᴬ(ω) - Gᴿ(ω)] / 2πi` is the spectral function. This is defined
+    such that summing up the `a(ω_k)` at the Chebyshev nodes `ω_k` is equivalent
+    to integrating `A(ω)` over the same range. This is useful for calculating e.g.
+    an order parameter or current, but when spectral quantities such as the
+    density of states are desired, this requires a scaling by `Nπ sqrt(1-ω²)`.
 
     The `radius` determines the size of the Local Krylov subspace used for the
     expansion, `moments` sets the number of Chebyshev matrices to include in
@@ -23,15 +30,16 @@ class Solver:
         if system.shape[1] % blocksize != 0:
             raise RuntimeError("Invalid blocksize: Must divide the Hamiltonian dimension.")
 
-        # Chebyshev nodes {ω_m} where we will calculate the Green function.
-        k = np.arange(2 * moments)
-        ω = np.cos(π * (2 * k + 1) / (4 * moments))
+        # Chebyshev nodes {ω_m} where we will calculate the spectral function.
+        N = moments
+        k = np.arange(2 * N)
+        ω = np.cos(π * (2 * k + 1) / (4 * N))
 
         # Calculate the corresponding Chebyshev transform coefficients.
         # TODO: Incorporate the relevant Lorentz kernel factors here.
-        n = np.arange(moments)
-        T = (2/π) * np.cos(n[None, :] * np.arccos(ω[:, None])) / np.sqrt(1 - ω[:, None] ** 2)
-        T[:, 0] /= 2
+        n = np.arange(N)
+        T = np.cos(n[None, :] * np.arccos(ω[:, None])) / N
+        T[:, 1:] *= 2
 
         # Prepare a cheap surrogate from the Hamiltonian.
         H = sp.bsr_matrix(system.hamiltonian, dtype=np.int8)
@@ -121,5 +129,7 @@ class Solver:
             ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], 'bsr')
             for m, ω_m in enumerate(self.energies)
         }
+
+        # TODO: Calculation of integrals.
 
         return A
