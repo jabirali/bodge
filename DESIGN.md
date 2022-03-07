@@ -24,7 +24,7 @@ For now, I have chosen to use `bsr_matrix` over `bsr_array`, even though this in
 ## Blockwise expansion
 When it comes to the Chebyshev expansion, the conceptually easiest approach is to generate the Chebyshev expansion for the whole matrix simultaneously. However, as the intermediate matrices are usually hundreds of times larger than the Hamiltonian, memory becomes a problem for large systems. The other extreme is to process one unit vector at a time instead of the whole identity matrix, as done by e.g. Nagai (2020). However, using a high-level language like Python, the sparse matrix construction cost becomes dominant, and the numerics slow to a crawl.
 
-In this implementation, I've therefore implemented a blockwise expansion. This works well.
+In this implementation, I've therefore implemented a blockwise expansion. Blocksize of 1024 or 2048 appears empirically to be most efficient – on my system, higher block sizes reduces CPU utilization (likely due to a cache or memory bottleneck), while lower blocksizes also becomes inefficient (likely due to more overhead being in Python rather than in C/Fortran libraries).
 
 ## Parallelization
 I've tried `joblib` with all backends and `multiprocessing` library. The time used by these two are the same with the `multiprocessing` backend, while the `loky` backend is \~6% faster and the `threading` backend is \~30% slower. However, no `__main__` guard is required by `loky`, and `joblib` is perhaps easier to tune.

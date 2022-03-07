@@ -63,7 +63,7 @@ class Solver:
 
 		# Generate the k'th slice of the projection mask.
 		P_k = H_k
-		for r in range(2, self.radius):
+		for _ in range(2, self.radius):
 			P_k = M @ P_k
 		P_k.data[...] = 1
 

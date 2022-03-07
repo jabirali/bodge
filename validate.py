@@ -9,7 +9,7 @@ t = 1.0
 m3 = t/5
 
 if __name__ == "__main__":
-	lattice = Cubic((32, 32, 32))
+	lattice = Cubic((24, 16, 16))
 	system = System(lattice)
 
 	with system as (H, Δ):
@@ -20,9 +20,9 @@ if __name__ == "__main__":
 		for i, j in lattice.neighbors():
 			H[i, j] = -t * σ0
 
-	# print(system.diagonalize())
-	solver = Solver(system)
-	G = solver.run()
+	print(system.diagonalize())
+	# solver = Solver(system)
+	# G = solver.run()
 	# G = solver.run(7)
 
-	print(G)
+	# print(G)
