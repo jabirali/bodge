@@ -9,7 +9,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = Cubic((24, 16, 16))
+    lattice = Cubic((32, 8, 8))
     system = System(lattice)
 
     with system as (H, Δ):
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     # print(system.diagonalize())
     solver = Solver(system)
-    G = solver.run()
+    A = solver.run()
     # G = solver.run(7)
 
-    # print(G)
+    print(A[-0.9999922893814706])

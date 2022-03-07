@@ -6,6 +6,7 @@ from tqdm import trange
 
 from .consts import *
 from .lattice import *
+from .system import *
 
 class Solver:
     """This class facilitates a Chebyshev expansion of the Green functions.
@@ -15,7 +16,7 @@ class Solver:
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, system, moments=200, radius=4, blocksize=1024):
+    def __init__(self, system: System, moments=200, radius=4, blocksize=1024):
         # Sanity checks for the arguments.
         if radius < 1:
             raise RuntimeError("Invalid radius: Must be a positive integer.")
@@ -109,15 +110,16 @@ class Solver:
         if jobs is None:
             jobs = cpu_count()
 
-        G = {}
+        # Calculate the spectral function in parallel.
+        A = {}
         with Pool(jobs) as p:
-            for k, G_k in p.imap(self, trange(self.blocks)):
-                G[k] = G_k
+            for k, A_k in p.imap(self, trange(self.blocks)):
+                A[k] = A_k
 
-        # TODO: Transpose G[k][m]
+        # Transpose and merge the calculated matrices.
+        A = {
+            ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], 'bsr')
+            for m, ω_m in enumerate(self.energies)
+        }
 
-        # TODO: Hstack G[m][:]
-
-        # TODO: Save to HDF5.
-
-        return G
+        return A
