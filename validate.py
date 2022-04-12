@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from pybdg import *
+from bodge import *
 
 t = 1.0
 μ = +3 * t

@@ -1,4 +1,4 @@
-name: pybdg
+name: bodge
 channels:
   - conda-forge
   - defaults

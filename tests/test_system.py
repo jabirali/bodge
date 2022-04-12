@@ -2,8 +2,8 @@ import numpy as np
 
 from scipy.linalg import eigh
 
-from pybdg.lattice import *
-from pybdg.system import *
+from bodge.lattice import *
+from bodge.system import *
 
 
 class TestSystem:

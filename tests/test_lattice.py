@@ -1,4 +1,4 @@
-from pybdg.lattice import *
+from bodge.lattice import *
 
 
 class TestCubic:
