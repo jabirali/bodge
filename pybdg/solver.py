@@ -2,13 +2,14 @@ from multiprocessing import Pool, cpu_count
 
 import numpy as np
 import scipy.sparse as sp
+import pandas as pd
 from tqdm import trange
 
 from .consts import *
 from .lattice import *
 from .system import *
 
-class Solver:
+class Chebyshev:
     """This class facilitates a Chebyshev expansion of Green functions.
 
     Specifically, it calculates the scaled function `a(ω) = A(ω) / Nπ sqrt(1-ω²)`,
@@ -23,7 +24,7 @@ class Solver:
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, system: System, moments=200, radius=4, blocksize=1024):
+    def __init__(self, system: Hamiltonian, moments=200, radius=4, blocksize=1024, integrate=True):
         # Sanity checks for the arguments.
         if radius < 1:
             raise RuntimeError("Invalid radius: Must be a positive integer.")
@@ -114,7 +115,7 @@ class Solver:
 
         return k, G_k
 
-    def run(self, jobs=None):
+    def run(self, integrate=True, jobs=None):
         if jobs is None:
             jobs = cpu_count()
 

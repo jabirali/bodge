@@ -3,7 +3,7 @@ import numpy as np
 from typing import Tuple
 
 
-class Cubic:
+class Cube:
     """Representation of a cubic atomic lattice in three dimensions.
 
     This class provides convenience methods for iterating over all sites
@@ -45,9 +45,9 @@ class Cubic:
         nearest-neighbor pairs along a certain direction, which is useful
         when e.g. specifying hopping terms for spin-orbit coupling.
 
-        Note that this returns pairs only in the "increasing" direction.
-        For instance, it yields ((0,0,0), (0,0,1)) but ((0,0,1), (0,0,0)),
-        such that any inverse hopping terms must be dealt with yourself.
+        Note that this returns pairs only in the "increasing" direction:
+        It yields e.g. ((0,0,0), (0,0,1)) but not ((0,0,1), (0,0,0)),
+        so any inverse hopping terms must be dealt with yourself.
         """
         if axis is None:
             # Neighbors along all axes.

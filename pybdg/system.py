@@ -7,9 +7,9 @@ from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
 from .consts import *
-from .lattice import Cubic
+from .lattice import Cube
 
-class System:
+class Hamiltonian:
     """Representation of a physical system in the tight-binding limit.
 
     This class can be used to construct Hamiltonian matrices for condensed
@@ -23,7 +23,7 @@ class System:
     the construction of megadimensional tight-binding systems (10⁶ lattice sites).
     """
 
-    def __init__(self, lattice: Cubic):
+    def __init__(self, lattice: Cube):
         # Lattice instance used as basis coordinates for the system.
         self.lattice = lattice
 

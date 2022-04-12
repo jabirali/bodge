@@ -6,9 +6,9 @@ from .solver import *
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.0.2"
 __all__ = [
-    "Cubic",
-    "System",
-    "Solver",
+    "Cube",
+    "Hamiltonian",
+    "Chebyshev",
     "σ0",
     "σ1",
     "σ2",

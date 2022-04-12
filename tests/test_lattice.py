@@ -3,7 +3,7 @@ from pybdg.lattice import *
 
 class TestCubic:
     def test_sites(self):
-        lat = Cubic((3, 5, 7))
+        lat = Cube((3, 5, 7))
         for ind, site in enumerate(lat.sites()):
             # Verify that indexing is contiguous.
             assert ind == lat[site]
@@ -17,7 +17,7 @@ class TestCubic:
         assert ind == 3 * 5 * 7 - 1
 
     def test_neighbors(self):
-        lat = Cubic((2, 3, 5))
+        lat = Cube((2, 3, 5))
         for (x1, y1, z1), (x2, y2, z2) in lat.neighbors(axis=0):
             # Verify neighbors along the x-axis.
             assert x2 == x1 + 1 and y2 == y1 and z2 == z1
