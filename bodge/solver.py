@@ -9,6 +9,7 @@ from .consts import *
 from .lattice import *
 from .system import *
 
+
 class Chebyshev:
     """This class facilitates a Chebyshev expansion of Green functions.
 
@@ -127,7 +128,7 @@ class Chebyshev:
 
         # Transpose and merge the calculated matrices.
         A = {
-            ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], 'bsr')
+            ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], "bsr")
             for m, ω_m in enumerate(self.energies)
         }
 

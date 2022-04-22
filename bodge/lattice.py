@@ -25,11 +25,7 @@ class Cube:
 
     def __getitem__(self, index):
         """Convert between coordinate and index notations."""
-        return (
-            index[2]
-            + index[1] * self.shape[2]
-            + index[0] * self.shape[1] * self.shape[2]
-        )
+        return index[2] + index[1] * self.shape[2] + index[0] * self.shape[1] * self.shape[2]
 
     def sites(self):
         """Generator for iterating over all sites in the lattice."""

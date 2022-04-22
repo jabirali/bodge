@@ -9,6 +9,7 @@ from tqdm import tqdm
 from .consts import *
 from .lattice import Cube
 
+
 class Hamiltonian:
     """Representation of a physical system in the tight-binding limit.
 
@@ -214,12 +215,8 @@ class Hamiltonian:
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(8, 8))
-        plt.spy(
-            self.hamiltonian, precision="present", markersize=1, marker="o", color="k"
-        )
-        plt.title(
-            "Hamiltonian elements stored in the Block Sparse Row (BSR) representation"
-        )
+        plt.spy(self.hamiltonian, precision="present", markersize=1, marker="o", color="k")
+        plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
         plt.xticks([])
         plt.yticks([])
 
