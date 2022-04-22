@@ -4,6 +4,8 @@ channels:
   - defaults
 dependencies:
   - python
+  - black
+  - isort
   - matplotlib
   - numba
   - numpy

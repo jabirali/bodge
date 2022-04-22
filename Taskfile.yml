@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  test:
+    summary: Execute the unit tests.
+    cmds:
+      - python -m pytest tests
+  fmt:
+    summary: Reformat the source code.
+    cmds:
+      - isort .
+      - black --line-length 99 .

@@ -1,7 +1,7 @@
 from .consts import *
 from .lattice import *
-from .system import *
 from .solver import *
+from .system import *
 
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.0.2"

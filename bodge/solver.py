@@ -1,8 +1,8 @@
 from multiprocessing import Pool, cpu_count
 
 import numpy as np
-import scipy.sparse as sp
 import pandas as pd
+import scipy.sparse as sp
 from tqdm import trange
 
 from .consts import *
