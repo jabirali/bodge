@@ -9,4 +9,4 @@ tasks:
     summary: Reformat the source code.
     cmds:
       - isort .
-      - black --line-length 99 .
+      - black .
