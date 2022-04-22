@@ -4,9 +4,9 @@ from .solver import *
 from .system import *
 
 __author__ = "Jabir Ali Ouassou"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __all__ = [
-    "Cube",
+    "CubicLattice",
     "Hamiltonian",
     "Chebyshev",
     "σ0",

@@ -6,7 +6,7 @@ from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
 from .consts import *
-from .lattice import CubicLattice
+from .lattice import Lattice
 
 
 class Hamiltonian:
@@ -23,7 +23,7 @@ class Hamiltonian:
     the construction of megadimensional tight-binding systems (10⁶ lattice sites).
     """
 
-    def __init__(self, lattice: CubicLattice):
+    def __init__(self, lattice: Lattice):
         # Lattice instance used as basis coordinates for the system.
         self.lattice = lattice
 
@@ -38,14 +38,14 @@ class Hamiltonian:
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The fastest alternative for this is the COO format.
         print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
-        pairs = (1 + lattice.bonds) * lattice.size
+        pairs = (1 + lattice.ligancy) * lattice.size
 
         rows = np.zeros(pairs, dtype=np.int64)
         cols = np.zeros(pairs, dtype=np.int64)
         data = np.repeat(np.complex128(1), pairs)
 
         k = 0
-        for _i, _j in lattice.relevant():
+        for _i, _j in lattice.terms():
             i, j = 4 * lattice[_i], 4 * lattice[_j]
 
             rows[k] = i

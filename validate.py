@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-
 from bodge import *
 
 t = 1.0
@@ -10,7 +8,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = Cube((32, 8, 8))
+    lattice = CubicLattice((32, 8, 8))
     system = Hamiltonian(lattice)
     solver = Chebyshev(system)
 
@@ -19,7 +17,7 @@ if __name__ == "__main__":
             H[i, i] = -μ * σ0 - m3 * σ3
             Δ[i, i] = Δ0 * jσ2
 
-        for i, j in lattice.neighbors():
+        for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
     result = solver.run()

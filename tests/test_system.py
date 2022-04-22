@@ -21,7 +21,7 @@ class TestSystem:
     def test_hermitian(self):
         # Instantiate a somewhat dense complex Hamiltonian. Note that
         # the submatrices need to be Hermitian for the whole to be so.
-        lattice = Cube((3, 5, 7))
+        lattice = CubicLattice((3, 5, 7))
         system = Hamiltonian(lattice)
 
         with system as (H, Δ):
@@ -29,7 +29,7 @@ class TestSystem:
                 H[i, i] = 1 * σ3 + 2 * σ2
                 Δ[i, i] = 5 * σ0 - 3 * σ2
 
-            for i, j in lattice.neighbors():
+            for i, j in lattice.bonds():
                 H[i, j] = 3 * σ0 - 4 * σ2
                 Δ[i, j] = 2 * σ3 + 5 * σ2
 
@@ -39,7 +39,7 @@ class TestSystem:
 
     def test_eigenvectors(self):
         # Instantiate a system with superconductivity and a barrier.
-        lattice = Cube((10, 10, 1))
+        lattice = CubicLattice((10, 10, 1))
         system = Hamiltonian(lattice)
 
         with system as (H, Δ):
@@ -49,7 +49,7 @@ class TestSystem:
                     Δ[i, i] = 1 * jσ2
                 elif i[0] > 3:
                     H[i, i] += 6 * σ0
-            for i, j in lattice.neighbors():
+            for i, j in lattice.bonds():
                 H[i, j] = -1 * σ0
 
         # Calculate the eigenvalues the manual way.
@@ -77,7 +77,7 @@ class TestSystem:
 
     def test_sparsity(self):
         # Instantiate a somewhat random test system.
-        lattice = Cube((3, 5, 7))
+        lattice = CubicLattice((3, 5, 7))
         system = Hamiltonian(lattice)
 
         with system as (H, Δ):
@@ -85,7 +85,7 @@ class TestSystem:
                 H[i, i] = 1 * σ3 + 2 * σ2
                 Δ[i, i] = 5 * σ0 - 3 * σ2
 
-            for i, j in lattice.neighbors():
+            for i, j in lattice.bonds():
                 H[i, j] = 3 * σ0 - 4 * σ2
                 Δ[i, j] = 2 * σ3 + 5 * σ2
 

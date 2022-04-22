@@ -3,14 +3,23 @@ import numpy as np
 from .consts import *
 
 
-class CubicLattice:
-    """Representation of a cubic atomic lattice in three dimensions.
+class Lattice:
+    """Representation of a general three-dimensional lattice.
 
-    This class provides convenience methods for iterating over all sites
-    or neighbors in a lattice, as well as methods for converting between
-    index (i1, i2) and coordinate ((x1, y1, z1), (x2, y2, z2)) notations.
-    This simplifies the process of preparing lattice Hamiltonian matrices
-    using flat indices while retaining the convenience of 3D coordinates.
+    This is an abstract class which defines an API for iterating over all the
+    sites (atoms) and bonds (nearest neighbors) in a lattice. In the language
+    of graph theory, this class lets us traverse all the nodes and links of a
+    simple graph. The actual graph traversal must be defined by subclassing
+    `Lattice` and implementing all methods that raise `NotImplementedError`.
+    Note that the `.bonds` method should yield the links in a "sorted" way:
+    i.e. it should yield ((0,0,0), (0,0,1)) but not ((0,0,1), (0,0,0)).
+
+    Note that you are free to implement optional arguments to these methods.
+    For instance, it may be useful to iterate over one sublattice at a time
+    when calling `.sites` on a honeycomb lattice, or to iterate over the
+    x- and y-axes separately when calling `.bonds` on a rectangular lattice.
+    However, it must be possible to call both methods without additional
+    arguments to traverse all sites and bonds in the lattice, respectively.
     """
 
     def __init__(self, shape: Coord):
@@ -21,35 +30,54 @@ class CubicLattice:
         self.size = np.prod(shape)
 
         # Number of nearest neighbors per atom.
-        self.bonds = np.sum([2 for s in shape if s > 1], dtype=np.int64)
+        self.ligancy = np.sum([2 for s in self.shape if s > 1], dtype=np.int64)
 
-    def __getitem__(self, index: Coord) -> Index:
+    def __getitem__(self, coord: Coord) -> Index:
+        """Syntactic sugar for converting coordinates into indices."""
+        return self.index(coord)
+
+    def index(self, coord: Coord) -> Index:
         """Convert between coordinate and index notations."""
-        return index[2] + index[1] * self.shape[2] + index[0] * self.shape[1] * self.shape[2]
+        raise NotImplementedError
 
     def sites(self) -> Iterable[Coord]:
-        """Generator for iterating over all sites in the lattice."""
+        """Iterate over all atomic sites in the lattice."""
+        raise NotImplementedError
+
+    def bonds(self) -> Iterable[Coords]:
+        """Iterate over all atomic bonds in the lattice."""
+        raise NotImplementedError
+
+    def terms(self) -> Iterable[Coords]:
+        """Iterate over all interactions in the lattice."""
+        for index in self.sites():
+            yield (index, index)
+        for indices in self.bonds():
+            yield indices
+
+
+class CubicLattice(Lattice):
+    """Concrete representation of a cubic lattice."""
+
+    def __init__(self, shape: Coord):
+        # Initialize superclass.
+        super().__init__(shape)
+
+    def index(self, coord: Coord) -> Index:
+        return coord[2] + coord[1] * self.shape[2] + coord[0] * self.shape[1] * self.shape[2]
+
+    def sites(self) -> Iterable[Coord]:
         for x in range(self.shape[0]):
             for y in range(self.shape[1]):
                 for z in range(self.shape[2]):
                     yield (x, y, z)
 
-    def neighbors(self, axis: Optional[int] = None) -> Iterable[Coords]:
-        """Generator for iterating over all neighbors in the lattice.
-
-        The argument `axis` specifies whether we are only interested in
-        nearest-neighbor pairs along a certain direction, which is useful
-        when e.g. specifying hopping terms for spin-orbit coupling.
-
-        Note that this returns pairs only in the "increasing" direction:
-        It yields e.g. ((0,0,0), (0,0,1)) but not ((0,0,1), (0,0,0)),
-        so any inverse hopping terms must be dealt with yourself.
-        """
+    def bonds(self, axis=None) -> Iterable[Coords]:
         if axis is None:
             # Neighbors along all axes.
-            yield from self.neighbors(axis=2)
-            yield from self.neighbors(axis=1)
-            yield from self.neighbors(axis=0)
+            yield from self.bonds(axis=2)
+            yield from self.bonds(axis=1)
+            yield from self.bonds(axis=0)
         elif axis == 0:
             # Neighbors along x-axis.
             for x in range(self.shape[0] - 1):
@@ -68,14 +96,3 @@ class CubicLattice:
                 for y in range(self.shape[1]):
                     for z in range(self.shape[2] - 1):
                         yield (x, y, z), (x, y, z + 1)
-
-    def relevant(self) -> Iterable[Coords]:
-        """Generator for all relevant coordinate pairs in the lattice.
-
-        This is useful when one might want to loop over both the on-site
-        interactions (i, i) and nearest-neighbor interactions (i, j).
-        """
-        for index in self.sites():
-            yield (index, index)
-        for indices in self.neighbors():
-            yield indices
