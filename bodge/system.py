@@ -6,7 +6,7 @@ from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
 from .consts import *
-from .lattice import Cube
+from .lattice import CubicLattice
 
 
 class Hamiltonian:
@@ -23,7 +23,7 @@ class Hamiltonian:
     the construction of megadimensional tight-binding systems (10⁶ lattice sites).
     """
 
-    def __init__(self, lattice: Cube):
+    def __init__(self, lattice: CubicLattice):
         # Lattice instance used as basis coordinates for the system.
         self.lattice = lattice
 

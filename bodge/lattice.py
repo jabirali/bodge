@@ -1,9 +1,9 @@
-from typing import Tuple
-
 import numpy as np
 
+from .consts import *
 
-class Cube:
+
+class CubicLattice:
     """Representation of a cubic atomic lattice in three dimensions.
 
     This class provides convenience methods for iterating over all sites
@@ -13,7 +13,7 @@ class Cube:
     using flat indices while retaining the convenience of 3D coordinates.
     """
 
-    def __init__(self, shape: Tuple[int, int, int]):
+    def __init__(self, shape: Coord):
         # Number of atoms per lattice dimension.
         self.shape = shape
 
@@ -23,18 +23,18 @@ class Cube:
         # Number of nearest neighbors per atom.
         self.bonds = np.sum([2 for s in shape if s > 1], dtype=np.int64)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Coord) -> Index:
         """Convert between coordinate and index notations."""
         return index[2] + index[1] * self.shape[2] + index[0] * self.shape[1] * self.shape[2]
 
-    def sites(self):
+    def sites(self) -> Iterable[Coord]:
         """Generator for iterating over all sites in the lattice."""
         for x in range(self.shape[0]):
             for y in range(self.shape[1]):
                 for z in range(self.shape[2]):
                     yield (x, y, z)
 
-    def neighbors(self, axis=None):
+    def neighbors(self, axis: Optional[int] = None) -> Iterable[Coords]:
         """Generator for iterating over all neighbors in the lattice.
 
         The argument `axis` specifies whether we are only interested in
@@ -69,7 +69,7 @@ class Cube:
                     for z in range(self.shape[2] - 1):
                         yield (x, y, z), (x, y, z + 1)
 
-    def relevant(self):
+    def relevant(self) -> Iterable[Coords]:
         """Generator for all relevant coordinate pairs in the lattice.
 
         This is useful when one might want to loop over both the on-site
