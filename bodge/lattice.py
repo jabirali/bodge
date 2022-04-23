@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 
 from .consts import *
@@ -24,20 +26,20 @@ class Lattice:
 
     def __init__(self, shape: Coord):
         # Number of atoms per lattice dimension.
-        self.shape = shape
+        self.shape: Coord = shape
 
         # Number of atoms in the lattice.
-        self.size = np.prod(shape)
+        self.size: Index = np.prod(shape)
 
         # Number of nearest neighbors per atom.
-        self.ligancy = np.sum([2 for s in self.shape if s > 1], dtype=np.int64)
+        self.ligancy: int = np.sum([2 for s in self.shape if s > 1], dtype=np.int64)
 
     def __getitem__(self, coord: Coord) -> Index:
         """Syntactic sugar for converting coordinates into indices."""
         return self.index(coord)
 
     def index(self, coord: Coord) -> Index:
-        """Convert between coordinate and index notations."""
+        """Convert a 3D site coordinate to a 1D index."""
         raise NotImplementedError
 
     def sites(self) -> Iterable[Coord]:

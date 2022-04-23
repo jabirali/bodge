@@ -1,5 +1,3 @@
-from typing import *
-
 import numpy as np
 
 # Fundamental constants.
@@ -19,5 +17,5 @@ jσ3 = 1j * σ3
 
 # Compact notation for common datatypes.
 Index = int
-Coord = Tuple[int, int, int]
-Coords = Tuple[Coord, Coord]
+Coord = tuple[int, int, int]
+Coords = tuple[Coord, Coord]
