@@ -12,6 +12,8 @@ if __name__ == "__main__":
     system = Hamiltonian(lattice)
     solver = Chebyshev(system)
 
+    print(lattice.ligancy)
+
     with system as (H, Δ):
         for i in lattice.sites():
             H[i, i] = -μ * σ0 - m3 * σ3
@@ -24,5 +26,4 @@ if __name__ == "__main__":
 
     # TODO: Fix so that `solver.run()` uses up-to-date Hamiltonian.
     # G = solver.run(7)
-
     print(A[-0.9999922893814706])

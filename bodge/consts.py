@@ -14,8 +14,3 @@ jσ0 = 1j * σ0
 jσ1 = 1j * σ1
 jσ2 = 1j * σ2
 jσ3 = 1j * σ3
-
-# Compact notation for common datatypes.
-Index = int
-Coord = tuple[int, int, int]
-Coords = tuple[Coord, Coord]

@@ -20,12 +20,12 @@ class Hamiltonian:
     lattice coordinates instead of matrix indices to fill out these elements.
 
     Internally, this constructs a block-sparse matrix (BSR format), enabling
-    the construction of megadimensional tight-binding systems (10⁶ lattice sites).
+    the construction of megadimensional tight-binding systems (>10^6 sites).
     """
 
     def __init__(self, lattice: Lattice):
         # Lattice instance used as basis coordinates for the system.
-        self.lattice = lattice
+        self.lattice: Lattice = lattice
 
         # Number of lattice points that the system has. The integers in front of
         # the lattice size are the local degrees of freedom at each lattice site.

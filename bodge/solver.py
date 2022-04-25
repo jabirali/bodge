@@ -25,7 +25,14 @@ class Chebyshev:
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, system: Hamiltonian, moments=200, radius=4, blocksize=1024, integrate=True):
+    def __init__(
+        self,
+        system: Hamiltonian,
+        moments: int = 200,
+        radius: int = 4,
+        blocksize: int = 1024,
+        integrate: bool = True,
+    ):
         # Sanity checks for the arguments.
         if radius < 1:
             raise RuntimeError("Invalid radius: Must be a positive integer.")
@@ -116,9 +123,9 @@ class Chebyshev:
 
         return k, G_k
 
-    def run(self, integrate=True, jobs=None):
-        if jobs is None:
-            jobs = cpu_count()
+    def run(self, integrate: bool = True):
+        # Determine number of processes to use.
+        jobs = cpu_count()
 
         # Calculate the spectral function in parallel.
         A = {}

@@ -33,3 +33,8 @@ I've tried `joblib` with all backends and `multiprocessing` library. The time us
 To use the Chebyshev expansion of the Green function, we need to compress the eigenvalue spectrum of the Hamiltonian to (-1, +1). There are many bounds available for this *spectral radius*, but a particularly efficient one turns out to be the 1-norm of the matrix. In realistic test cases on a 100x100x10 lattice, it takes only 0.2s to calculate this quantity, yet the highest eigenvalue is in practice 92-98% of this upper bound.
 
 I also tried using `scipy.sparse.linalg.eigsh`, but it takes orders of magnitude more time to finish, and even then provides unreliable results. It could likely be tuned to do better, but the speed would be an issue.
+
+## Gradual typing
+I've decided to follow these guidelines:
+- Types specified for all method/function arguments, to make it easier to IDE autocomplete their usage.
+- Types specified for `self.*` variables defined in `__init__` when the class is meant to be derived.

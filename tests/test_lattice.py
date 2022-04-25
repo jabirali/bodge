@@ -1,7 +1,14 @@
+from pytest import raises
+
 from bodge.lattice import *
 
 
 class TestCubic:
+    def test_super(self):
+        # Superclass should not be constructable.
+        with raises(ValueError) as e:
+            lat = Lattice((1, 1, 1))
+
     def test_sites(self):
         lat = CubicLattice((3, 5, 7))
         for ind, site in enumerate(lat.sites()):
@@ -16,7 +23,7 @@ class TestCubic:
         # Verify that number of elements is correct.
         assert ind == 3 * 5 * 7 - 1
 
-    def test_neighbors(self):
+    def test_bonds(self):
         lat = CubicLattice((2, 3, 5))
         for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=0):
             # Verify neighbors along the x-axis.
