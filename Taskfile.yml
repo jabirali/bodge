@@ -1,6 +1,10 @@
 version: '3'
 
 tasks:
+  auto:
+    summary: Automatically reformat and retest.
+    cmds:
+      - ls */*.py | entr sh -c "clear; task fmt; task test"
   test:
     summary: Execute the unit tests.
     cmds:
