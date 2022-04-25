@@ -66,10 +66,7 @@ class Lattice:
 
 
 class CubicLattice(Lattice):
-    """Concrete representation of a cubic lattice."""
-
-    def __init__(self, shape: Coord):
-        super().__init__(shape)
+    """Concrete representation of a primitive cubic lattice."""
 
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
