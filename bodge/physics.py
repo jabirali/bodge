@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.sparse as sp
 from rich import print
 from scipy.linalg import eigh, inv
@@ -6,7 +7,7 @@ from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
 from .consts import *
-from .lattice import Lattice
+from .lattice import *
 
 
 class Hamiltonian:
@@ -29,25 +30,25 @@ class Hamiltonian:
 
         # Number of lattice points that the system has. The integers in front of
         # the lattice size are the local degrees of freedom at each lattice site.
-        self.shape = (4 * lattice.size, 4 * lattice.size)
+        self.shape: Indices = (4 * lattice.size, 4 * lattice.size)
 
         # Scale factor used to compress the Hamiltonian spectrum to (-1, +1).
         # This must be set to an upper bound for the Hamiltonian spectral radius.
-        self.scale = 1.0
+        self.scale: float = 1.0
 
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The fastest alternative for this is the COO format.
         print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
 
-        pairs = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
+        size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
 
-        rows = np.zeros(pairs, dtype=np.int64)
-        cols = np.zeros(pairs, dtype=np.int64)
-        data = np.repeat(np.complex128(1), pairs)
+        rows = np.zeros(size, dtype=np.int64)
+        cols = np.zeros(size, dtype=np.int64)
+        data = np.repeat(np.complex128(1), size)
 
         k = 0
-        for _i, _j in lattice:
-            i, j = 4 * lattice[_i], 4 * lattice[_j]
+        for r1, r2 in lattice:
+            i, j = 4 * lattice[r1], 4 * lattice[r2]
 
             rows[k] = i
             cols[k] = j
@@ -58,18 +59,18 @@ class Hamiltonian:
                 cols[k] = i
                 k += 1
 
-        self.hamiltonian = sp.coo_matrix((data, (rows, cols)), shape=self.shape)
+        skeleton = sp.coo_matrix((data, (rows, cols)), shape=self.shape)
 
         # Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
         # most efficient format for handling matrix-matrix multiplications numerically.
         # We can then discard all the dummy entries used during matrix construction.
-        self.hamiltonian = self.hamiltonian.tobsr((4, 4))
+        self.hamiltonian: sp.bsr_matrix = skeleton.tobsr((4, 4))
         self.hamiltonian.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data = self.hamiltonian.data
+        self.data: npt.NDArray[np.complex128] = self.hamiltonian.data
 
-    def __enter__(self):
+    def __enter__(self) -> tuple[dict[Coords, npt.NDArray], dict[Coords, npt.NDArray]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
@@ -81,7 +82,6 @@ class Hamiltonian:
 
         Note that the `__exit__` method is responsible for actually transferring
         all the elements of H and Δ to the correct locations in the Hamiltonian.
-
         """
         # Restore the Hamiltonian energy scale.
         self.data *= self.scale
@@ -148,7 +148,7 @@ class Hamiltonian:
         self.hopp = {}
         self.pair = {}
 
-    def index(self, row, col):
+    def index(self, row: Coord, col: Coord) -> Index:
         """Determine the sparse matrix index corresponding to block (row, col).
 
         This can be used to access `self.data[index, :, :]` when direct

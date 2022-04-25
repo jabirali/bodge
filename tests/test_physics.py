@@ -2,22 +2,10 @@ import numpy as np
 from scipy.linalg import eigh
 
 from bodge.lattice import *
-from bodge.system import *
+from bodge.physics import *
 
 
-class TestSystem:
-    def test_pauli(self):
-        # Test that the quaternion identities hold.
-        assert np.allclose(σ1 @ σ1, σ0)
-        assert np.allclose(σ2 @ σ2, σ0)
-        assert np.allclose(σ3 @ σ3, σ0)
-
-        assert np.allclose(σ1 @ σ2, jσ3)
-        assert np.allclose(σ2 @ σ3, jσ1)
-        assert np.allclose(σ3 @ σ1, jσ2)
-
-        assert np.allclose(σ1 @ σ2 @ σ3, jσ0)
-
+class TestPhysics:
     def test_hermitian(self):
         # Instantiate a somewhat dense complex Hamiltonian. Note that
         # the submatrices need to be Hermitian for the whole to be so.

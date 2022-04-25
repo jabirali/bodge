@@ -7,7 +7,7 @@ from tqdm import trange
 
 from .consts import *
 from .lattice import *
-from .system import *
+from .physics import *
 
 
 class Chebyshev:
