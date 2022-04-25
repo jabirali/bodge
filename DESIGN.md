@@ -36,5 +36,7 @@ I also tried using `scipy.sparse.linalg.eigsh`, but it takes orders of magnitude
 
 ## Gradual typing
 I've decided to follow these guidelines:
-- Types specified for all method/function arguments, to make it easier to IDE autocomplete their usage.
-- Types specified for `self.*` variables defined in `__init__` when the class is meant to be derived.
+- Types specified for all function arguments and return values to enable IDE/LSP autocompletion.
+- Types specified for the `self.*` variables defined in `__init__` when:
+	1. The class is meant to be derived, in which case this enforces consistency;
+	2. The members of the object may be directly accessed by other objects, where this can be used to flag required refactoring after changes.

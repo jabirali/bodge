@@ -1,8 +1,8 @@
 import numpy as np
-import numpy.typing as npt
-import scipy.sparse as sp
+from numpy.typing import ArrayLike, NDArray
 from rich import print
 from scipy.linalg import eigh, inv
+from scipy.sparse import bsr_matrix, coo_matrix, identity
 from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
@@ -47,8 +47,8 @@ class Hamiltonian:
         data = np.repeat(np.complex128(1), size)
 
         k = 0
-        for r1, r2 in lattice:
-            i, j = 4 * lattice[r1], 4 * lattice[r2]
+        for ri, rj in lattice:
+            i, j = 4 * lattice[ri], 4 * lattice[rj]
 
             rows[k] = i
             cols[k] = j
@@ -59,18 +59,18 @@ class Hamiltonian:
                 cols[k] = i
                 k += 1
 
-        skeleton = sp.coo_matrix((data, (rows, cols)), shape=self.shape)
+        skeleton = coo_matrix((data, (rows, cols)), shape=self.shape)
 
         # Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
         # most efficient format for handling matrix-matrix multiplications numerically.
         # We can then discard all the dummy entries used during matrix construction.
-        self.hamiltonian: sp.bsr_matrix = skeleton.tobsr((4, 4))
+        self.hamiltonian: bsr_matrix = skeleton.tobsr((4, 4))
         self.hamiltonian.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: npt.NDArray[np.complex128] = self.hamiltonian.data
+        self.data: NDArray[np.complex128] = self.hamiltonian.data
 
-    def __enter__(self) -> tuple[dict[Coords, npt.NDArray], dict[Coords, npt.NDArray]]:
+    def __enter__(self) -> tuple[dict[Coords, NDArray], dict[Coords, NDArray]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
@@ -140,13 +140,13 @@ class Hamiltonian:
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
         print(" -> normalizing the spectral radius")
-        self.scale = norm(self.hamiltonian, 1)
+        self.scale: float = norm(self.hamiltonian, 1)
         self.hamiltonian /= self.scale
 
         # Reset accessors.
         print(" -> done!\n")
-        self.hopp = {}
-        self.pair = {}
+        del self.hopp
+        del self.pair
 
     def index(self, row: Coord, col: Coord) -> Index:
         """Determine the sparse matrix index corresponding to block (row, col).
@@ -163,11 +163,11 @@ class Hamiltonian:
         return k
 
     @property
-    def identity(self):
+    def identity(self) -> bsr_matrix:
         """Generate an identity matrix with similar dimensions as the Hamiltonian."""
-        return sp.identity(self.shape[1], "int8").tobsr((4, 4))
+        return identity(self.shape[1], "int8").tobsr((4, 4))
 
-    def diagonalize(self):
+    def diagonalize(self) -> tuple[NDArray, NDArray]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
         This calculates the eigenvalues and eigenvectors of the system. Due to
@@ -188,7 +188,7 @@ class Hamiltonian:
 
         return eigval, eigvec
 
-    def spectralize(self, energies, resolution=1e-4):
+    def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[NDArray]:
         """Calculate the exact spectral function of the system via direct inversion."""
         # Restore the Hamiltonian scale and switch to dense matrices.
         H = self.scale * self.hamiltonian.todense()
@@ -209,12 +209,12 @@ class Hamiltonian:
 
         return spectral
 
-    def plot(self, grid=False):
+    def plot(self, grid: bool = False):
         """Visualize the sparsity structure of the generated matrix."""
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(8, 8))
-        plt.spy(self.hamiltonian, precision="present", markersize=1, marker="o", color="k")
+        plt.spy(self.hamiltonian, markersize=1, marker="o", color="k")
         plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
         plt.xticks([])
         plt.yticks([])

@@ -8,11 +8,9 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((32, 32, 8))
+    lattice = CubicLattice((8, 8, 8))
     system = Hamiltonian(lattice)
     solver = Chebyshev(system)
-
-    print(lattice.size)
 
     with system as (H, Δ):
         for i in lattice.sites():
@@ -26,4 +24,4 @@ if __name__ == "__main__":
 
     # TODO: Fix so that `solver.run()` uses up-to-date Hamiltonian.
     # G = solver.run(7)
-    print(A[-0.9999922893814706])
+    # print(A[-0.9999922893814706])
