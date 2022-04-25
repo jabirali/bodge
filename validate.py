@@ -20,8 +20,5 @@ if __name__ == "__main__":
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    result = solver.run()
-
-    # TODO: Fix so that `solver.run()` uses up-to-date Hamiltonian.
-    # G = solver.run(7)
-    # print(A[-0.9999922893814706])
+    A = solver.run()
+    print(A[-0.9999922893814706])
