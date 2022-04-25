@@ -38,14 +38,15 @@ class Hamiltonian:
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The fastest alternative for this is the COO format.
         print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
-        pairs = (1 + lattice.ligancy) * lattice.size
+
+        pairs = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
 
         rows = np.zeros(pairs, dtype=np.int64)
         cols = np.zeros(pairs, dtype=np.int64)
         data = np.repeat(np.complex128(1), pairs)
 
         k = 0
-        for _i, _j in lattice.terms():
+        for _i, _j in lattice:
             i, j = 4 * lattice[_i], 4 * lattice[_j]
 
             rows[k] = i
@@ -57,7 +58,6 @@ class Hamiltonian:
                 cols[k] = i
                 k += 1
 
-        rows, cols, data = rows[:k], cols[:k], data[:k]
         self.hamiltonian = sp.coo_matrix((data, (rows, cols)), shape=self.shape)
 
         # Convert the matrix to the BSR format with 4x4 dense submatrices. This is the

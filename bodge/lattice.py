@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterator, Optional
 
 import numpy as np
 
@@ -35,37 +35,34 @@ class Lattice:
         if self.__class__.__name__ == "Lattice":
             raise ValueError("This class is not intended to be instantiated directly.")
 
-        # Number of atoms per lattice dimension.
+        # Number of atoms per dimension.
         self.shape: Coord = shape
 
         # Number of atoms in the lattice.
         self.size: Index = np.prod(shape)
 
-        # Number of nearest neighbors per atom.
-        self.ligancy: int = np.sum([2 for s in self.shape if s > 1], dtype=np.int64)
-
     def __getitem__(self, coord: Coord) -> Index:
         """Syntactic sugar for converting coordinates into indices."""
         return self.index(coord)
+
+    def __iter__(self) -> Iterator[Coords]:
+        """Iterate over all on-site and nearest-neighbor interactions."""
+        for index in self.sites():
+            yield (index, index)
+        for indices in self.bonds():
+            yield indices
 
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
         raise NotImplementedError
 
-    def sites(self) -> Iterable[Coord]:
+    def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice."""
         raise NotImplementedError
 
-    def bonds(self) -> Iterable[Coords]:
+    def bonds(self) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice."""
         raise NotImplementedError
-
-    def terms(self) -> Iterable[Coords]:
-        """Iterate over all interactions in the lattice."""
-        for index in self.sites():
-            yield (index, index)
-        for indices in self.bonds():
-            yield indices
 
 
 class CubicLattice(Lattice):
@@ -79,7 +76,7 @@ class CubicLattice(Lattice):
 
         return coord[2] + coord[1] * self.shape[2] + coord[0] * self.shape[1] * self.shape[2]
 
-    def sites(self) -> Iterable[Coord]:
+    def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice."""
 
         for x in range(self.shape[0]):
@@ -87,7 +84,7 @@ class CubicLattice(Lattice):
                 for z in range(self.shape[2]):
                     yield (x, y, z)
 
-    def bonds(self, axis: Optional[int] = None) -> Iterable[Coords]:
+    def bonds(self, axis: Optional[int] = None) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice.
 
         The `axis` argument allows iterating over bonds along only one
