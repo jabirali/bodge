@@ -8,7 +8,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((8, 8, 8))
+    lattice = CubicLattice((16, 16, 16))
     system = Hamiltonian(lattice)
     solver = Chebyshev(system)
 

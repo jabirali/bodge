@@ -39,7 +39,42 @@ class SpectralSolver:
             return self.calc_all()
         else:
             # Perform calculations for the current block.
+            self.init_block(block)
             return self.calc_block(block)
+
+    def init_block(self, block: int):
+        # Construct the current block of the identity matrix.
+        diag = np.repeat(np.int8(1), self.blocksize)
+        offset = -block * self.blocksize
+        shape = (self.hamiltonian.shape[0], self.blocksize)
+        identity = sp.dia_matrix((diag, [offset]), shape, dtype=np.int8)
+
+        self.identity: sp.bsr_matrix = identity.tobsr((4, 4))
+
+        # Construct a projection mask containing nearest-neighbor interactions.
+        mask_1 = self.hamiltonian @ self.identity
+        mask_1.data[...] = 1
+
+        self.mask_1: sp.spmatrix = sp.bsr_matrix(mask_1, dtype=np.int8)
+
+        # Prepare matrices for the subspace expansion.
+        # self.diag =
+
+        # Prepare a cheap surrogate for the Hamiltonian.
+        # This is primarily used to prepare matrix masks.
+
+        # Generate the k'th slice of the projection mask.
+        mask_r = self.mask_1
+        for _ in range(2, self.radius):
+            mask_r = self.hamiltonian @ mask_r
+        mask_r.data[...] = 1
+
+        self.mask_r: sp.spmatrix = sp.bsr_matrix(mask_1, dtype=np.int8)
+
+        # self.identity = identity
+        self.I_k = self.identity
+        self.P_k = self.mask_r
+        self.H_k = self.mask_1
 
     def calc_block(self, block: int):
         raise NotImplementedError
@@ -78,15 +113,6 @@ class Chebyshev(SpectralSolver):
         T = np.cos(n[None, :] * np.arccos(ω[:, None])) / N
         T[:, 1:] *= 2
 
-        # Prepare matrices for the subspace expansion.
-        self.diag = np.repeat(np.int8(1), self.blocksize)
-
-        # Prepare a cheap surrogate for the Hamiltonian.
-        # This is primarily used to prepare matrix masks.
-        H = sp.bsr_matrix(self.hamiltonian, dtype=np.int8)
-        H.data[...] = 1
-        self.H0 = H
-
         # Save relevant variables internally.
         self.moments = moments
 
@@ -117,23 +143,26 @@ class Chebyshev(SpectralSolver):
         """Chebyshev expansion of a given Green function block."""
         # Compact notation for relevant variables.
         k = block
-        M = self.H0
+        # M = self.H0
+        I_k = self.identity
+        P_k = self.P_k
+        H_k = self.H_k
 
-        # Generate a slice of the identity matrix.
-        I_k = sp.dia_matrix(
-            (self.diag, [-block * self.blocksize]),
-            (self.hamiltonian.shape[0], self.blocksize),
-        ).tobsr((4, 4))
+        # # Generate a slice of the identity matrix.
+        # I_k = sp.dia_matrix(
+        #     (self.diag, [-block * self.blocksize]),
+        #     (self.hamiltonian.shape[0], self.blocksize),
+        # ).tobsr((4, 4))
 
-        # Generate the k'th slice of the Hamiltonian mask.
-        H_k = M @ I_k
-        H_k.data[...] = 1
+        # # Generate the k'th slice of the Hamiltonian mask.
+        # H_k = M @ I_k
+        # H_k.data[...] = 1
 
-        # Generate the k'th slice of the projection mask.
-        P_k = H_k
-        for _ in range(2, self.radius):
-            P_k = M @ P_k
-        P_k.data[...] = 1
+        # # Generate the k'th slice of the projection mask.
+        # P_k = H_k
+        # for _ in range(2, self.radius):
+        #     P_k = M @ P_k
+        # P_k.data[...] = 1
 
         # Shorter names for stored stuff.
         H = self.hamiltonian
