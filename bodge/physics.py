@@ -64,11 +64,11 @@ class Hamiltonian:
         # Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
         # most efficient format for handling matrix-matrix multiplications numerically.
         # We can then discard all the dummy entries used during matrix construction.
-        self.hamiltonian: bsr_matrix = skeleton.tobsr((4, 4))
-        self.hamiltonian.data[...] = 0
+        self.matrix: bsr_matrix = skeleton.tobsr((4, 4))
+        self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: NDArray[np.complex128] = self.hamiltonian.data
+        self.data: NDArray[np.complex128] = self.matrix.data
 
     def __enter__(self) -> tuple[dict[Coords, NDArray], dict[Coords, NDArray]]:
         """Implement a context manager interface for the class.
@@ -134,14 +134,14 @@ class Hamiltonian:
 
         # Verify that the matrix is Hermitian.
         print(" -> checking that the matrix is hermitian")
-        if np.max(self.hamiltonian - self.hamiltonian.getH()) > 1e-6:
+        if np.max(self.matrix - self.matrix.getH()) > 1e-6:
             raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
         print(" -> normalizing the spectral radius")
-        self.scale: float = norm(self.hamiltonian, 1)
-        self.hamiltonian /= self.scale
+        self.scale: float = norm(self.matrix, 1)
+        self.matrix /= self.scale
 
         # Reset accessors.
         print(" -> done!\n")
@@ -154,7 +154,7 @@ class Hamiltonian:
         This can be used to access `self.data[index, :, :]` when direct
         changes to the encapsulated block-sparse matrix are required.
         """
-        indices, indptr = self.hamiltonian.indices, self.hamiltonian.indptr
+        indices, indptr = self.matrix.indices, self.matrix.indptr
 
         i, j = self.lattice[row], self.lattice[col]
         js = indices[indptr[i] : indptr[i + 1]]
@@ -178,7 +178,7 @@ class Hamiltonian:
         """
         # Calculate the relevant eigenvalues and eigenvectors.
         print("[green]:: Calculating eigenstates via direct diagonalization[/green]")
-        H = self.scale * self.hamiltonian.todense()
+        H = self.scale * self.matrix.todense()
         eigval, eigvec = eigh(H, subset_by_value=(0, np.inf))
 
         # Restructure the eigenvectors to have the format eigvec[n, i, α],
@@ -191,7 +191,7 @@ class Hamiltonian:
     def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[NDArray]:
         """Calculate the exact spectral function of the system via direct inversion."""
         # Restore the Hamiltonian scale and switch to dense matrices.
-        H = self.scale * self.hamiltonian.todense()
+        H = self.scale * self.matrix.todense()
         I = self.identity.todense()
 
         # The resolution is controlled by the imaginary energy.
@@ -214,7 +214,7 @@ class Hamiltonian:
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(8, 8))
-        plt.spy(self.hamiltonian, markersize=1, marker="o", color="k")
+        plt.spy(self.matrix, markersize=1, marker="o", color="k")
         plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
         plt.xticks([])
         plt.yticks([])

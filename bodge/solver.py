@@ -10,7 +10,45 @@ from .lattice import *
 from .physics import *
 
 
-class Chebyshev:
+class SpectralSolver:
+    """Defines an API for numerically calculating spectral functions.
+
+    This solver assumes the following properties for the derived solvers:
+    - The Hamiltonian and spectral function are implemented as 4x4 BSR matrices.
+    - The implementation is done using a Local Krylov cutoff for linear scaling.
+    """
+
+    def __init__(self, hamiltonian: Hamiltonian, blocksize: int = 1024, radius: int = 4):
+        # Reference to the sparse matrix we use.
+        self.hamiltonian: sp.bsr_matrix = hamiltonian.matrix
+
+        # Linear scaling is achieved via a Local Krylov cutoff.
+        self.radius: int = radius
+        if self.radius < 1:
+            raise RuntimeError("Krylov cutoff radius must be a positive integer.")
+
+        # Parallelization is done by division into matrix blocks.
+        self.blocksize: int = blocksize
+        self.blocks: int = self.hamiltonian.shape[1] // blocksize
+        if self.blocksize * self.blocks != hamiltonian.shape[1]:
+            raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
+
+    def __call__(self, block: Optional[int] = None):
+        if block is None:
+            # Perform parallel calculations for all blocks.
+            return self.calc_all()
+        else:
+            # Perform calculations for the current block.
+            return self.calc_block(block)
+
+    def calc_block(self, block: int):
+        raise NotImplementedError
+
+    def calc_all(self):
+        raise NotImplementedError
+
+
+class Chebyshev(SpectralSolver):
     """This class facilitates a Chebyshev expansion of Green functions.
 
     Specifically, it calculates the scaled function `a(ω) = A(ω) / Nπ sqrt(1-ω²)`,
@@ -25,19 +63,9 @@ class Chebyshev:
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(
-        self,
-        system: Hamiltonian,
-        moments: int = 200,
-        radius: int = 4,
-        blocksize: int = 1024,
-        integrate: bool = True,
-    ):
-        # Sanity checks for the arguments.
-        if radius < 1:
-            raise RuntimeError("Invalid radius: Must be a positive integer.")
-        if system.shape[1] % blocksize != 0:
-            raise RuntimeError("Invalid blocksize: Must divide the Hamiltonian dimension.")
+    def __init__(self, *args, moments: int = 200, **kwargs):
+        # Superclass constructor.
+        super().__init__(*args, **kwargs)
 
         # Chebyshev nodes {ω_m} where we will calculate the spectral function.
         N = moments
@@ -50,30 +78,20 @@ class Chebyshev:
         T = np.cos(n[None, :] * np.arccos(ω[:, None])) / N
         T[:, 1:] *= 2
 
-        # Prepare a cheap surrogate from the Hamiltonian.
-        H = sp.bsr_matrix(system.hamiltonian, dtype=np.int8)
+        # Prepare matrices for the subspace expansion.
+        self.diag = np.repeat(np.int8(1), self.blocksize)
+
+        # Prepare a cheap surrogate for the Hamiltonian.
+        # This is primarily used to prepare matrix masks.
+        H = sp.bsr_matrix(self.hamiltonian, dtype=np.int8)
         H.data[...] = 1
         self.H0 = H
 
-        # Prepare matrices for the subspace expansion.
-        self.diag = np.repeat(np.int8(1), blocksize)
-
         # Save relevant variables internally.
-        self.hamiltonian = system.hamiltonian
         self.moments = moments
-        self.radius = radius
 
         self.transform = T
         self.energies = ω
-
-        self.blocksize = blocksize
-        self.blocks = system.shape[1] // blocksize
-
-    def __call__(self, block: Optional[int] = None):
-        if block is None:
-            return self.calc_all()
-        else:
-            return self.calc_block(block)
 
     def calc_all(self):
         # Determine number of processes to use.
@@ -91,7 +109,7 @@ class Chebyshev:
             for m, ω_m in enumerate(self.energies)
         }
 
-        # TODO: Calculation of integrals.
+        # TODO: Calculate and return integral weights.
 
         return A
 

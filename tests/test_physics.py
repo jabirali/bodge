@@ -22,7 +22,7 @@ class TestPhysics:
                 Δ[i, j] = 2 * σ3 + 5 * σ2
 
         # Verify that the result is Hermitian.
-        H = system.hamiltonian.todense()
+        H = system.matrix.todense()
         assert np.allclose(H, H.T.conj())
 
     def test_eigenvectors(self):
@@ -41,7 +41,7 @@ class TestPhysics:
                 H[i, j] = -1 * σ0
 
         # Calculate the eigenvalues the manual way.
-        H = system.scale * system.hamiltonian.todense()
+        H = system.scale * system.matrix.todense()
         E, X = eigh(H, subset_by_value=(0, np.inf))
         X = X.T
 
@@ -78,7 +78,7 @@ class TestPhysics:
                 Δ[i, j] = 2 * σ3 + 5 * σ2
 
         # Calculate a matrix product using internal matrices.
-        H = system.hamiltonian
+        H = system.matrix
         I = system.identity
         G = H @ I
 

@@ -12,7 +12,7 @@ Coords = tuple[Coord, Coord]
 
 
 class Lattice:
-    """Representation of a general three-dimensional lattice.
+    """API for working with generic three-dimensional lattices.
 
     This is an abstract class which defines an API for iterating over all the
     sites (atoms) and bonds (nearest neighbors) in a lattice. In the language
