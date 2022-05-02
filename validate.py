@@ -20,5 +20,5 @@ if __name__ == "__main__":
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    A = solver.run()
+    A = solver()
     print(A[-0.9999922893814706])

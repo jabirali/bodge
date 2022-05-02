@@ -69,7 +69,33 @@ class Chebyshev:
         self.blocksize = blocksize
         self.blocks = system.shape[1] // blocksize
 
-    def __call__(self, block):
+    def __call__(self, block: Optional[int] = None):
+        if block is None:
+            return self.calc_all()
+        else:
+            return self.calc_block(block)
+
+    def calc_all(self):
+        # Determine number of processes to use.
+        jobs = cpu_count()
+
+        # Calculate the spectral function in parallel.
+        A = {}
+        with Pool(jobs) as p:
+            for k, A_k in p.imap(self, trange(self.blocks)):
+                A[k] = A_k
+
+        # Transpose and merge the calculated matrices.
+        A = {
+            ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], "bsr")
+            for m, ω_m in enumerate(self.energies)
+        }
+
+        # TODO: Calculation of integrals.
+
+        return A
+
+    def calc_block(self, block):
         """Chebyshev expansion of a given Green function block."""
         # Compact notation for relevant variables.
         k = block
@@ -122,23 +148,3 @@ class Chebyshev:
                 G_km.data += T[m, n] * GH_kn.data
 
         return k, G_k
-
-    def run(self, integrate: bool = True):
-        # Determine number of processes to use.
-        jobs = cpu_count()
-
-        # Calculate the spectral function in parallel.
-        A = {}
-        with Pool(jobs) as p:
-            for k, A_k in p.imap(self, trange(self.blocks)):
-                A[k] = A_k
-
-        # Transpose and merge the calculated matrices.
-        A = {
-            ω_m: sp.hstack([A_k[m] for _, A_k in A.items()], "bsr")
-            for m, ω_m in enumerate(self.energies)
-        }
-
-        # TODO: Calculation of integrals.
-
-        return A
