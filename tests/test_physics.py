@@ -79,11 +79,18 @@ class TestPhysics:
 
         # Calculate a matrix product using internal matrices.
         H = system.matrix
+        S = system.struct
         I = system.identity
         G = H @ I
 
-        # Ensure that the Hamiltonian H has a 4x4 BSR representation,
-        # and that the identity I preserves both the value and format.
+        # Ensure that the Hamiltonian H has a 4x4 BSR representation.
         assert H.blocksize == (4, 4)
+
+        # Ensure that the identity preserves format and value.
         assert G.blocksize == (4, 4)
         assert np.allclose(G.todense(), H.todense())
+
+        # Ensure the structure matrix is consistent with Hamiltonian.
+        H.data[...] = 1
+        assert S.blocksize == (4, 4)
+        assert np.allclose(H.todense(), S.todense())

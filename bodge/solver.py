@@ -1,4 +1,5 @@
 from multiprocessing import Pool, cpu_count
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -8,6 +9,11 @@ from tqdm import trange
 from .consts import *
 from .lattice import *
 from .physics import *
+
+Block = int
+Energy = float
+SpectralFunc = dict[Energy, sp.bsr_matrix]
+SpectralBlock = dict[Block, dict[Energy, sp.bsr_matrix]]
 
 
 class SpectralSolver:
@@ -21,6 +27,7 @@ class SpectralSolver:
     def __init__(self, hamiltonian: Hamiltonian, blocksize: int = 1024, radius: int = 4):
         # Reference to the sparse matrix we use.
         self.hamiltonian: sp.bsr_matrix = hamiltonian.matrix
+        self.skeleton: sp.bsr_matrix = hamiltonian.struct
 
         # Linear scaling is achieved via a Local Krylov cutoff.
         self.radius: int = radius
@@ -33,7 +40,7 @@ class SpectralSolver:
         if self.blocksize * self.blocks != hamiltonian.shape[1]:
             raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
 
-    def __call__(self, block: Optional[int] = None):
+    def __call__(self, block: Optional[int] = None) -> Union[SpectralFunc, SpectralBlock]:
         if block is None:
             # Perform parallel calculations for all blocks.
             return self.calc_all()
@@ -43,43 +50,32 @@ class SpectralSolver:
             return self.calc_block(block)
 
     def init_block(self, block: int):
-        # Construct the current block of the identity matrix.
+        # Instantiate the current block of the identity matrix.
         diag = np.repeat(np.int8(1), self.blocksize)
         offset = -block * self.blocksize
         shape = (self.hamiltonian.shape[0], self.blocksize)
         identity = sp.dia_matrix((diag, [offset]), shape, dtype=np.int8)
 
-        self.identity: sp.bsr_matrix = identity.tobsr((4, 4))
+        self.block_identity: sp.bsr_matrix = identity.tobsr(self.hamiltonian.blocksize)
 
-        # Construct a projection mask containing nearest-neighbor interactions.
-        mask_1 = self.hamiltonian @ self.identity
-        mask_1.data[...] = 1
+        # Projection with this mask retains only local terms (up to nearest
+        # neighbors), which are the relevant terms in the spectral function.
+        self.block_neighbors: sp.spmatrix = self.skeleton @ self.block_identity
 
-        self.mask_1: sp.spmatrix = sp.bsr_matrix(mask_1, dtype=np.int8)
-
-        # Prepare matrices for the subspace expansion.
-        # self.diag =
-
-        # Prepare a cheap surrogate for the Hamiltonian.
-        # This is primarily used to prepare matrix masks.
-
-        # Generate the k'th slice of the projection mask.
-        mask_r = self.mask_1
+        # Projection with this mask retains all terms within a "bubble" of
+        # a given radius. This defines the Local Krylov subspace used for
+        # intermediate calculations in the Green function expansions.
+        mask = self.block_neighbors
         for _ in range(2, self.radius):
-            mask_r = self.hamiltonian @ mask_r
-        mask_r.data[...] = 1
+            mask = self.skeleton @ mask
+        mask.data[...] = 1
 
-        self.mask_r: sp.spmatrix = sp.bsr_matrix(mask_1, dtype=np.int8)
+        self.block_subspace: sp.spmatrix = sp.bsr_matrix(mask, dtype=np.int8)
 
-        # self.identity = identity
-        self.I_k = self.identity
-        self.P_k = self.mask_r
-        self.H_k = self.mask_1
-
-    def calc_block(self, block: int):
+    def calc_block(self, block: int) -> SpectralBlock:
         raise NotImplementedError
 
-    def calc_all(self):
+    def calc_all(self) -> SpectralFunc:
         raise NotImplementedError
 
 
@@ -115,7 +111,6 @@ class Chebyshev(SpectralSolver):
 
         # Save relevant variables internally.
         self.moments = moments
-
         self.transform = T
         self.energies = ω
 
@@ -143,26 +138,9 @@ class Chebyshev(SpectralSolver):
         """Chebyshev expansion of a given Green function block."""
         # Compact notation for relevant variables.
         k = block
-        # M = self.H0
-        I_k = self.identity
-        P_k = self.P_k
-        H_k = self.H_k
-
-        # # Generate a slice of the identity matrix.
-        # I_k = sp.dia_matrix(
-        #     (self.diag, [-block * self.blocksize]),
-        #     (self.hamiltonian.shape[0], self.blocksize),
-        # ).tobsr((4, 4))
-
-        # # Generate the k'th slice of the Hamiltonian mask.
-        # H_k = M @ I_k
-        # H_k.data[...] = 1
-
-        # # Generate the k'th slice of the projection mask.
-        # P_k = H_k
-        # for _ in range(2, self.radius):
-        #     P_k = M @ P_k
-        # P_k.data[...] = 1
+        I_k = self.block_identity
+        P_k = self.block_subspace
+        H_k = self.block_neighbors
 
         # Shorter names for stored stuff.
         H = self.hamiltonian

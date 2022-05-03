@@ -37,14 +37,15 @@ class Hamiltonian:
         self.scale: float = 1.0
 
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
-        # sparse matrix. The fastest alternative for this is the COO format.
+        # sparse matrix. The fastest alternative for this is the COO format,
+        # but we later convert to BSR format with 4x4 dense submatrices.
         print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
 
         size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
 
         rows = np.zeros(size, dtype=np.int64)
         cols = np.zeros(size, dtype=np.int64)
-        data = np.repeat(np.complex128(1), size)
+        data = np.repeat(np.int8(1), size)
 
         k = 0
         for ri, rj in lattice:
@@ -59,12 +60,17 @@ class Hamiltonian:
                 cols[k] = i
                 k += 1
 
-        skeleton = coo_matrix((data, (rows, cols)), shape=self.shape)
+        skeleton = coo_matrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
 
-        # Convert the matrix to the BSR format with 4x4 dense submatrices. This is the
-        # most efficient format for handling matrix-matrix multiplications numerically.
-        # We can then discard all the dummy entries used during matrix construction.
-        self.matrix: bsr_matrix = skeleton.tobsr((4, 4))
+        # Save an integer matrix that encodes the structure of the Hamiltonian,
+        # i.e. any potentially present element in the matrix is indicated by 1.
+        # This can be used to instantiate new matrices with the same structure.
+        self.struct: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
+        self.struct.data[...] = 1
+
+        # Save a complex matrix that encodes the Hamiltonian matrix itself.
+        # Each element is set to zero and must later be populated for use.
+        self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
