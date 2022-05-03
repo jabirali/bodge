@@ -5,13 +5,16 @@ from bodge.lattice import *
 
 def test_super():
     # Superclass should not be constructable.
-    with raises(ValueError) as e:
+    with raises(ValueError):
         lat = Lattice((1, 1, 1))
 
 
 def test_sites():
     lat = CubicLattice((3, 5, 7))
+    tot = 0
     for ind, site in enumerate(lat.sites()):
+        tot += 1
+
         # Verify that indexing is contiguous.
         assert ind == lat[site]
 
@@ -21,7 +24,7 @@ def test_sites():
         assert site[2] >= 0 and site[2] < lat.shape[2]
 
     # Verify that number of elements is correct.
-    assert ind == 3 * 5 * 7 - 1
+    assert tot == 3 * 5 * 7
 
 
 def test_bonds():
@@ -35,6 +38,3 @@ def test_bonds():
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=2):
         # Verify neighbors along the z-axis.
         assert x2 == x1 and y2 == y1 and z2 == z1 + 1
-
-    # Verify that the number of neighbors is correct.
-    len([*lat.bonds()]) == 2 * 3 * 5 - 2 * 3 - 3 * 5 - 5 * 2

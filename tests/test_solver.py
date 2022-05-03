@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 
 from bodge import *
@@ -32,8 +30,8 @@ def test_order():
     assert np.allclose(solver1.skeleton.todense(), solver2.skeleton.todense())
 
     # Generate an arbitrary block of the matrix.
-    solver1.init_block(3)
-    solver2.init_block(3)
+    solver1.block_init(3)
+    solver2.block_init(3)
 
     # Ensure that all block matrices are consistent.
     assert np.allclose(solver1.block_identity.todense(), solver2.block_identity.todense())
@@ -53,7 +51,7 @@ def test_blocking():
     # Test that each block of the identity matrix has the right dimensions.
     I = []
     for k in range(solver.blocks):
-        solver.init_block(k)
+        solver.block_init(k)
         I_k = solver.block_identity
 
         assert I_k.blocksize == H.blocksize
@@ -67,7 +65,7 @@ def test_blocking():
 
     # Check that the projection matrices are consistent with a manual expansion.
     for k in range(solver.blocks):
-        solver.init_block(k)
+        solver.block_init(k)
         I_k = solver.block_identity
 
         N_k = H @ I_k
@@ -77,12 +75,3 @@ def test_blocking():
         S_k = H @ (H @ (H @ I_k))
         S_k.data[...] = 1
         assert np.allclose(S_k.todense(), solver.block_subspace.todense())
-
-    # Manually calculate block matrices.
-    # k = 3
-    # H = system.matrix
-    # I = system.
-    # I
-
-    # Test that the
-    # solver = SpectralSolver(system)

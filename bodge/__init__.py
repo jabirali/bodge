@@ -8,7 +8,7 @@ __version__ = "0.0.3"
 __all__ = [
     "CubicLattice",
     "Hamiltonian",
-    "Chebyshev",
+    "ChebyshevSolver",
     "σ0",
     "σ1",
     "σ2",

@@ -195,7 +195,11 @@ class Hamiltonian:
         return eigval, eigvec
 
     def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[NDArray]:
-        """Calculate the exact spectral function of the system via direct inversion."""
+        """Calculate the exact spectral function of the system via direct inversion.
+
+        Note that this method is quite inefficient since it uses dense matrices;
+        it is meant as a benchmark, not for actual large-scale calculations.
+        """
         # Restore the Hamiltonian scale and switch to dense matrices.
         H = self.scale * self.matrix.todense()
         I = self.identity.todense()
