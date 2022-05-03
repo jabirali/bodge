@@ -12,7 +12,7 @@ from .physics import *
 
 Block = int
 Energy = float
-SpectralFunc = dict[Energy, sp.bsr_matrix]
+Spectral = dict[Energy, sp.bsr_matrix]
 SpectralBlock = dict[Block, dict[Energy, sp.bsr_matrix]]
 
 
@@ -40,7 +40,7 @@ class SpectralSolver:
         if self.blocksize * self.blocks != hamiltonian.shape[1]:
             raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
 
-    def __call__(self, block: Optional[int] = None) -> Union[SpectralFunc, SpectralBlock]:
+    def __call__(self, block: Optional[int] = None) -> Union[Spectral, SpectralBlock]:
         if block is None:
             # Perform parallel calculations for all blocks.
             return self.calc_all()
@@ -66,7 +66,7 @@ class SpectralSolver:
         # a given radius. This defines the Local Krylov subspace used for
         # intermediate calculations in the Green function expansions.
         mask = self.block_neighbors
-        for _ in range(2, self.radius):
+        for _ in range(self.radius - 1):
             mask = self.skeleton @ mask
         mask.data[...] = 1
 
@@ -75,7 +75,7 @@ class SpectralSolver:
     def calc_block(self, block: int) -> SpectralBlock:
         raise NotImplementedError
 
-    def calc_all(self) -> SpectralFunc:
+    def calc_all(self) -> Spectral:
         raise NotImplementedError
 
 
