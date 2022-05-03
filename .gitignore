@@ -1,2 +1,5 @@
 __pycache__
-.pytest_cache
+.*_cache
+.envrc
+*.sublime-*
+*.sw*
