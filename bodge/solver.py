@@ -76,8 +76,9 @@ class SpectralSolver:
 
             # Calculate each block A_km = [A_k(ω_m)] in parallel, then use `zip`
             # to transpose from block-first (A_km) to energy-first (A_mk) format.
+            print("[yellow]:: Calculating the spectral function in parallel[/yellow]")
             with Pool(self.processes) as pool:
-                blocks = zip(*pool.map(self, trange(self.blocks)))
+                blocks = zip(*pool.map(self, trange(self.blocks, desc="-> blocks", unit="")))
 
             # Merge the parallel blocks into complete matrices and store these.
             self.solution = [sp.hstack(block, "bsr") for block in blocks]
@@ -133,7 +134,7 @@ class ChebyshevSolver(SpectralSolver):
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, *args, moments: int = 200, **kwargs):
+    def __init__(self, *args, moments: int = 256, **kwargs):
         # Superclass constructor.
         super().__init__(*args, **kwargs)
 

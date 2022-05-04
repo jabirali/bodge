@@ -8,7 +8,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((16, 16, 16))
+    lattice = CubicLattice((16, 8, 8))
     hamiltonian = Hamiltonian(lattice)
     spectral = ChebyshevSolver(hamiltonian)
 
@@ -21,4 +21,4 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     spectral()
-    print(spectral.solution[0])
+    # print(spectral.solution[0])
