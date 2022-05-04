@@ -56,8 +56,8 @@ class SpectralSolver:
         self.solution: list[sp.bsr_matrix] = []
 
         self.block_identity: sp.bsr_matrix
-        self.block_neighbors: sp.spmatrix
-        self.block_subspace: sp.spmatrix
+        self.block_neighbors: sp.bsr_matrix
+        self.block_subspace: sp.bsr_matrix
 
     def __call__(self, block: Optional[int] = None):
         """Calculate the spectral function as a function of energy.
