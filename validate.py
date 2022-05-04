@@ -21,4 +21,4 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     spectral()
-    # print(spectral.solution[0])
+    print(spectral.solution[4])

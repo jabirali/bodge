@@ -1,4 +1,5 @@
 from multiprocessing import Pool, cpu_count
+from h5py import File
 
 import numpy as np
 import numpy.typing as npt
@@ -55,6 +56,7 @@ class SpectralSolver:
         self.energies: npt.NDArray[np.float64]
         self.solution: list[sp.bsr_matrix] = []
 
+        self.block: int
         self.block_identity: sp.bsr_matrix
         self.block_neighbors: sp.bsr_matrix
         self.block_subspace: sp.bsr_matrix
@@ -74,12 +76,23 @@ class SpectralSolver:
             # Delete any previously calculated solutions to save memory.
             del self.solution
 
-            # Calculate each block A_km = [A_k(ω_m)] in parallel, then use `zip`
-            # to transpose from block-first (A_km) to energy-first (A_mk) format.
+            # Calculate each block A_km = [A_k(ω_m)] in parallel and store to files.
             print("[yellow]:: Calculating the spectral function in parallel[/yellow]")
             with Pool(self.processes) as pool:
-                blocks = zip(*pool.map(self, trange(self.blocks, desc="-> blocks", unit="")))
+                fnames = pool.map(self, trange(self.blocks, desc="-> blocks", unit=""))
 
+            fblocks = [File(fname, "r") for fname in fnames]
+
+            # for m in fblocks[0]:
+            #     A_m = [sp.bsr_matrix(())]
+
+            # with File("bodge.hdf5", "w") as f:
+            # for fname in fnames:
+                # print("q", fname)
+
+            for fblock in fblocks:
+                fblock.close()
+# 
             # Merge the parallel blocks into complete matrices and store these.
             self.solution = [sp.hstack(block, "bsr") for block in blocks]
         else:
@@ -93,6 +106,9 @@ class SpectralSolver:
         This instantiates all the matrices required for a linear-scaling
         polynomial expansion of the spectral function at the given block.
         """
+        # Save the block index.
+        self.block = block
+
         # Instantiate the current block of the identity matrix.
         diag = np.repeat(np.int8(1), self.blocksize)
         offset = -block * self.blocksize
@@ -171,20 +187,30 @@ class ChebyshevSolver(SpectralSolver):
         A_k0 = I_k
         A_k1 = H @ I_k
 
-        A_k = [T[m, 0] * A_k0 + T[m, 1] * A_k1 for m in range(2 * self.moments)]
+        # Prepare a storage file for this block, and store the initial results.
+        fname = f"block_{self.block:08d}.hdf5"
+        with File(fname, "w", rdcc_nbytes=1024**3) as f:
+            A_k = {}
+            for m in range(2 * self.moments):
+                A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
 
-        # Chebyshev expansion of the next elements.
-        R_k *= 2
-        for n in range(2, self.moments):
-            # Chebyshev expansion of next vector. Element-wise multiplication
-            # by R_k projects the result back into the Local Krylov subspace.
-            A_k1, A_k0 = (H @ A_k1).multiply(R_k) - A_k0, A_k1
+                f[f'{m:08d}/indices'] = A_km.indices
+                f[f'{m:08d}/indptr'] = A_km.indptr
+                f[f'{m:08d}/data'] = A_km.data
 
-            # Perform the Chebyshev transformation. Element-wise multiplication
-            # by H_k preserves only on-site and nearest-neighbor interactions.
-            # WARNING: This has been optimized to ignore SciPy wrapper checks.
-            AH_kn = A_k1.multiply(P_k)
-            for m, A_km in enumerate(A_k):
-                A_km.data += T[m, n] * AH_kn.data
+                A_k[m] = f[f'{m:08d}/data']
 
-        return A_k
+            # Chebyshev expansion of the next elements.
+            for n in range(2, self.moments):
+                # Chebyshev expansion of next vector. Element-wise multiplication
+                # by R_k projects the result back into the Local Krylov subspace.
+                A_k1, A_k0 = (H @ A_k1).multiply(R_k) - A_k0, A_k1
+
+                # Perform the Chebyshev transformation. Element-wise multiplication
+                # by H_k preserves only on-site and nearest-neighbor interactions.
+                # WARNING: This has been optimized to ignore SciPy wrapper checks.
+                AH_kn = A_k1.multiply(P_k)
+                for m, A_km in A_k.items():
+                    A_k[m][...] = T[m, n] * AH_kn.data
+
+        return fname
