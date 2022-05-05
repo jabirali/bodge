@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from bodge import *
+from h5py import File
 
 t = 1.0
 μ = +3 * t
@@ -20,5 +21,7 @@ if __name__ == "__main__":
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    spectral()
-    print(spectral.solution[4])
+    f = File(spectral(), 'r')
+    print([k for k in f['0001']])
+
+    # print(spectral.solution[4])

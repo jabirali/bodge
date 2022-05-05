@@ -76,25 +76,44 @@ class SpectralSolver:
             # Delete any previously calculated solutions to save memory.
             del self.solution
 
-            # Calculate each block A_km = [A_k(ω_m)] in parallel and store to files.
+            # Calculate each block A_km = [A_k(ω_m)] of the spectral function
+            # A(ω) in parallel. The results are stored as HDF5 to save RAM.
             print("[yellow]:: Calculating the spectral function in parallel[/yellow]")
             with Pool(self.processes) as pool:
-                fnames = pool.map(self, trange(self.blocks, desc="-> blocks", unit=""))
+                block_range = trange(self.blocks, desc=" -> blocks", unit="")
+                block_names = sorted(pool.imap(self, block_range))
 
-            fblocks = [File(fname, "r") for fname in fnames]
+            # Open the generated HDF5 files for reading, and merge the blocks
+            # A_km = [A_k(ω_m)] into complete matrices A_m = [A(ω_m)]. The
+            # results are written to a new output file which is also HDF5.
+            print("[yellow]:: Collecting the parallel results[/yellow]")
+            block_files = [File(f, "r") for f in block_names]
 
-            # for m in fblocks[0]:
-            #     A_m = [sp.bsr_matrix(())]
+            result_name = "bodge.hdf5"
+            with File(result_name, "w") as fout:
+                for m in block_files[0]:
+                    A_m = []
+                    for fin in block_files:
+                        data = fin[f'{m}/data']
+                        indices = fin[f'{m}/indices']
+                        indptr = fin[f'{m}/indptr']
 
-            # with File("bodge.hdf5", "w") as f:
-            # for fname in fnames:
-                # print("q", fname)
+                        A_km = bsr_matrix((data, indices, indptr))
 
-            for fblock in fblocks:
-                fblock.close()
-# 
+                        A_m.append(A_km)
+
+                    A_m = sp.hstack(A_m, "bsr")
+
+                    fout[f'{m}/indices'] = A_m.indices
+                    fout[f'{m}/indptr'] = A_m.indptr
+                    fout[f'{m}/data'] = A_m.data
+
+                # Close all the input files.
+                for fin in block_files:
+                    fin.close()
+
             # Merge the parallel blocks into complete matrices and store these.
-            self.solution = [sp.hstack(block, "bsr") for block in blocks]
+            return result_name
         else:
             # Calculate the spectral function A_k(ω_m) for a given block index k.
             self.block_init(block)
@@ -194,11 +213,11 @@ class ChebyshevSolver(SpectralSolver):
             for m in range(2 * self.moments):
                 A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
 
-                f[f'{m:08d}/indices'] = A_km.indices
-                f[f'{m:08d}/indptr'] = A_km.indptr
-                f[f'{m:08d}/data'] = A_km.data
+                f[f'{m:04d}/indices'] = A_km.indices
+                f[f'{m:04d}/indptr'] = A_km.indptr
+                f[f'{m:04d}/data'] = A_km.data
 
-                A_k[m] = f[f'{m:08d}/data']
+                A_k[m] = f[f'{m:04d}/data']
 
             # Chebyshev expansion of the next elements.
             for n in range(2, self.moments):
