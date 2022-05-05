@@ -237,9 +237,8 @@ class ChebyshevSolver(SpectralSolver):
         A_k1 = H @ I_k
 
         # Prepare a storage file for this block, and store the initial results.
-        for m in range(2 * self.moments):
-            A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
-            A_k[m][...] = A_km.data
+        for m, A_km in A_k.items():
+            A_km[...] = (T[m, 0] * A_k0 + T[m, 1] * A_k1).data
 
         # Chebyshev expansion of the next elements.
         for n in range(2, self.moments):
@@ -252,5 +251,5 @@ class ChebyshevSolver(SpectralSolver):
             # WARNING: This has been optimized to ignore SciPy wrapper checks.
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
-                A_k[m][...] += T[m, n] * AH_kn.data
+                A_km[...] += T[m, n] * AH_kn.data
 
