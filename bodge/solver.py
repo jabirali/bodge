@@ -199,7 +199,7 @@ class ChebyshevSolver(SpectralSolver):
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, *args, moments: int = 1024, **kwargs):
+    def __init__(self, *args, moments: int = 200, **kwargs):
         # Superclass constructor.
         super().__init__(*args, **kwargs)
 
