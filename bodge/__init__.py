@@ -4,7 +4,7 @@ from .physics import *
 from .solver import *
 
 __author__ = "Jabir Ali Ouassou"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __all__ = [
     "CubicLattice",
     "Hamiltonian",

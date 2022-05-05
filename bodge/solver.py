@@ -1,4 +1,5 @@
 from multiprocessing import Pool, cpu_count
+from os import remove
 
 import numpy as np
 import numpy.typing as npt
@@ -123,8 +124,12 @@ class SpectralSolver:
                     result_file[f"{m}/data"] = A_m.data
 
                 # Close all the input files after processing.
-                for fin in block_files:
-                    fin.close()
+                for block_file in block_files:
+                    block_file.close()
+
+                # Remove the now unneeded temporary files.
+                for block_name in block_names:
+                    remove(block_name)
 
             # Return the generated output file.
             return SpectralSolution(result_name)

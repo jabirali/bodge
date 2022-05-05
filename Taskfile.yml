@@ -9,7 +9,7 @@ tasks:
       - task: test
   test:
     summary: Unit tests.
-    soures:
+    sources:
       - ./bodge/*.py
       - ./tests/*.py
     cmds:
@@ -21,3 +21,4 @@ tasks:
     cmds:
       - isort .; echo
       - black .; echo
+
