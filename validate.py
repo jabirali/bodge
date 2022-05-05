@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from bodge import *
 from h5py import File
+
+from bodge import *
 
 t = 1.0
 μ = +3 * t
@@ -22,6 +23,6 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     sol = spectral()
-    print([k for k in sol.file['0001']])
+    print([k for k in sol.file["0001"]])
 
     # print(spectral.solution[4])

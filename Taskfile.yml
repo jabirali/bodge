@@ -12,5 +12,5 @@ tasks:
   fmt:
     summary: Reformat the source code.
     cmds:
-      - isort .
-      - black .
+      - isort .; echo
+      - black .; echo

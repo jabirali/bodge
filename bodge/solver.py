@@ -1,21 +1,23 @@
 from multiprocessing import Pool, cpu_count
-from h5py import File
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from h5py import File
 from tqdm import trange
 
 from .consts import *
 from .lattice import *
 from .physics import *
 
+
 class SpectralSolution:
     def __init__(self, file_name: str):
-        self.file: File = File(file_name, 'r')
+        self.file: File = File(file_name, "r")
 
     def __del__(self):
         self.file.close()
+
 
 class SpectralSolver:
     """Defines an API for numerically calculating spectral functions.
@@ -100,9 +102,9 @@ class SpectralSolver:
                     # Iterate over every block A_k(ω_m).
                     for block_file in block_files:
                         # Extract data from corresponding input files.
-                        data = block_file[f'{m}/data']
-                        indices = block_file[f'{m}/indices']
-                        indptr = block_file[f'{m}/indptr']
+                        data = block_file[f"{m}/data"]
+                        indices = block_file[f"{m}/indices"]
+                        indptr = block_file[f"{m}/indptr"]
 
                         # Reconstruct the sparse matrix A_k(ω_m).
                         A_km = bsr_matrix((data, indices, indptr))
@@ -114,9 +116,9 @@ class SpectralSolver:
                     A_m = sp.hstack(A_m, "bsr")
 
                     # Decontruct the matrix and store in the output file.
-                    result_file[f'{m}/indices'] = A_m.indices
-                    result_file[f'{m}/indptr'] = A_m.indptr
-                    result_file[f'{m}/data'] = A_m.data
+                    result_file[f"{m}/indices"] = A_m.indices
+                    result_file[f"{m}/indptr"] = A_m.indptr
+                    result_file[f"{m}/data"] = A_m.data
 
                 # Close all the input files after processing.
                 for fin in block_files:
@@ -138,12 +140,12 @@ class SpectralSolver:
                 A_k = {}
                 for m in range(len(self.energies)):
                     # Save one BSR matrix for each block A_k(ω_m).
-                    block_file[f'{m:04d}/indices'] = block_template.indices
-                    block_file[f'{m:04d}/indptr'] = block_template.indptr
-                    block_file[f'{m:04d}/data'] = block_template.data
+                    block_file[f"{m:04d}/indices"] = block_template.indices
+                    block_file[f"{m:04d}/indptr"] = block_template.indptr
+                    block_file[f"{m:04d}/data"] = block_template.data
 
                     # Save a reference to its data for easy updates.
-                    A_k[m] = block_file[f'{m:04d}/data']
+                    A_k[m] = block_file[f"{m:04d}/data"]
 
                 # Perform calculations for this block in working area `A_k`.
                 # This ensures that `block_solve` doesn't need to handle the
@@ -258,4 +260,3 @@ class ChebyshevSolver(SpectralSolver):
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
                 A_km[...] += T[m, n] * AH_kn.data
-
