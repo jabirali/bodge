@@ -1,16 +1,23 @@
 version: '3'
 
 tasks:
-  auto:
-    summary: Automatically reformat and retest.
+  default:
+    summary: Format and test.
     cmds:
-      - ls */*.py | entr sh -c "clear; task fmt; task test"
+      - clear
+      - task: format
+      - task: test
   test:
-    summary: Execute the unit tests.
+    summary: Unit tests.
+    soures:
+      - ./bodge/*.py
+      - ./tests/*.py
     cmds:
       - python -m pytest tests
-  fmt:
-    summary: Reformat the source code.
+  format:
+    summary: Code formatters.
+    sources:
+      - ./**/*.py
     cmds:
       - isort .; echo
       - black .; echo
