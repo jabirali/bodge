@@ -18,7 +18,8 @@ class SpectralSolver:
 
     - The Hamiltonian and spectral function are implemented as BSR matrices;
     - Linear-scaling algorithms based on a Local Krylov subspace are employed;
-    - Parallelization based on the independent expansion of matrix blocks.
+    - Parallelization based on the independent expansion of matrix blocks;
+    - These blocks are saved as HDF5 files to limit the RAM requirements.
 
     To use this class, subclass it and implement the missing solver method.
     """
@@ -54,7 +55,6 @@ class SpectralSolver:
 
         # Declare additional variables for methods and subclasses to define.
         self.energies: npt.NDArray[np.float64]
-        self.solution: list[sp.bsr_matrix] = []
 
         self.block: int
         self.block_identity: sp.bsr_matrix
@@ -66,16 +66,12 @@ class SpectralSolver:
 
         After instantiating this class as e.g. `solver`, run `solver()` in
         the `__main__` process to calculate the complete spectral function.
-        The results are stored in the `.solution` variable of the instance.
 
         Calling the instance as `solver(k)` calculates block number k, and
         is meant to be run by individial worker processes in parallel. The
         solver should usually not be used in this manner in user scripts.
         """
         if block is None:
-            # Delete any previously calculated solutions to save memory.
-            del self.solution
-
             # Calculate each block A_km = [A_k(ω_m)] of the spectral function
             # A(ω) in parallel. The results are stored as HDF5 to save RAM.
             print("[yellow]:: Calculating the spectral function in parallel[/yellow]")
@@ -84,40 +80,53 @@ class SpectralSolver:
                 block_names = sorted(pool.imap(self, block_range))
 
             # Open the generated HDF5 files for reading, and merge the blocks
-            # A_km = [A_k(ω_m)] into complete matrices A_m = [A(ω_m)]. The
-            # results are written to a new output file which is also HDF5.
+            # [A_k(ω_m)] into complete matrices A(ω_m). The results are
+            # written to a new output file which is also stored as HDF5.
             print("[yellow]:: Collecting the parallel results[/yellow]")
-            block_files = [File(f, "r") for f in block_names]
+            block_files = [File(block_name, "r") for block_name in block_names]
 
             result_name = "bodge.hdf5"
-            with File(result_name, "w") as fout:
+            with File(result_name, "w") as result_file:
+                # Iterate over every energy ω_m.
                 for m in block_files[0]:
                     A_m = []
-                    for fin in block_files:
-                        data = fin[f'{m}/data']
-                        indices = fin[f'{m}/indices']
-                        indptr = fin[f'{m}/indptr']
+                    # Iterate over every block A_k(ω_m).
+                    for block_file in block_files:
+                        # Extract data from corresponding input files.
+                        data = block_file[f'{m}/data']
+                        indices = block_file[f'{m}/indices']
+                        indptr = block_file[f'{m}/indptr']
 
+                        # Reconstruct the sparse matrix A_k(ω_m).
                         A_km = bsr_matrix((data, indices, indptr))
 
+                        # Save this matrix for further processing.
                         A_m.append(A_km)
 
+                    # Merge all matrix blocks A_k(ω_m) into one matrix A(ω_m).
                     A_m = sp.hstack(A_m, "bsr")
 
-                    fout[f'{m}/indices'] = A_m.indices
-                    fout[f'{m}/indptr'] = A_m.indptr
-                    fout[f'{m}/data'] = A_m.data
+                    # Decontruct the matrix and store in the output file.
+                    result_file[f'{m}/indices'] = A_m.indices
+                    result_file[f'{m}/indptr'] = A_m.indptr
+                    result_file[f'{m}/data'] = A_m.data
 
-                # Close all the input files.
+                # Close all the input files after processing.
                 for fin in block_files:
                     fin.close()
 
-            # Merge the parallel blocks into complete matrices and store these.
+            # Return the generated output file.
             return result_name
         else:
-            # Calculate the spectral function A_k(ω_m) for a given block index k.
+            # Calculate the spectral function A_k(ω_m) for a block index k.
+            # The results should be stored in an HDF5 file `block_name`,
+            # which is returned to the caller after the calculation.
             self.block_init(block)
-            return self.block_solve()
+            block_name = f"block_{self.block:08d}.hdf5"
+            with File(block_name, "w", rdcc_nbytes=1024**3) as block_file:
+                self.block_solve(block_file)
+
+            return block_name
 
     def block_init(self, block: int) -> None:
         """Prepare for performing calculations at a given block index.
@@ -150,7 +159,7 @@ class SpectralSolver:
 
         self.block_subspace = sp.bsr_matrix(mask, dtype=np.int8)
 
-    def block_solve(self):
+    def block_solve(self, block_file: File) -> None:
         raise NotImplementedError
 
 
@@ -169,7 +178,7 @@ class ChebyshevSolver(SpectralSolver):
     the expansion, and `system` provides a previously configured Hamiltonian.
     """
 
-    def __init__(self, *args, moments: int = 256, **kwargs):
+    def __init__(self, *args, moments: int = 1024, **kwargs):
         # Superclass constructor.
         super().__init__(*args, **kwargs)
 
@@ -191,7 +200,7 @@ class ChebyshevSolver(SpectralSolver):
         self.chebyshev = T
         self.energies = ω
 
-    def block_solve(self):
+    def block_solve(self, block_file: File):
         """Chebyshev expansion of a given block of the spectral function."""
         # Compact notation for the essential matrices.
         H = self.hamiltonian
@@ -207,29 +216,26 @@ class ChebyshevSolver(SpectralSolver):
         A_k1 = H @ I_k
 
         # Prepare a storage file for this block, and store the initial results.
-        fname = f"block_{self.block:08d}.hdf5"
-        with File(fname, "w", rdcc_nbytes=1024**3) as f:
-            A_k = {}
-            for m in range(2 * self.moments):
-                A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
+        A_k = {}
+        for m in range(2 * self.moments):
+            A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
 
-                f[f'{m:04d}/indices'] = A_km.indices
-                f[f'{m:04d}/indptr'] = A_km.indptr
-                f[f'{m:04d}/data'] = A_km.data
+            block_file[f'{m:04d}/indices'] = A_km.indices
+            block_file[f'{m:04d}/indptr'] = A_km.indptr
+            block_file[f'{m:04d}/data'] = A_km.data
 
-                A_k[m] = f[f'{m:04d}/data']
+            A_k[m] = block_file[f'{m:04d}/data']
 
-            # Chebyshev expansion of the next elements.
-            for n in range(2, self.moments):
-                # Chebyshev expansion of next vector. Element-wise multiplication
-                # by R_k projects the result back into the Local Krylov subspace.
-                A_k1, A_k0 = (H @ A_k1).multiply(R_k) - A_k0, A_k1
+        # Chebyshev expansion of the next elements.
+        for n in range(2, self.moments):
+            # Chebyshev expansion of next vector. Element-wise multiplication
+            # by R_k projects the result back into the Local Krylov subspace.
+            A_k1, A_k0 = (H @ A_k1).multiply(R_k) - A_k0, A_k1
 
-                # Perform the Chebyshev transformation. Element-wise multiplication
-                # by H_k preserves only on-site and nearest-neighbor interactions.
-                # WARNING: This has been optimized to ignore SciPy wrapper checks.
-                AH_kn = A_k1.multiply(P_k)
-                for m, A_km in A_k.items():
-                    A_k[m][...] = T[m, n] * AH_kn.data
+            # Perform the Chebyshev transformation. Element-wise multiplication
+            # by H_k preserves only on-site and nearest-neighbor interactions.
+            # WARNING: This has been optimized to ignore SciPy wrapper checks.
+            AH_kn = A_k1.multiply(P_k)
+            for m, A_km in A_k.items():
+                A_k[m][...] = T[m, n] * AH_kn.data
 
-        return fname
