@@ -1,5 +1,5 @@
+import os
 from multiprocessing import Pool, cpu_count
-from os import remove
 from typing import Iterator
 
 import numpy as np
@@ -111,15 +111,15 @@ class SpectralSolver:
         if block is None:
             # Calculate each block A_km = [A_k(ω_m)] of the spectral function
             # A(ω) in parallel. The results are stored as HDF5 to save RAM.
-            print("[yellow]:: Calculating the spectral function in parallel[/yellow]")
+            print("[green]:: Calculating the spectral function in parallel[/green]")
             with Pool(self.processes) as pool:
-                block_range = trange(self.blocks, desc=" -> blocks", unit="")
+                block_range = trange(self.blocks, desc=" -> expansion", unit="block")
                 block_names = sorted(pool.imap(self, block_range))
 
             # Open the generated HDF5 files for reading, and merge the blocks
             # [A_k(ω_m)] into complete matrices A(ω_m). The results are
             # written to a new output file which is also stored as HDF5.
-            print("[yellow]:: Collecting the parallel results[/yellow]")
+            print(" -> merging calculated blocks")
             block_files = [File(block_name, "r") for block_name in block_names]
 
             result_name = "bodge.hdf5"
@@ -148,20 +148,21 @@ class SpectralSolver:
                     result_file[f"{m}/spectral/indptr"] = A_m.indptr
                     result_file[f"{m}/spectral/data"] = A_m.data
 
-                # Close all the input files after processing.
+                # Close and remove the input files after processing.
+                print("-> cleaning up temporary files")
                 for block_file in block_files:
                     block_file.close()
-
-                # Remove the now unneeded temporary files.
                 for block_name in block_names:
-                    remove(block_name)
+                    os.remove(block_name)
 
                 # Save other relevant variables.
+                print("-> saving auxilliary variables")
                 for m in result_file:
                     result_file[f"{m}/energy"] = self.energies[int(m)]
                     result_file[f"{m}/weight"] = self.weights[int(m)]
 
             # Return the generated output file.
+            print("--> done!")
             return SpectralSolution(result_name)
         else:
             # Calculate the spectral function A_k(ω_m) for a block index k.
@@ -245,7 +246,6 @@ class ChebyshevSolver(SpectralSolver):
 
         # Calculate the corresponding Chebyshev transform coefficients.
         # TODO: Incorporate the relevant Lorentz kernel factors here.
-        # TODO: Reintroduce the scaling prefactor for DOS calcs.
         n = np.arange(N)
         T = np.cos(n[None, :] * np.arccos(ω[:, None])) / N
         T[:, 1:] *= 2
