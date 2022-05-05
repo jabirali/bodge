@@ -10,6 +10,12 @@ from .consts import *
 from .lattice import *
 from .physics import *
 
+class SpectralSolution:
+    def __init__(self, file_name: str):
+        self.file: File = File(file_name, 'r')
+
+    def __del__(self):
+        self.file.close()
 
 class SpectralSolver:
     """Defines an API for numerically calculating spectral functions.
@@ -117,7 +123,7 @@ class SpectralSolver:
                     fin.close()
 
             # Return the generated output file.
-            return result_name
+            return SpectralSolution(result_name)
         else:
             # Calculate the spectral function A_k(ω_m) for a block index k.
             # The results should be stored in an HDF5 file `block_name`,
