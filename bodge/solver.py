@@ -16,8 +16,8 @@ class SpectralSolver:
 
     This solver assumes the following properties for the derived solvers:
 
+    - Local Krylov subspace methods are used to obtain linear scaling;
     - The Hamiltonian and spectral function are implemented as BSR matrices;
-    - Linear-scaling algorithms based on a Local Krylov subspace are employed;
     - Parallelization based on the independent expansion of matrix blocks;
     - These blocks are saved as HDF5 files to limit the RAM requirements.
 
@@ -57,6 +57,7 @@ class SpectralSolver:
         self.energies: npt.NDArray[np.float64]
 
         self.block: int
+        self.block_name: str
         self.block_identity: sp.bsr_matrix
         self.block_neighbors: sp.bsr_matrix
         self.block_subspace: sp.bsr_matrix
@@ -122,11 +123,28 @@ class SpectralSolver:
             # The results should be stored in an HDF5 file `block_name`,
             # which is returned to the caller after the calculation.
             self.block_init(block)
-            block_name = f"block_{self.block:08d}.hdf5"
-            with File(block_name, "w", rdcc_nbytes=1024**3) as block_file:
-                self.block_solve(block_file)
+            with File(self.block_name, "w", rdcc_nbytes=1024**3) as block_file:
+                # Prepare an empty skeleton for storing the results.
+                block_template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
+                block_template.data *= 0
 
-            return block_name
+                # Store the skeletons to the output file.
+                A_k = {}
+                for m in range(len(self.energies)):
+                    # Save one BSR matrix for each block A_k(ω_m).
+                    block_file[f'{m:04d}/indices'] = block_template.indices
+                    block_file[f'{m:04d}/indptr'] = block_template.indptr
+                    block_file[f'{m:04d}/data'] = block_template.data
+
+                    # Save a reference to its data for easy updates.
+                    A_k[m] = block_file[f'{m:04d}/data']
+
+                # Perform calculations for this block in working area `A_k`.
+                # This ensures that `block_solve` doesn't need to handle the
+                # interaction with the HDF5 temporary file explicitly.
+                self.block_solve(A_k)
+
+            return self.block_name
 
     def block_init(self, block: int) -> None:
         """Prepare for performing calculations at a given block index.
@@ -159,7 +177,10 @@ class SpectralSolver:
 
         self.block_subspace = sp.bsr_matrix(mask, dtype=np.int8)
 
-    def block_solve(self, block_file: File) -> None:
+        # Prepare a filename where the results can be stored.
+        self.block_name = f"block_{self.block:08d}.hdf5"
+
+    def block_solve(self, A_k: dict[int, ArrayLike]) -> None:
         raise NotImplementedError
 
 
@@ -200,7 +221,7 @@ class ChebyshevSolver(SpectralSolver):
         self.chebyshev = T
         self.energies = ω
 
-    def block_solve(self, block_file: File):
+    def block_solve(self, A_k):
         """Chebyshev expansion of a given block of the spectral function."""
         # Compact notation for the essential matrices.
         H = self.hamiltonian
@@ -216,15 +237,9 @@ class ChebyshevSolver(SpectralSolver):
         A_k1 = H @ I_k
 
         # Prepare a storage file for this block, and store the initial results.
-        A_k = {}
         for m in range(2 * self.moments):
             A_km = T[m, 0] * A_k0 + T[m, 1] * A_k1
-
-            block_file[f'{m:04d}/indices'] = A_km.indices
-            block_file[f'{m:04d}/indptr'] = A_km.indptr
-            block_file[f'{m:04d}/data'] = A_km.data
-
-            A_k[m] = block_file[f'{m:04d}/data']
+            A_k[m][...] = A_km.data
 
         # Chebyshev expansion of the next elements.
         for n in range(2, self.moments):
@@ -237,5 +252,5 @@ class ChebyshevSolver(SpectralSolver):
             # WARNING: This has been optimized to ignore SciPy wrapper checks.
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
-                A_k[m][...] = T[m, n] * AH_kn.data
+                A_k[m][...] += T[m, n] * AH_kn.data
 
