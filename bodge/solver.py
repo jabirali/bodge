@@ -1,4 +1,5 @@
 import os
+from collections import namedtuple
 from multiprocessing import Pool, cpu_count
 from typing import Iterator
 
@@ -12,10 +13,8 @@ from .consts import *
 from .lattice import *
 from .physics import *
 
-Energy = np.float64
-Weight = np.float64
-SpectralValue = sp.bsr_matrix
-SpectralTuple = tuple[SpectralValue, Energy, Weight]
+SpectralTuple = namedtuple("SpectralTuple", ["matrix", "energy", "weight"])
+SparseLike = namedtuple("SparseLike", ["data", "indices", "indptr"])
 
 
 class SpectralSolution:
@@ -35,16 +34,16 @@ class SpectralSolution:
         for m in spectral:
             # Reconstruct spectral function.
             data = spectral[f"{m}/data"]
-            indptr = spectral[f"{m}/indptr"]
             indices = spectral[f"{m}/indices"]
+            indptr = spectral[f"{m}/indptr"]
 
-            A_m: SpectralValue = sp.bsr_matrix((data, indices, indptr))
+            A_m = sp.bsr_matrix((data, indices, indptr))
 
             # Extract remaining variables.
-            ω_m: Energy = spectral[f"{m}/energy"][...]
-            w_m: Weight = spectral[f"{m}/weight"][...]
+            ω_m = spectral[f"{m}/energy"][...]
+            w_m = spectral[f"{m}/weight"][...]
 
-            yield A_m, ω_m, w_m
+            yield SpectralTuple(A_m, ω_m, w_m)
 
 
 class SpectralSolver:
@@ -89,8 +88,8 @@ class SpectralSolver:
             self.processes: int = max(cpu_count(), 2)
 
         # Declare additional variables for methods and subclasses to define.
-        self.energies: npt.NDArray[Energy]
-        self.weights: npt.NDArray[Weight]
+        self.energies: npt.NDArray[np.float64]
+        self.weights: npt.NDArray[np.float64]
 
         self.block: int
         self.block_name: str
@@ -114,7 +113,7 @@ class SpectralSolver:
             print("[green]:: Calculating the spectral function in parallel[/green]")
             with Pool(self.processes) as pool:
                 block_range = trange(self.blocks, desc=" -> expanding", unit="block")
-                block_names = sorted(pool.imap_unordered(self, block_range))
+                block_names: list[str] = sorted(pool.imap(self, block_range))
 
             # Open the generated HDF5 files for reading, and merge the blocks
             # [A_k(ω_m)] into complete matrices A(ω_m). The results are
@@ -168,19 +167,20 @@ class SpectralSolver:
             self.block_init(block)
             with File(self.block_name, "w", rdcc_nbytes=1024**3) as block_file:
                 # Prepare an empty skeleton for storing the results.
-                block_template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
-                block_template.data *= 0
+                template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
+                template.data *= 0
 
                 # Store the skeletons to the output file.
                 A_k = {}
                 for m in range(len(self.energies)):
                     # Save one BSR matrix for each block A_k(ω_m).
-                    block_file[f"/block/{m:04d}/indices"] = block_template.indices
-                    block_file[f"/block/{m:04d}/indptr"] = block_template.indptr
-                    block_file[f"/block/{m:04d}/data"] = block_template.data
+                    block_file[f"/block/{m:04d}/data"] = template.data
+                    block_file[f"/block/{m:04d}/indices"] = template.indices
+                    block_file[f"/block/{m:04d}/indptr"] = template.indptr
 
                     # Save a reference to its data for easy updates.
-                    A_k[m] = block_file[f"/block/{m:04d}/data"]
+                    A_km = block_file[f"/block/{m:04d}"]
+                    A_k[m] = SparseLike(A_km["data"], A_km["indices"], A_km["indptr"])
 
                 # Perform calculations for this block in working area `A_k`.
                 # This ensures that `block_solve` doesn't need to handle the
@@ -223,7 +223,7 @@ class SpectralSolver:
         # Prepare a filename where the results can be stored.
         self.block_name = f"block_{self.block:08d}.hdf"
 
-    def block_solve(self, A_k: dict[int, ArrayLike]) -> None:
+    def block_solve(self, storage: dict[int, SparseLike]) -> None:
         raise NotImplementedError
 
 
@@ -253,7 +253,7 @@ class ChebyshevSolver(SpectralSolver):
         self.energies = ω
         self.weights = w
 
-    def block_solve(self, storage):
+    def block_solve(self, storage: dict[int, SparseLike]) -> None:
         """Chebyshev expansion of a given block of the spectral function."""
         # Compact notation for the essential matrices.
         H = self.hamiltonian
@@ -292,4 +292,6 @@ class ChebyshevSolver(SpectralSolver):
 
         # Copy out results.
         for m, A_km in A_k.items():
-            storage[m] = A_km.data
+            storage[m].data[...] = A_km.data
+            storage[m].indices[...] = A_km.indices
+            storage[m].indptr[...] = A_km.indptr
