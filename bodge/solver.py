@@ -81,12 +81,11 @@ class SpectralSolver:
         if self.blocksize * self.blocks != hamiltonian.shape[1]:
             raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
 
-        # By default we use one less process than number of processors (min 2).
-        # This ensures the remaining CPU core is free to orchestrate the rest.
+        # Parallel processes is by default we use the number of processor cores (min 2).
         if processes is not None:
             self.processes: int = processes
         else:
-            self.processes: int = max(cpu_count() - 1, 2)
+            self.processes: int = max(cpu_count(), 2)
 
         # Declare additional variables for methods and subclasses to define.
         self.energies: npt.NDArray[Energy]
@@ -114,7 +113,7 @@ class SpectralSolver:
             print("[green]:: Calculating the spectral function in parallel[/green]")
             with Pool(self.processes) as pool:
                 block_range = trange(self.blocks, desc=" -> expansion", unit="block")
-                block_names = sorted(pool.imap(self, block_range))
+                block_names = sorted(pool.imap_unordered(self, block_range))
 
             # Open the generated HDF5 files for reading, and merge the blocks
             # [A_k(ω_m)] into complete matrices A(ω_m). The results are
@@ -122,7 +121,7 @@ class SpectralSolver:
             print(" -> merging calculated blocks")
             block_files = [File(block_name, "r") for block_name in block_names]
 
-            result_name = "bodge.hdf5"
+            result_name = "bodge.hdf"
             with File(result_name, "w") as result_file:
                 # Iterate over every energy ω_m.
                 for m in block_files[0]:
@@ -147,6 +146,9 @@ class SpectralSolver:
                     result_file[f"{m}/spectral/indices"] = A_m.indices
                     result_file[f"{m}/spectral/indptr"] = A_m.indptr
                     result_file[f"{m}/spectral/data"] = A_m.data
+                    result_file[f"{m}"].create_dataset(
+                        "data", A_m.data.shape, dtype=A_m.data.dtype, chunks=True
+                    )
 
                 # Close and remove the input files after processing.
                 print("-> cleaning up temporary files")
@@ -180,7 +182,13 @@ class SpectralSolver:
                     # Save one BSR matrix for each block A_k(ω_m).
                     block_file[f"{m:04d}/indices"] = block_template.indices
                     block_file[f"{m:04d}/indptr"] = block_template.indptr
-                    block_file[f"{m:04d}/data"] = block_template.data
+                    # block_file[f"{m:04d}/data"] = block_template.data
+                    block_file[f"{m:04d}"].create_dataset(
+                        "data",
+                        block_template.data.shape,
+                        dtype=block_template.data.dtype,
+                        chunks=True,
+                    )
 
                     # Save a reference to its data for easy updates.
                     A_k[m] = block_file[f"{m:04d}/data"]
@@ -224,7 +232,7 @@ class SpectralSolver:
         self.block_subspace = sp.bsr_matrix(mask, dtype=np.int8)
 
         # Prepare a filename where the results can be stored.
-        self.block_name = f"block_{self.block:08d}.hdf5"
+        self.block_name = f"block_{self.block:08d}.hdf"
 
     def block_solve(self, A_k: dict[int, ArrayLike]) -> None:
         raise NotImplementedError
@@ -256,7 +264,7 @@ class ChebyshevSolver(SpectralSolver):
         self.energies = ω
         self.weights = w
 
-    def block_solve(self, A_k):
+    def block_solve(self, storage):
         """Chebyshev expansion of a given block of the spectral function."""
         # Compact notation for the essential matrices.
         H = self.hamiltonian
@@ -272,8 +280,9 @@ class ChebyshevSolver(SpectralSolver):
         A_k1 = H @ I_k
 
         # Prepare a storage file for this block, and store the initial results.
-        for m, A_km in A_k.items():
-            A_km[...] = (T[m, 0] * A_k0 + T[m, 1] * A_k1).data
+        A_k = {}
+        for m in storage:
+            A_k[m] = T[m, 0] * A_k0 + T[m, 1] * A_k1
 
         # Chebyshev expansion of the next elements.
         for n in range(2, self.order):
@@ -286,8 +295,12 @@ class ChebyshevSolver(SpectralSolver):
             # WARNING: This has been optimized to ignore SciPy wrapper checks.
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
-                A_km += T[m, n] * AH_kn.data
+                A_k[m].data += T[m, n] * AH_kn.data
 
         # Scale the final results using the integral weights.
         for m, A_km in A_k.items():
-            A_km /= self.weights[m]
+            A_km.data /= self.weights[m]
+
+        # Copy out results.
+        for m, A_km in A_k.items():
+            storage[m] = A_km.data
