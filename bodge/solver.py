@@ -31,18 +31,17 @@ class SpectralSolution:
 
     def __iter__(self) -> Iterator[SpectralTuple]:
         """Iterate over all stored results."""
-        spectral = self.file[f"/spectral"]
-        for m in spectral:
+        for m in self.file:
             # Reconstruct spectral function.
-            data = spectral[f"{m}/data"]
-            indptr = spectral[f"{m}/indptr"]
-            indices = spectral[f"{m}/indices"]
+            data = self.file[f"{m}/spectral/data"]
+            indptr = self.file[f"{m}/spectral/indptr"]
+            indices = self.file[f"{m}/spectral/indices"]
 
             A_m: SpectralValue = sp.bsr_matrix((data, indices, indptr))
 
             # Extract remaining variables.
-            ω_m: Energy = spectral[f"{m}/energy"][...]
-            w_m: Weight = spectral[f"{m}/weight"][...]
+            ω_m: Energy = self.file[f"{m}/energy"][...]
+            w_m: Weight = self.file[f"{m}/weight"][...]
 
             yield A_m, ω_m, w_m
 
@@ -64,7 +63,7 @@ class SpectralSolver:
         self,
         hamiltonian: Hamiltonian,
         processes: Optional[int] = None,
-        blocksize: int = 256,
+        blocksize: int = 1024,
         radius: int = 4,
     ):
         # Reference to the sparse matrix we use.
@@ -113,36 +112,27 @@ class SpectralSolver:
             # Calculate each block A_km = [A_k(ω_m)] of the spectral function
             # A(ω) in parallel. The results are stored as HDF5 to save RAM.
             print("[green]:: Calculating the spectral function in parallel[/green]")
+            with Pool(self.processes) as pool:
+                block_range = trange(self.blocks, desc=" -> expansion", unit="block")
+                block_names = sorted(pool.imap(self, block_range))
+
+            # Open the generated HDF5 files for reading, and merge the blocks
+            # [A_k(ω_m)] into complete matrices A(ω_m). The results are
+            # written to a new output file which is also stored as HDF5.
+            print(" -> merging calculated blocks")
+            block_files = [File(block_name, "r") for block_name in block_names]
+
             result_name = "bodge.hdf5"
-            A = {}
-            with File(result_name, "w", rdcc_nbytes=100 * 1024**2) as result_file:
-                with Pool(self.processes) as pool:
-                    block_range = trange(self.blocks, desc=" -> expansion", unit="block")
-                    for k, A_k in pool.map(self, block_range):
-                        A[k] = {}
-                        for m, A_km in A_k.items():
-
-                            # Save one BSR matrix for each block A_k(ω_m).
-                            result_file[f"/block/{k:04d}/{m:04d}/indices"] = A_km.indices
-                            result_file[f"/block/{k:04d}/{m:04d}/indptr"] = A_km.indptr
-                            result_file[f"/block/{k:04d}/{m:04d}/data"] = A_km.data
-
-                            A[k][m] = result_file[f"/block/{k:04d}/{m:04d}"]
-
-                # Open the generated HDF5 files for reading, and merge the blocks
-                # [A_k(ω_m)] into complete matrices A(ω_m). The results are
-                # written to a new output file which is also stored as HDF5.
-                print(" -> merging calculated blocks")
-
+            with File(result_name, "w") as result_file:
                 # Iterate over every energy ω_m.
-                for m in trange(len(self.energies), desc=" -> merging", unit="freq"):
+                for m in block_files[0]:
                     A_m = []
                     # Iterate over every block A_k(ω_m).
-                    for k, A_k in A.items():
+                    for block_file in block_files:
                         # Extract data from corresponding input files.
-                        data = A_k[m]["data"]
-                        indices = A_k[m]["indices"]
-                        indptr = A_k[m]["indptr"]
+                        data = block_file[f"{m}/data"]
+                        indices = block_file[f"{m}/indices"]
+                        indptr = block_file[f"{m}/indptr"]
 
                         # Reconstruct the sparse matrix A_k(ω_m).
                         A_km = bsr_matrix((data, indices, indptr))
@@ -154,15 +144,22 @@ class SpectralSolver:
                     A_m = sp.hstack(A_m, "bsr")
 
                     # Decontruct the matrix and store in the output file.
-                    result_file[f"/spectral/{m:04d}/indices"] = A_m.indices
-                    result_file[f"/spectral/{m:04d}/indptr"] = A_m.indptr
-                    result_file[f"/spectral/{m:04d}/data"] = A_m.data
+                    result_file[f"{m}/spectral/indices"] = A_m.indices
+                    result_file[f"{m}/spectral/indptr"] = A_m.indptr
+                    result_file[f"{m}/spectral/data"] = A_m.data
+
+                # Close and remove the input files after processing.
+                print("-> cleaning up temporary files")
+                for block_file in block_files:
+                    block_file.close()
+                for block_name in block_names:
+                    os.remove(block_name)
 
                 # Save other relevant variables.
                 print("-> saving auxilliary variables")
-                for m, (ω_m, w_m) in enumerate(zip(self.energies, self.weights)):
-                    result_file[f"/spectral/{m:04d}/energy"] = ω_m
-                    result_file[f"/spectral/{m:04d}/weight"] = w_m
+                for m in result_file:
+                    result_file[f"{m}/energy"] = self.energies[int(m)]
+                    result_file[f"{m}/weight"] = self.weights[int(m)]
 
             # Return the generated output file.
             print("--> done!")
@@ -172,28 +169,28 @@ class SpectralSolver:
             # The results should be stored in an HDF5 file `block_name`,
             # which is returned to the caller after the calculation.
             self.block_init(block)
-            # with File(self.block_name, "w", rdcc_nbytes=1024**3) as block_file:
-            #     # Prepare an empty skeleton for storing the results.
-            #     block_template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
-            #     block_template.data *= 0
+            with File(self.block_name, "w", rdcc_nbytes=1024**3) as block_file:
+                # Prepare an empty skeleton for storing the results.
+                block_template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
+                block_template.data *= 0
 
-            #     # Store the skeletons to the output file.
-            #     A_k = {}
-            #     for m in range(len(self.energies)):
-            #         # Save one BSR matrix for each block A_k(ω_m).
-            #         block_file[f"{m:04d}/indices"] = block_template.indices
-            #         block_file[f"{m:04d}/indptr"] = block_template.indptr
-            #         block_file[f"{m:04d}/data"] = block_template.data
+                # Store the skeletons to the output file.
+                A_k = {}
+                for m in range(len(self.energies)):
+                    # Save one BSR matrix for each block A_k(ω_m).
+                    block_file[f"{m:04d}/indices"] = block_template.indices
+                    block_file[f"{m:04d}/indptr"] = block_template.indptr
+                    block_file[f"{m:04d}/data"] = block_template.data
 
-            #         # Save a reference to its data for easy updates.
-            #         A_k[m] = block_file[f"{m:04d}/data"]
+                    # Save a reference to its data for easy updates.
+                    A_k[m] = block_file[f"{m:04d}/data"]
 
-            # Perform calculations for this block in working area `A_k`.
-            # This ensures that `block_solve` doesn't need to handle the
-            # interaction with the HDF5 temporary file explicitly.
-            return self.block_solve()
+                # Perform calculations for this block in working area `A_k`.
+                # This ensures that `block_solve` doesn't need to handle the
+                # interaction with the HDF5 temporary file explicitly.
+                self.block_solve(A_k)
 
-            # return self.block_name
+            return self.block_name
 
     def block_init(self, block: int) -> None:
         """Prepare for performing calculations at a given block index.
@@ -227,7 +224,7 @@ class SpectralSolver:
         self.block_subspace = sp.bsr_matrix(mask, dtype=np.int8)
 
         # Prepare a filename where the results can be stored.
-        # self.block_name = f"block_{self.block:08d}.hdf5"
+        self.block_name = f"block_{self.block:08d}.hdf5"
 
     def block_solve(self, A_k: dict[int, ArrayLike]) -> None:
         raise NotImplementedError
@@ -236,7 +233,7 @@ class SpectralSolver:
 class ChebyshevSolver(SpectralSolver):
     """Chebyshev expansion of spectral functions."""
 
-    def __init__(self, *args, order: int = 500, **kwargs):
+    def __init__(self, *args, order: int = 200, **kwargs):
         # Superclass constructor.
         super().__init__(*args, **kwargs)
 
@@ -259,13 +256,12 @@ class ChebyshevSolver(SpectralSolver):
         self.energies = ω
         self.weights = w
 
-    def block_solve(self):
+    def block_solve(self, A_k):
         """Chebyshev expansion of a given block of the spectral function."""
         # Compact notation for the essential matrices.
         H = self.hamiltonian
         T = self.chebyshev
 
-        k = self.block
         I_k = self.block_identity
         P_k = self.block_neighbors
         R_k = self.block_subspace
@@ -276,9 +272,8 @@ class ChebyshevSolver(SpectralSolver):
         A_k1 = H @ I_k
 
         # Prepare a storage file for this block, and store the initial results.
-        A_k = {}
-        for m, ω_m in enumerate(self.energies):
-            A_k[m] = T[m, 0] * A_k0 + T[m, 1] * A_k1
+        for m, A_km in A_k.items():
+            A_km[...] = (T[m, 0] * A_k0 + T[m, 1] * A_k1).data
 
         # Chebyshev expansion of the next elements.
         for n in range(2, self.order):
@@ -291,10 +286,8 @@ class ChebyshevSolver(SpectralSolver):
             # WARNING: This has been optimized to ignore SciPy wrapper checks.
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
-                A_km.data += T[m, n] * AH_kn.data
+                A_km += T[m, n] * AH_kn.data
 
         # Scale the final results using the integral weights.
         for m, A_km in A_k.items():
-            A_km.data /= self.weights[m]
-
-        return k, A_k
+            A_km /= self.weights[m]
