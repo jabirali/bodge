@@ -286,8 +286,8 @@ class ChebyshevSolver(SpectralSolver):
             # WARNING: This has been optimized to ignore SciPy wrapper checks.
             AH_kn = A_k1.multiply(P_k)
             for m, A_km in A_k.items():
-                A_km[...] += T[m, n] * AH_kn.data
+                A_km += T[m, n] * AH_kn.data
 
         # Scale the final results using the integral weights.
         for m, A_km in A_k.items():
-            A_km[...] /= self.weights[m]
+            A_km /= self.weights[m]
