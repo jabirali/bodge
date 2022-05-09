@@ -119,7 +119,6 @@ class SpectralSolver:
             # Open the generated HDF5 files for reading, and merge the blocks
             # [A_k(ω_m)] into complete matrices A(ω_m). The results are
             # written to a new output file which is also stored as HDF5.
-            block_files = [File(block_name, "r") for block_name in block_names]
             result_name = "bodge.hdf"
             with File(result_name, "w", rdcc_nbytes=1024**3) as result_file:
                 # Iterate over every energy ω_m.
@@ -127,17 +126,18 @@ class SpectralSolver:
                 for m in result_range:
                     A_m = []
                     # Iterate over every block A_k(ω_m).
-                    for block_file in block_files:
-                        # Extract data from corresponding input files.
-                        data = block_file[f"/block/{m:04d}/data"]
-                        indices = block_file[f"/block/{m:04d}/indices"]
-                        indptr = block_file[f"/block/{m:04d}/indptr"]
+                    for block_name in block_names:
+                        with File(block_name, "r") as block_file:
+                            # Extract data from corresponding input files.
+                            data = block_file[f"/block/{m:04d}/data"]
+                            indices = block_file[f"/block/{m:04d}/indices"]
+                            indptr = block_file[f"/block/{m:04d}/indptr"]
 
-                        # Reconstruct the sparse matrix A_k(ω_m).
-                        A_km = bsr_matrix((data, indices, indptr))
+                            # Reconstruct the sparse matrix A_k(ω_m).
+                            A_km = bsr_matrix((data, indices, indptr))
 
-                        # Save this matrix for further processing.
-                        A_m.append(A_km)
+                            # Save this matrix for further processing.
+                            A_m.append(A_km)
 
                     # Merge all matrix blocks A_k(ω_m) into one matrix A(ω_m).
                     A_m = sp.hstack(A_m, "bsr")
@@ -149,8 +149,6 @@ class SpectralSolver:
 
                 # Close and remove the input files after processing.
                 print("-> cleaning up temporary files")
-                for block_file in block_files:
-                    block_file.close()
                 for block_name in block_names:
                     os.remove(block_name)
 
