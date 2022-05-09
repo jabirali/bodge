@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from rich import print
 from scipy.linalg import eigh, inv
 from scipy.sparse import bsr_matrix, coo_matrix, identity
@@ -7,7 +6,8 @@ from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
 from .consts import *
-from .lattice import *
+from .lattice import Lattice
+from .typing import *
 
 
 class Hamiltonian:
@@ -74,9 +74,9 @@ class Hamiltonian:
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: NDArray[np.complex128] = self.matrix.data
+        self.data: Array[np.complex128] = self.matrix.data
 
-    def __enter__(self) -> tuple[dict[Coords, NDArray], dict[Coords, NDArray]]:
+    def __enter__(self) -> tuple[dict[Coords, Array], dict[Coords, Array]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
@@ -173,7 +173,7 @@ class Hamiltonian:
         """Generate an identity matrix with similar dimensions as the Hamiltonian."""
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
-    def diagonalize(self) -> tuple[NDArray, NDArray]:
+    def diagonalize(self) -> tuple[Array, Array]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
         This calculates the eigenvalues and eigenvectors of the system. Due to
@@ -194,7 +194,7 @@ class Hamiltonian:
 
         return eigval, eigvec
 
-    def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[NDArray]:
+    def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[Array]:
         """Calculate the exact spectral function of the system via direct inversion.
 
         Note that this method is quite inefficient since it uses dense matrices;

@@ -1,21 +1,16 @@
 import os
-from collections import namedtuple
 from multiprocessing import Pool, cpu_count
-from typing import Iterator
 
 import numpy as np
-import numpy.typing as npt
 import scipy.sparse as sp
 from h5py import File
+from rich import print
 from tqdm import trange
 
 from .consts import *
-from .lattice import *
-from .physics import *
-
-Sparse = sp.bsr_matrix
-SparseLike = namedtuple("SparseLike", ["data", "indices", "indptr"])
-SpectralTuple = namedtuple("SpectralTuple", ["spectral", "energy", "weight"])
+from .lattice import Lattice
+from .physics import Hamiltonian
+from .typing import *
 
 
 class SpectralSolution:
@@ -89,8 +84,8 @@ class SpectralSolver:
             self.processes: int = max(cpu_count(), 2)
 
         # Declare additional variables for methods and subclasses to define.
-        self.energies: npt.NDArray[np.float64]
-        self.weights: npt.NDArray[np.float64]
+        self.energies: Array[np.float64]
+        self.weights: Array[np.float64]
 
         self.block: int
         self.block_name: str
@@ -134,7 +129,7 @@ class SpectralSolver:
                             indptr = block_file[f"/block/{m:04d}/indptr"]
 
                             # Reconstruct the sparse matrix A_k(ω_m).
-                            A_km = bsr_matrix((data, indices, indptr))
+                            A_km = Sparse((data, indices, indptr))
 
                             # Save this matrix for further processing.
                             A_m.append(A_km)

@@ -1,14 +1,7 @@
-from typing import Iterator, Optional
-
 import numpy as np
 
 from .consts import *
-
-# Data types for working with Lattice coordinates.
-Index = int
-Coord = tuple[int, int, int]
-Indices = tuple[Index, Index]
-Coords = tuple[Coord, Coord]
+from .typing import *
 
 
 class Lattice:
