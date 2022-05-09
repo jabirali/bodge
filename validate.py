@@ -10,7 +10,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((256, 256, 16))
+    lattice = CubicLattice((8, 8, 8))
     hamiltonian = Hamiltonian(lattice)
     solver = ChebyshevSolver(hamiltonian)
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     for A_m, ω_m, w_m in solver():
-        print(A_m)
+        # print(A_m)
         print(ω_m)
-        print(w_m)
-        print("=====")
+        # print(w_m)
+        # print("=====")

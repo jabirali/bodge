@@ -31,17 +31,18 @@ class SpectralSolution:
 
     def __iter__(self) -> Iterator[SpectralTuple]:
         """Iterate over all stored results."""
-        for m in self.file:
+        spectral = self.file["/spectral/"]
+        for m in spectral:
             # Reconstruct spectral function.
-            data = self.file[f"{m}/spectral/data"]
-            indptr = self.file[f"{m}/spectral/indptr"]
-            indices = self.file[f"{m}/spectral/indices"]
+            data = spectral[f"{m}/data"]
+            indptr = spectral[f"{m}/indptr"]
+            indices = spectral[f"{m}/indices"]
 
             A_m: SpectralValue = sp.bsr_matrix((data, indices, indptr))
 
             # Extract remaining variables.
-            ω_m: Energy = self.file[f"{m}/energy"][...]
-            w_m: Weight = self.file[f"{m}/weight"][...]
+            ω_m: Energy = spectral[f"{m}/energy"][...]
+            w_m: Weight = spectral[f"{m}/weight"][...]
 
             yield A_m, ω_m, w_m
 
@@ -112,26 +113,25 @@ class SpectralSolver:
             # A(ω) in parallel. The results are stored as HDF5 to save RAM.
             print("[green]:: Calculating the spectral function in parallel[/green]")
             with Pool(self.processes) as pool:
-                block_range = trange(self.blocks, desc=" -> expansion", unit="block")
+                block_range = trange(self.blocks, desc=" -> expanding", unit="block")
                 block_names = sorted(pool.imap_unordered(self, block_range))
 
             # Open the generated HDF5 files for reading, and merge the blocks
             # [A_k(ω_m)] into complete matrices A(ω_m). The results are
             # written to a new output file which is also stored as HDF5.
-            print(" -> merging calculated blocks")
             block_files = [File(block_name, "r") for block_name in block_names]
-
             result_name = "bodge.hdf"
-            with File(result_name, "w") as result_file:
+            with File(result_name, "w", rdcc_nbytes=1024**3) as result_file:
                 # Iterate over every energy ω_m.
-                for m in block_files[0]:
+                result_range = trange(len(self.energies), desc=" -> merging", unit="energy")
+                for m in result_range:
                     A_m = []
                     # Iterate over every block A_k(ω_m).
                     for block_file in block_files:
                         # Extract data from corresponding input files.
-                        data = block_file[f"{m}/data"]
-                        indices = block_file[f"{m}/indices"]
-                        indptr = block_file[f"{m}/indptr"]
+                        data = block_file[f"/block/{m:04d}/data"]
+                        indices = block_file[f"/block/{m:04d}/indices"]
+                        indptr = block_file[f"/block/{m:04d}/indptr"]
 
                         # Reconstruct the sparse matrix A_k(ω_m).
                         A_km = bsr_matrix((data, indices, indptr))
@@ -143,12 +143,9 @@ class SpectralSolver:
                     A_m = sp.hstack(A_m, "bsr")
 
                     # Decontruct the matrix and store in the output file.
-                    result_file[f"{m}/spectral/indices"] = A_m.indices
-                    result_file[f"{m}/spectral/indptr"] = A_m.indptr
-                    result_file[f"{m}/spectral/data"] = A_m.data
-                    result_file[f"{m}"].create_dataset(
-                        "data", A_m.data.shape, dtype=A_m.data.dtype, chunks=True
-                    )
+                    result_file[f"/spectral/{m:04d}/indices"] = A_m.indices
+                    result_file[f"/spectral/{m:04d}/indptr"] = A_m.indptr
+                    result_file[f"/spectral/{m:04d}/data"] = A_m.data
 
                 # Close and remove the input files after processing.
                 print("-> cleaning up temporary files")
@@ -159,9 +156,9 @@ class SpectralSolver:
 
                 # Save other relevant variables.
                 print("-> saving auxilliary variables")
-                for m in result_file:
-                    result_file[f"{m}/energy"] = self.energies[int(m)]
-                    result_file[f"{m}/weight"] = self.weights[int(m)]
+                for m in range(len(self.energies)):
+                    result_file[f"/spectral/{m:04d}/energy"] = self.energies[int(m)]
+                    result_file[f"/spectral/{m:04d}/weight"] = self.weights[int(m)]
 
             # Return the generated output file.
             print("--> done!")
@@ -180,18 +177,12 @@ class SpectralSolver:
                 A_k = {}
                 for m in range(len(self.energies)):
                     # Save one BSR matrix for each block A_k(ω_m).
-                    block_file[f"{m:04d}/indices"] = block_template.indices
-                    block_file[f"{m:04d}/indptr"] = block_template.indptr
-                    # block_file[f"{m:04d}/data"] = block_template.data
-                    block_file[f"{m:04d}"].create_dataset(
-                        "data",
-                        block_template.data.shape,
-                        dtype=block_template.data.dtype,
-                        chunks=True,
-                    )
+                    block_file[f"/block/{m:04d}/indices"] = block_template.indices
+                    block_file[f"/block/{m:04d}/indptr"] = block_template.indptr
+                    block_file[f"/block/{m:04d}/data"] = block_template.data
 
                     # Save a reference to its data for easy updates.
-                    A_k[m] = block_file[f"{m:04d}/data"]
+                    A_k[m] = block_file[f"/block/{m:04d}/data"]
 
                 # Perform calculations for this block in working area `A_k`.
                 # This ensures that `block_solve` doesn't need to handle the
