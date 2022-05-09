@@ -23,7 +23,7 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     for A_m, ω_m, w_m in solver():
-        # print(A_m)
-        print(ω_m)
+        print(A_m)
+        # print(ω_m)
         # print(w_m)
         # print("=====")

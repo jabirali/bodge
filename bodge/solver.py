@@ -13,8 +13,9 @@ from .consts import *
 from .lattice import *
 from .physics import *
 
-SpectralTuple = namedtuple("SpectralTuple", ["matrix", "energy", "weight"])
+Sparse = sp.bsr_matrix
 SparseLike = namedtuple("SparseLike", ["data", "indices", "indptr"])
+SpectralTuple = namedtuple("SpectralTuple", ["spectral", "energy", "weight"])
 
 
 class SpectralSolution:
@@ -37,7 +38,7 @@ class SpectralSolution:
             indices = spectral[f"{m}/indices"]
             indptr = spectral[f"{m}/indptr"]
 
-            A_m = sp.bsr_matrix((data, indices, indptr))
+            A_m = Sparse((data, indices, indptr))
 
             # Extract remaining variables.
             ω_m = spectral[f"{m}/energy"][...]
@@ -67,8 +68,8 @@ class SpectralSolver:
         radius: int = 4,
     ):
         # Reference to the sparse matrix we use.
-        self.hamiltonian: sp.bsr_matrix = hamiltonian.matrix
-        self.skeleton: sp.bsr_matrix = hamiltonian.struct
+        self.hamiltonian: Sparse = hamiltonian.matrix
+        self.skeleton: Sparse = hamiltonian.struct
 
         # Linear scaling is achieved via a Local Krylov cutoff.
         self.radius: int = radius
@@ -93,9 +94,9 @@ class SpectralSolver:
 
         self.block: int
         self.block_name: str
-        self.block_identity: sp.bsr_matrix
-        self.block_neighbors: sp.bsr_matrix
-        self.block_subspace: sp.bsr_matrix
+        self.block_identity: Sparse
+        self.block_neighbors: Sparse
+        self.block_subspace: Sparse
 
     def __call__(self, block: Optional[int] = None):
         """Calculate the spectral function as a function of energy.
@@ -167,7 +168,7 @@ class SpectralSolver:
             self.block_init(block)
             with File(self.block_name, "w", rdcc_nbytes=1024**3) as block_file:
                 # Prepare an empty skeleton for storing the results.
-                template = sp.bsr_matrix(self.block_neighbors, dtype=np.complex128)
+                template = Sparse(self.block_neighbors, dtype=np.complex128)
                 template.data *= 0
 
                 # Store the skeletons to the output file.
@@ -218,7 +219,7 @@ class SpectralSolver:
             mask = self.skeleton @ mask
         mask.data[...] = 1
 
-        self.block_subspace = sp.bsr_matrix(mask, dtype=np.int8)
+        self.block_subspace = Sparse(mask, dtype=np.int8)
 
         # Prepare a filename where the results can be stored.
         self.block_name = f"block_{self.block:08d}.hdf"
