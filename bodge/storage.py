@@ -13,7 +13,7 @@ def pack(file: File, path: str, obj: Any):
         file[path] = obj
 
 
-def unpack(file: File, path: str):
+def unpack(file: File, path: str) -> Any:
     """Load an object at a given path in an open HDF file."""
     if isinstance(file[path], Group):
         data = file[path + "/data"][...]

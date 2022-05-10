@@ -3,7 +3,6 @@
 import scipy.sparse as sp
 
 from bodge import *
-from bodge.solver2 import BlockSolver, Solver
 
 t = 1.0
 μ = +3 * t
@@ -13,8 +12,7 @@ m3 = t / 5
 if __name__ == "__main__":
     lattice = CubicLattice((96, 96, 1))
     hamiltonian = Hamiltonian(lattice)
-    # solver = ChebyshevSolver(hamiltonian)
-    solver = Solver(hamiltonian, BlockSolver)
+    solver = Solver(chebyshev, hamiltonian, resolve=True)
 
     with hamiltonian as (H, Δ):
         for i in lattice.sites():

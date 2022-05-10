@@ -1,3 +1,4 @@
+from .chebyshev import *
 from .consts import *
 from .lattice import *
 from .physics import *
@@ -8,7 +9,8 @@ __version__ = "0.0.4"
 __all__ = [
     "CubicLattice",
     "Hamiltonian",
-    "ChebyshevSolver",
+    "Solver",
+    "chebyshev",
     "σ0",
     "σ1",
     "σ2",
