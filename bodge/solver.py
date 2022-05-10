@@ -45,12 +45,12 @@ class Solver:
 
     This part of the system is responsible for preparing relevant storage
     files and multiprocessing pools and then orchestrating calculations.
-    Actual calculations are handled by `BlockSolver` and its derivatives.
+    Actual calculations are handled by `Kernel` and its derivatives.
     """
 
     def __init__(
         self,
-        block_solver: Callable,
+        kernel: Callable,
         hamiltonian: Hamiltonian,
         blocksize: int = 1024,
         radius: int = 4,
@@ -75,7 +75,7 @@ class Solver:
 
         # Define a result file and instantiate the block solver.
         self.filename = "bodge.hdf"
-        self.block_solver = block_solver(self.filename)
+        self.kernel = kernel(self.filename)
 
     def __call__(self) -> Solution:
         # Load data from `self.filename`.
@@ -91,7 +91,7 @@ class Solver:
         # Parallel calculations with `multiprocessing`.
         print("[green]:: Calculating the spectral function in parallel[/green]")
         with Pool() as pool:
-            block_names = pool.imap(self.block_solver, range(self.blocks))
+            block_names = pool.imap(self.kernel, range(self.blocks))
             block_names = [*tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk")]
 
         # Determine which outputs were calculated.
@@ -139,7 +139,7 @@ class Solver:
         return Solution(self.filename)
 
 
-class BlockSolver:
+class Kernel:
     """Numerically calculate one block of a spectral function.
 
     This class is invoked indirectly by `Solver` to calculate the spectral

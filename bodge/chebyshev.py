@@ -1,7 +1,7 @@
 from .solver import *
 
 
-class chebyshev(BlockSolver):
+class chebyshev(Kernel):
     """Chebyshev expansion of spectral functions."""
 
     def solve(self) -> None:

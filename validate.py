@@ -9,9 +9,9 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((16, 16, 4))
+    lattice = CubicLattice((96, 96, 1))
     hamiltonian = Hamiltonian(lattice)
-    solver = Solver(chebyshev, hamiltonian, resolve=True)
+    solver = Solver(chebyshev, hamiltonian, resolve=False)
 
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
@@ -24,5 +24,5 @@ if __name__ == "__main__":
     sol = solver()
     print(sol.integral)
 
-    for ω, A in sol.spectral:
-        print(ω, A)
+    # for ω, A in sol.spectral:
+    # print(ω, A)
