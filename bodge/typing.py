@@ -12,5 +12,4 @@ Indices = tuple[Index, Index]
 Coords = tuple[Coord, Coord]
 
 # Named tuples for important return types.
-SparseLike = namedtuple("SparseLike", ["data", "indices", "indptr"])
-SpectralTuple = namedtuple("SpectralTuple", ["spectral", "energy", "weight"])
+Spectral = namedtuple("Spectral", ["energy", "value"])

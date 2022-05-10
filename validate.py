@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import scipy.sparse as sp
 
 from bodge import *
 
@@ -10,7 +9,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((96, 96, 1))
+    lattice = CubicLattice((16, 16, 4))
     hamiltonian = Hamiltonian(lattice)
     solver = Solver(chebyshev, hamiltonian, resolve=True)
 
@@ -22,9 +21,8 @@ if __name__ == "__main__":
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    solver()
-    # for A_m, ω_m, w_m in solver():
-    # print(A_m)
-    # print(ω_m)
-    # print(w_m)
-    # print("=====")
+    sol = solver()
+    print(sol.integral)
+
+    for ω, A in sol.spectral:
+        print(ω, A)

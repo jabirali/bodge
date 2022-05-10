@@ -4,12 +4,7 @@ from .solver import *
 class chebyshev(BlockSolver):
     """Chebyshev expansion of spectral functions."""
 
-    def __init__(self, *args, **kwargs):
-        # Superclass constructor.
-        super().__init__(*args, **kwargs)
-
-    def solve(self, block: int):
-        """Chebyshev expansion of a given block of the spectral function."""
+    def solve(self) -> None:
         # Chebyshev nodes {ω_m} where we calculate the spectral function
         # and corresponding weights {w_m} used for quadrature integration.
         N = 200
