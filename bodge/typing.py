@@ -1,5 +1,4 @@
-from collections import namedtuple
-from typing import Any, Callable, Iterator, Optional
+from typing import Any, Callable, Iterator, NamedTuple, Optional
 
 from numpy.typing import ArrayLike
 from numpy.typing import NDArray as Array
@@ -12,4 +11,6 @@ Indices = tuple[Index, Index]
 Coords = tuple[Coord, Coord]
 
 # Named tuples for important return types.
-Spectral = namedtuple("Spectral", ["energy", "value"])
+class Spectral(NamedTuple):
+    energy: float
+    value: Sparse
