@@ -4,20 +4,22 @@ from multiprocessing import Pool
 
 import scipy.sparse as sp
 from h5py import File
-from rich import print
 from tqdm import tqdm
 
 from .consts import *
 from .physics import Hamiltonian
-from .storage import *
+from .stdio import *
 from .typing import *
 
 
 class Solution:
-    """User-facing interface for numerically calculated results.
+    """Interface to the results calculated by the `Solver` class.
 
-    This provides a series of properties for accessing the data in a HDF5
-    file, without having to explicitly index the underlying storage.
+    The spectral functions calculated by Bodge can be huge, and may not fit in
+    computer memory. Moreover, it can be desirable to archive the results for
+    reprocessing in the future. For these reasons, all the calculated results
+    are stored in an HDF5 output file. This class wraps the generated HDF5
+    file, such that the data can be accessed in a more seamless manner.
     """
 
     def __init__(self, filename: str) -> None:
@@ -25,19 +27,33 @@ class Solution:
         self.filename: str = filename
 
     @property
-    def integral(self) -> Sparse:
+    def integral(self) -> Optional[Sparse]:
+        """Accessor for the energy-integrated spectral function.
+
+        `None` is returned if the quantity has not been calculated or stored.
+        """
         with File(self.filename, "r") as file:
-            return unpack(file, "/integral")
+            if "integral" not in file:
+                return None
+            else:
+                return unpack(file, "/integral")
 
     @property
-    def spectral(self) -> Iterator[Spectral]:
-        with File(self.filename, "r") as file:
-            ω = unpack(file, "/energies")
-            for m in file["/spectral"]:
-                ω_m = ω[int(m)]
-                A_m = unpack(file, f"/spectral/{m}")
+    def spectral(self) -> Iterator[Optional[Spectral]]:
+        """Accessor for the energy-resolved spectral function.
 
-                yield Spectral(ω_m, A_m)
+        `None` is returned if the quantity has not been calculated or stored.
+        """
+        with File(self.filename, "r") as file:
+            if "spectral" not in file:
+                yield None
+            else:
+                ω = unpack(file, "/energies")
+                for m in file["/spectral"]:
+                    ω_m = ω[int(m)]
+                    A_m = unpack(file, f"/spectral/{m}")
+
+                    yield Spectral(ω_m, A_m)
 
 
 class Solver:
@@ -79,7 +95,7 @@ class Solver:
 
     def __call__(self) -> Solution:
         # Load data from `self.filename`.
-        print("[green]:: Preparing system for parallel calculations[/green]")
+        log(self, "Preparing system for parallel calculations")
         with File(self.filename, "w") as file:
             pack(file, "/hamiltonian/matrix", self.hamiltonian.matrix)
             pack(file, "/hamiltonian/struct", self.hamiltonian.struct)
@@ -89,7 +105,7 @@ class Solver:
             pack(file, "/numerics/resolve", self.resolve)
 
         # Parallel calculations with `multiprocessing`.
-        print("[green]:: Calculating the spectral function in parallel[/green]")
+        log(self, "Calculating the spectral function in parallel")
         with Pool() as pool:
             block_names = pool.imap(self.kernel, range(self.blocks))
             block_names = [*tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk")]

@@ -1,5 +1,4 @@
 import numpy as np
-from rich import print
 from scipy.linalg import eigh, inv
 from scipy.sparse import bsr_matrix, coo_matrix, identity
 from scipy.sparse.linalg import norm
@@ -7,6 +6,7 @@ from tqdm import tqdm
 
 from .consts import *
 from .lattice import Lattice
+from .stdio import *
 from .typing import *
 
 
@@ -39,7 +39,7 @@ class Hamiltonian:
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The fastest alternative for this is the COO format,
         # but we later convert to BSR format with 4x4 dense submatrices.
-        print("[green]:: Preparing a sparse skeleton for the Hamiltonian[/green]")
+        log(self, "Preparing a sparse skeleton")
 
         size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
 
@@ -96,7 +96,7 @@ class Hamiltonian:
         self.hopp = {}
         self.pair = {}
 
-        print("[green]:: Collecting new contributions to the Hamiltonian[/green]")
+        log(self, "Collecting new contributions")
         return self.hopp, self.pair
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -110,7 +110,7 @@ class Hamiltonian:
         - Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
         """
         # Process hopping: H[i, j].
-        print("[green]:: Updating the matrix elements of the Hamiltonian[/green]")
+        log(self, "Updating the matrix elements")
         for (i, j), val in tqdm(self.hopp.items(), desc=" -> hopping", unit="", unit_scale=True):
             # Find this matrix block.
             k1 = self.index(i, j)
@@ -183,7 +183,7 @@ class Hamiltonian:
         it is meant as a benchmark, not for actual large-scale calculations.
         """
         # Calculate the relevant eigenvalues and eigenvectors.
-        print("[green]:: Calculating eigenstates via direct diagonalization[/green]")
+        log(self, "Calculating eigenstates via direct diagonalization")
         H = self.scale * self.matrix.todense()
         eigval, eigvec = eigh(H, subset_by_value=(0, np.inf))
 
@@ -209,7 +209,7 @@ class Hamiltonian:
 
         # Calculate the spectral function via direct inversion.
         spectral = []
-        print("[green]:: Calculating spectral function via direct inversion[/green]")
+        log(self, "Calculating spectral function via direct inversion")
         for ω in tqdm(energies, desc=" -> energies", unit="", unit_scale=True):
             Gᴿ = inv((ω + η) * I - H)
             Gᴬ = inv((ω - η) * I - H)

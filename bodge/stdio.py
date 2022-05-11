@@ -1,6 +1,12 @@
 from h5py import File, Group
+from rich import print
 
 from .typing import *
+
+
+def log(self, msg: str):
+    """Write a colorized log message to stdout."""
+    print(f"[white]:: [magenta]{self.__class__.__name__}[/magenta]: [green]{msg}[/green][/white]")
 
 
 def pack(file: File, path: str, obj: Any):
