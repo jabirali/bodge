@@ -12,6 +12,7 @@ from .stdio import *
 from .typing import *
 
 
+@typechecked
 class Solution:
     """Interface to the results calculated by the `Solver` class.
 
@@ -56,6 +57,7 @@ class Solution:
                     yield Spectral(ω_m, A_m)
 
 
+@typechecked
 class Solver:
     """User-facing interface for numerically calculating spectral functions.
 
@@ -155,6 +157,7 @@ class Solver:
         return Solution(self.filename)
 
 
+@typechecked
 class Kernel:
     """Numerically calculate one block of a spectral function.
 

@@ -4,6 +4,7 @@ from .consts import *
 from .typing import *
 
 
+@typechecked
 class Lattice:
     """API for working with generic three-dimensional lattices.
 
@@ -58,6 +59,7 @@ class Lattice:
         raise NotImplementedError
 
 
+@typechecked
 class CubicLattice(Lattice):
     """Concrete representation of a primitive cubic lattice."""
 

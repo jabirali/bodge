@@ -1,8 +1,12 @@
 from typing import Any, Callable, Iterator, NamedTuple, Optional
 
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from numpy.typing import NDArray as Array
 from scipy.sparse import bsr_matrix as Sparse
+from typeguard import typechecked
+
+# Data types used for storing/loading numeric data.
+Numeric = Sparse | ArrayLike | DTypeLike
 
 # Data types for working with Lattice coordinates.
 Index = int
@@ -11,6 +15,7 @@ Indices = tuple[Index, Index]
 Coords = tuple[Coord, Coord]
 
 # Named tuples for important return types.
+@typechecked
 class Spectral(NamedTuple):
     energy: float
     value: Sparse

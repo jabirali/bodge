@@ -1,6 +1,7 @@
 from .solver import *
 
 
+@typechecked
 class chebyshev(Kernel):
     """Chebyshev expansion of spectral functions."""
 

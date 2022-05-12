@@ -4,12 +4,14 @@ from rich import print
 from .typing import *
 
 
+@typechecked
 def log(self, msg: str):
-    """Write a colorized log message to stdout."""
+    """Log a formatted message to stdout."""
     print(f"[white]:: [magenta]{self.__class__.__name__}[/magenta]: [green]{msg}[/green][/white]")
 
 
-def pack(file: File, path: str, obj: Any):
+@typechecked
+def pack(file: File, path: str, obj: Numeric):
     """Save an object to a given path in an open HDF file."""
     if type(obj) == Sparse:
         file[path + "/data"] = obj.data
@@ -19,7 +21,8 @@ def pack(file: File, path: str, obj: Any):
         file[path] = obj
 
 
-def unpack(file: File, path: str) -> Any:
+@typechecked
+def unpack(file: File, path: str) -> Numeric:
     """Load an object at a given path in an open HDF file."""
     if isinstance(file[path], Group):
         data = file[path + "/data"][...]

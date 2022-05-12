@@ -10,6 +10,7 @@ from .stdio import *
 from .typing import *
 
 
+@typechecked
 class Hamiltonian:
     """Representation of a physical system in the tight-binding limit.
 
@@ -122,7 +123,7 @@ class Hamiltonian:
             # Inverse process for non-diagonal contributions.
             if i != j:
                 k2 = self.index(j, i)
-                self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
+                self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
         # Process pairing: Δ[i, j].
         for (i, j), val in tqdm(self.pair.items(), desc=" -> pairing", unit="", unit_scale=True):
@@ -136,7 +137,7 @@ class Hamiltonian:
             # Inverse process for non-diagonal contributions.
             if i != j:
                 k2 = self.index(j, i)
-                self.data[k2, ...] = np.swapaxes(self.data[k1, ...], 2, 3).conj()
+                self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
         # Verify that the matrix is Hermitian.
         print(" -> checking that the matrix is hermitian")
@@ -166,7 +167,7 @@ class Hamiltonian:
         js = indices[indptr[i] : indptr[i + 1]]
         k = indptr[i] + np.where(js == j)
 
-        return k
+        return Index(k)
 
     @property
     def identity(self) -> bsr_matrix:
