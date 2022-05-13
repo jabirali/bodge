@@ -4,7 +4,6 @@ from .consts import *
 from .typing import *
 
 
-@typechecked
 class Lattice:
     """API for working with generic three-dimensional lattices.
 
@@ -24,6 +23,7 @@ class Lattice:
     arguments to traverse all sites and bonds in the lattice, respectively.
     """
 
+    @beartype
     def __init__(self, shape: Coord):
         # Create an abstract class.
         if self.__class__.__name__ == "Lattice":
@@ -35,10 +35,12 @@ class Lattice:
         # Number of atoms in the lattice.
         self.size: Index = np.prod(shape)
 
+    @beartype
     def __getitem__(self, coord: Coord) -> Index:
         """Syntactic sugar for converting coordinates into indices."""
         return self.index(coord)
 
+    @beartype
     def __iter__(self) -> Iterator[Coords]:
         """Iterate over all on-site and nearest-neighbor interactions."""
         for index in self.sites():
@@ -46,28 +48,32 @@ class Lattice:
         for indices in self.bonds():
             yield indices
 
+    @beartype
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
         raise NotImplementedError
 
+    @beartype
     def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice."""
         raise NotImplementedError
 
+    @beartype
     def bonds(self) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice."""
         raise NotImplementedError
 
 
-@typechecked
 class CubicLattice(Lattice):
     """Concrete representation of a primitive cubic lattice."""
 
+    @beartype
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
 
         return coord[2] + coord[1] * self.shape[2] + coord[0] * self.shape[1] * self.shape[2]
 
+    @beartype
     def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice."""
 
@@ -76,6 +82,7 @@ class CubicLattice(Lattice):
                 for z in range(self.shape[2]):
                     yield (x, y, z)
 
+    @beartype
     def bonds(self, axis: Optional[int] = None) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice.
 

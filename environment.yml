@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - python
+  - beartype
   - black
   - h5py
   - isort
@@ -14,4 +15,3 @@ dependencies:
   - scipy
   - seaborn
   - tqdm
-  - typeguard

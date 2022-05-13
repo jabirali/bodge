@@ -9,7 +9,7 @@ t = 1.0
 m3 = t / 5
 
 if __name__ == "__main__":
-    lattice = CubicLattice((32, 32, 10))
+    lattice = CubicLattice((128, 128, 64))
     hamiltonian = Hamiltonian(lattice)
     solver = Solver(chebyshev, hamiltonian, resolve=False)
 

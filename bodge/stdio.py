@@ -4,13 +4,13 @@ from rich import print
 from .typing import *
 
 
-@typechecked
+@beartype
 def log(self, msg: str):
     """Log a formatted message to stdout."""
     print(f"[white]:: [magenta]{self.__class__.__name__}[/magenta]: [green]{msg}[/green][/white]")
 
 
-@typechecked
+@beartype
 def pack(file: File, path: str, obj: Any):
     """Save an object to a given path in an open HDF file."""
     if type(obj) == Sparse:
@@ -21,7 +21,7 @@ def pack(file: File, path: str, obj: Any):
         file[path] = obj
 
 
-@typechecked
+@beartype
 def unpack(file: File, path: str) -> Any:
     """Load an object at a given path in an open HDF file."""
     if isinstance(file[path], Group):

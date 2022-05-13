@@ -1,9 +1,8 @@
-from typing import Any, Callable, Iterator, NamedTuple, Optional
-
+from beartype import beartype
+from beartype.typing import Any, Callable, Iterator, NamedTuple, Optional
 from numpy.typing import ArrayLike, DTypeLike
 from numpy.typing import NDArray as Array
 from scipy.sparse import bsr_matrix as Sparse
-from typeguard import typechecked
 
 # Data types for working with Lattice coordinates.
 Index = int

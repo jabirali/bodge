@@ -12,7 +12,6 @@ from .stdio import *
 from .typing import *
 
 
-@typechecked
 class Solution:
     """Interface to the results calculated by the `Solver` class.
 
@@ -23,11 +22,13 @@ class Solution:
     file, such that the data can be accessed in a more seamless manner.
     """
 
+    @beartype
     def __init__(self, filename: str) -> None:
         # Storage path for results.
         self.filename: str = filename
 
     @property
+    @beartype
     def integral(self) -> Optional[Sparse]:
         """Accessor for the energy-integrated spectral function.
 
@@ -40,6 +41,7 @@ class Solution:
                 return unpack(file, "/integral")
 
     @property
+    @beartype
     def spectral(self) -> Iterator[Optional[Spectral]]:
         """Accessor for the energy-resolved spectral function.
 
@@ -57,7 +59,6 @@ class Solution:
                     yield Spectral(ω_m, A_m)
 
 
-@typechecked
 class Solver:
     """User-facing interface for numerically calculating spectral functions.
 
@@ -66,6 +67,7 @@ class Solver:
     Actual calculations are handled by `Kernel` and its derivatives.
     """
 
+    @beartype
     def __init__(
         self,
         kernel: Callable,
@@ -101,6 +103,7 @@ class Solver:
         self.filename = "bodge.hdf"
         self.kernel = kernel(self.filename)
 
+    @beartype
     def __call__(self) -> Solution:
         # Load data from `self.filename`.
         log(self, "Preparing system for parallel calculations")
@@ -164,7 +167,6 @@ class Solver:
         return Solution(self.filename)
 
 
-@typechecked
 class Kernel:
     """Numerically calculate one block of a spectral function.
 
@@ -173,10 +175,12 @@ class Kernel:
     in a derived class, which is responsible for the actual calculations.
     """
 
+    @beartype
     def __init__(self, filename: str) -> None:
         # Filename to fetch input data from.
         self.filename: str = filename
 
+    @beartype
     def __call__(self, block: int) -> str:
         """Perform calculations at a given block index.
 
@@ -226,6 +230,7 @@ class Kernel:
         # Return storage filename.
         return self.blockname
 
+    @beartype
     def solve(self) -> None:
         """This method must be implemented by derived classes."""
         raise NotImplementedError

@@ -27,6 +27,7 @@ def test_blocking():
     populate(system)
 
     # Determine blocking parameters.
+    energies = 128
     blocksize = 128
     blocks = system.matrix.shape[0] // blocksize
     radius = 3
@@ -36,6 +37,7 @@ def test_blocking():
     with File(filename, "w") as file:
         pack(file, "/hamiltonian/matrix", system.matrix)
         pack(file, "/hamiltonian/struct", system.struct)
+        pack(file, "/numerics/energies", energies)
         pack(file, "/numerics/blocksize", blocksize)
         pack(file, "/numerics/blocks", blocks)
         pack(file, "/numerics/radius", radius)
