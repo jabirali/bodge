@@ -11,7 +11,7 @@ def log(self, msg: str):
 
 
 @typechecked
-def pack(file: File, path: str, obj: Numeric):
+def pack(file: File, path: str, obj: Any):
     """Save an object to a given path in an open HDF file."""
     if type(obj) == Sparse:
         file[path + "/data"] = obj.data
@@ -22,7 +22,7 @@ def pack(file: File, path: str, obj: Numeric):
 
 
 @typechecked
-def unpack(file: File, path: str) -> Numeric:
+def unpack(file: File, path: str) -> Any:
     """Load an object at a given path in an open HDF file."""
     if isinstance(file[path], Group):
         data = file[path + "/data"][...]
