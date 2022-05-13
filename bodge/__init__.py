@@ -1,3 +1,8 @@
+import os
+import sys
+from glob import glob
+from signal import SIGINT, signal
+
 from .chebyshev import *
 from .consts import *
 from .lattice import *
@@ -20,3 +25,15 @@ __all__ = [
     "jσ2",
     "jσ3",
 ]
+
+# Exit gracefully upon Ctrl-C.
+def interrupt(sig, frame):
+    print()
+    log("SIGINT", "Cleaning up...")
+    for file in glob("./bodge.*.hdf"):
+        os.remove(file)
+    log("SIGINT", "Exiting...")
+    sys.exit(1)
+
+
+signal(SIGINT, interrupt)

@@ -7,7 +7,11 @@ from .typing import *
 @beartype
 def log(self, msg: str):
     """Log a formatted message to stdout."""
-    print(f"[white]:: [magenta]{self.__class__.__name__}[/magenta]: [green]{msg}[/green][/white]")
+    if isinstance(self, str):
+        name = f"[red]{self}[/red]"
+    else:
+        name = f"[magenta]{self.__class__.__name__}[/magenta]"
+    print(f"[white]:: {name}: [green]{msg}[/green][/white]")
 
 
 @beartype
