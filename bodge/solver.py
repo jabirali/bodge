@@ -70,6 +70,7 @@ class Solver:
         self,
         kernel: Callable,
         hamiltonian: Hamiltonian,
+        energies: int = 512,
         blocksize: int = 1024,
         radius: int = 4,
         resolve: bool = False,
@@ -81,6 +82,11 @@ class Solver:
         self.radius: int = radius
         if self.radius < 1:
             raise RuntimeError("Krylov cutoff radius must be a positive integer.")
+
+        # Number of energies to calculate the spectral function for.
+        self.energies = energies
+        if not np.log2(self.energies).is_integer():
+            raise RuntimeError("Number of energies should be a power of two.")
 
         # Parallelization is done by division into matrix blocks.
         self.blocksize: int = blocksize
@@ -101,8 +107,9 @@ class Solver:
         with File(self.filename, "w") as file:
             pack(file, "/hamiltonian/matrix", self.hamiltonian.matrix)
             pack(file, "/hamiltonian/struct", self.hamiltonian.struct)
-            pack(file, "/numerics/blocksize", self.blocksize)
             pack(file, "/numerics/blocks", self.blocks)
+            pack(file, "/numerics/blocksize", self.blocksize)
+            pack(file, "/numerics/energies", self.energies)
             pack(file, "/numerics/radius", self.radius)
             pack(file, "/numerics/resolve", self.resolve)
 
@@ -185,8 +192,9 @@ class Kernel:
         with File(self.filename, "r") as file:
             self.hamiltonian: Sparse = unpack(file, "/hamiltonian/matrix")
             self.skeleton: Sparse = unpack(file, "/hamiltonian/struct")
-            self.blocksize: int = unpack(file, "/numerics/blocksize")
             self.blocks: int = unpack(file, "/numerics/blocks")
+            self.blocksize: int = unpack(file, "/numerics/blocksize")
+            self.energies: int = unpack(file, "/numerics/energies")
             self.radius: int = unpack(file, "/numerics/radius")
             self.resolve: bool = unpack(file, "/numerics/resolve")
 

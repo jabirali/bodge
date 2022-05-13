@@ -8,7 +8,7 @@ class chebyshev(Kernel):
     def solve(self) -> None:
         # Chebyshev nodes {ω_m} where we calculate the spectral function
         # and corresponding weights {w_m} used for quadrature integration.
-        N = 200
+        N = self.energies // 2
         k = np.arange(2 * N)
         ω = np.cos(π * (2 * k + 1) / (4 * N))
         w = N * π * np.sqrt(1 - ω**2)
