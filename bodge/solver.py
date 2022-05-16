@@ -1,5 +1,7 @@
 import os
 import os.path
+import sys
+from glob import glob
 from multiprocessing import Pool
 
 import scipy.sparse as sp
@@ -119,8 +121,22 @@ class Solver:
         # Parallel calculations with `multiprocessing`.
         log(self, "Calculating the spectral function in parallel")
         with Pool() as pool:
-            block_names = pool.imap(self.kernel, range(self.blocks))
-            block_names = [*tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk")]
+            try:
+                block_names = pool.imap(self.kernel, range(self.blocks))
+                block_names = [
+                    *tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk")
+                ]
+            except KeyboardInterrupt:
+                print()
+                log("Interrupt", "Killing parallel workers...")
+                pool.terminate()
+
+                log("Interrupt", "Cleaning temporary files...")
+                for tmp in glob("./bodge.*.hdf"):
+                    os.remove(tmp)
+
+                log("Interrupt", "Exiting...")
+                sys.exit(1)
 
         # Determine which outputs were calculated.
         matrices = []
@@ -163,7 +179,7 @@ class Solver:
             os.remove(block_name)
 
         # Return solution object.
-        print(" -> done!")
+        print(" -> done!\n")
         return Solution(self.filename, self.hamiltonian.lattice)
 
 
@@ -188,47 +204,50 @@ class Kernel:
         algorithm for the polynomial expansion of the spectral function.
         Afterwards, it calls the `.solve` method to do the calculations.
         """
-        # Output file for this block.
-        base, ext = os.path.splitext(self.filename)
-        self.blockname: str = f"{base}.{block:04d}{ext}"
+        try:
+            # Output file for this block.
+            base, ext = os.path.splitext(self.filename)
+            self.blockname: str = f"{base}.{block:04d}{ext}"
 
-        # Extract global parameters from data file.
-        with File(self.filename, "r") as file:
-            self.hamiltonian: Sparse = unpack(file, "/hamiltonian/matrix")
-            self.skeleton: Sparse = unpack(file, "/hamiltonian/struct")
-            self.blocks: int = unpack(file, "/numerics/blocks")
-            self.blocksize: int = unpack(file, "/numerics/blocksize")
-            self.energies: int = unpack(file, "/numerics/energies")
-            self.radius: int = unpack(file, "/numerics/radius")
-            self.resolve: bool = unpack(file, "/numerics/resolve")
+            # Extract global parameters from data file.
+            with File(self.filename, "r") as file:
+                self.hamiltonian: Sparse = unpack(file, "/hamiltonian/matrix")
+                self.skeleton: Sparse = unpack(file, "/hamiltonian/struct")
+                self.blocks: int = unpack(file, "/numerics/blocks")
+                self.blocksize: int = unpack(file, "/numerics/blocksize")
+                self.energies: int = unpack(file, "/numerics/energies")
+                self.radius: int = unpack(file, "/numerics/radius")
+                self.resolve: bool = unpack(file, "/numerics/resolve")
 
-        # Instantiate the current block of the identity matrix.
-        diag = np.repeat(np.int8(1), self.blocksize)
-        offset = -block * self.blocksize
-        shape = (self.hamiltonian.shape[0], self.blocksize)
-        identity = sp.dia_matrix((diag, [offset]), shape, dtype=np.int8)
+            # Instantiate the current block of the identity matrix.
+            diag = np.repeat(np.int8(1), self.blocksize)
+            offset = -block * self.blocksize
+            shape = (self.hamiltonian.shape[0], self.blocksize)
+            identity = sp.dia_matrix((diag, [offset]), shape, dtype=np.int8)
 
-        self.block_identity = identity.tobsr(self.hamiltonian.blocksize)
+            self.block_identity = identity.tobsr(self.hamiltonian.blocksize)
 
-        # Projection with this mask retains only local terms (up to nearest
-        # neighbors), which are the relevant terms in the spectral function.
-        self.block_neighbors = self.skeleton @ self.block_identity
+            # Projection with this mask retains only local terms (up to nearest
+            # neighbors), which are the relevant terms in the spectral function.
+            self.block_neighbors = self.skeleton @ self.block_identity
 
-        # Projection with this mask retains all terms within a bubble of
-        # a given radius. This defines the Local Krylov subspace used for
-        # intermediate calculations in the Green function expansions.
-        mask = self.block_neighbors
-        for _ in range(self.radius - 1):
-            mask = self.skeleton @ mask
-        mask.data[...] = 1
+            # Projection with this mask retains all terms within a bubble of
+            # a given radius. This defines the Local Krylov subspace used for
+            # intermediate calculations in the Green function expansions.
+            mask = self.block_neighbors
+            for _ in range(self.radius - 1):
+                mask = self.skeleton @ mask
+            mask.data[...] = 1
 
-        self.block_subspace = Sparse(mask, dtype=np.int8)
+            self.block_subspace = Sparse(mask, dtype=np.int8)
 
-        # Run actual calculations.
-        self.solve()
+            # Run actual calculations.
+            self.solve()
 
-        # Return storage filename.
-        return self.blockname
+            # Return storage filename.
+            return self.blockname
+        except KeyboardInterrupt:
+            sys.exit(2)
 
     @beartype
     def solve(self) -> None:
