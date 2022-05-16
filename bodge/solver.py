@@ -1,7 +1,6 @@
 import os
 import os.path
 import sys
-from glob import glob
 from multiprocessing import Pool
 
 import scipy.sparse as sp
@@ -75,7 +74,7 @@ class Solver:
         kernel: Callable,
         hamiltonian: Hamiltonian,
         energies: int = 512,
-        blocksize: int = 1024,
+        blocksize: int = 256,
         radius: int = 4,
         resolve: bool = False,
     ) -> None:
@@ -93,7 +92,7 @@ class Solver:
             raise RuntimeError("Number of energies should be a power of two.")
 
         # Parallelization is done by division into matrix blocks.
-        self.blocksize: int = blocksize
+        self.blocksize: int = blocksize * hamiltonian.matrix.blocksize[0]
         self.blocks: int = self.hamiltonian.shape[1] // blocksize
         if self.blocksize * self.blocks != hamiltonian.shape[1]:
             raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
@@ -129,13 +128,6 @@ class Solver:
                 ]
             except KeyboardInterrupt:
                 print()
-                log("Interrupt", "Killing parallel workers...")
-                pool.terminate()
-
-                log("Interrupt", "Cleaning temporary files...")
-                for tmp in glob("./bodge.*.hdf"):
-                    os.remove(tmp)
-
                 log("Interrupt", "Exiting...")
                 sys.exit(1)
 
@@ -249,6 +241,7 @@ class Kernel:
             # Return storage filename.
             return self.blockname
         except KeyboardInterrupt:
+            os.remove(self.blockname)
             sys.exit(2)
 
     @beartype

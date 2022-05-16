@@ -37,6 +37,7 @@ def test_blocking():
     with File(filename, "w") as file:
         pack(file, "/hamiltonian/matrix", system.matrix)
         pack(file, "/hamiltonian/struct", system.struct)
+        pack(file, "/hamiltonian/scale", system.scale)
         pack(file, "/numerics/energies", energies)
         pack(file, "/numerics/blocksize", blocksize)
         pack(file, "/numerics/blocks", blocks)

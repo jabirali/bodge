@@ -13,15 +13,15 @@ class chebyshev(Kernel):
         M = self.energies
         m = np.arange(M)
 
-        ω = Ω * np.cos(π * (m + 1/2) / M)
-        w = π * np.sqrt(Ω**2 - ω**2) 
+        ω = Ω * np.cos(π * (m + 1 / 2) / M)
+        w = π * np.sqrt(Ω**2 - ω**2)
 
         # Calculate the corresponding Chebyshev transform coefficients.
         # Since {ω_m} are Chebyshev nodes this is just a Fourier transform.
         N = M // 2
         n = np.arange(N)
 
-        T = np.cos(π * n[None,:] * (m[:,None] + 1/2) / M)
+        T = np.cos(π * n[None, :] * (m[:, None] + 1 / 2) / M)
         T[:, 1:] *= 2
 
         # Adjust the Chebyshev transform using a Lorentz kernel. This avoids
