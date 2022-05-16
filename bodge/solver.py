@@ -76,7 +76,7 @@ class Solver:
         hamiltonian: Hamiltonian,
         energies: int = 512,
         blocksize: int = 1024,
-        radius: int = 6,
+        radius: int = 4,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.

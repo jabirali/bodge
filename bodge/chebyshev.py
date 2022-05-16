@@ -26,7 +26,8 @@ class chebyshev(Kernel):
 
         # Adjust the Chebyshev transform using a Lorentz kernel. This avoids
         # Runge oscillations near sharp corners in the spectral functions.
-        L = np.sinh(1 - n / N) / np.sinh(1)
+        λ = 0.1
+        L = np.sinh(λ * (1 - n / N)) / np.sinh(λ)
         T *= L
 
         # Compact notation for the essential matrices.
