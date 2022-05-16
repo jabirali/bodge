@@ -10,13 +10,18 @@ class chebyshev(Kernel):
         N = self.energies // 2
         k = np.arange(2 * N)
         ω = np.cos(π * (2 * k + 1) / (4 * N))
-        w = π * np.sqrt(1 - ω**2)
+        w = π * np.sqrt(1 - ω**2) 
 
         # Calculate the corresponding Chebyshev transform coefficients.
         # TODO: Incorporate the relevant Lorentz kernel factors here.
         n = np.arange(N)[None, :]
         k = np.arange(2 * N)[:, None]
         T = np.cos(π * n * (2 * k + 1) / (4 * N))
+
+        # Include the Lorentz kernel.
+        λ = 1
+        g = np.sinh(λ * (1 - n / N)) / np.sinh(λ)
+        T *= g
         # T[:, 1:] *= 2
 
         # Compact notation for the essential matrices.
@@ -33,7 +38,7 @@ class chebyshev(Kernel):
         # Prepare a storage file for this block, and store the initial results.
         A_k = {}
         for m, _ in enumerate(ω):
-            A_k[m] = T[m, 0] * A_k0 + T[m, 1] * A_k1
+            A_k[m] = (T[m, 0] * A_k0 + T[m, 1] * A_k1) / w[m]
 
         # Chebyshev expansion of the next elements.
         for n in range(2, N):

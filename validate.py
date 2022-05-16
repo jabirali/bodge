@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 import numpy as np
-from matplotlib.pyplot import plot, show, xlim
+from matplotlib.pyplot import legend, plot, show, xlabel, xlim, ylabel
 
 from bodge import *
 
 t = 1
 Δ0 = t / 3
-μ = 0
+μ = t / 2
 m3 = Δ0 / 2
 
 if __name__ == "__main__":
     lattice = CubicLattice((4, 4, 4))
     hamiltonian = Hamiltonian(lattice)
-    solver = Solver(chebyshev, hamiltonian, blocksize=32, energies=256, resolve=True)
+    solver = Solver(chebyshev, hamiltonian, blocksize=32, energies=512, resolve=True)
 
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     D2 = []
     # print(hamiltonian.scale)
-    A2 = hamiltonian.spectralize(ws, resolution=1e-2)
+    A2 = hamiltonian.spectralize(ws, resolution=8e-3)
     for A in A2:
         A_ii = A.diagonal()
         A_ii = A_ii
@@ -55,6 +55,10 @@ if __name__ == "__main__":
         D2.append(A_up)
 
     plot(ws, D1, "b", ws, D2, "r")
+    legend([ "Chebyshev (no cutoff)", "Direct solution" ])
+    xlabel(r"Energy $\omega/t$")
+    ylabel("Density of states")
+    xlim([-15, +15])
     show()
 
 # for ω, A in sol.spectral:
