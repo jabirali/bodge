@@ -7,6 +7,7 @@ from h5py import File
 from tqdm import tqdm
 
 from .consts import *
+from .lattice import Lattice
 from .physics import Hamiltonian
 from .stdio import *
 from .typing import *
@@ -23,33 +24,32 @@ class Solution:
     """
 
     @beartype
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str, lattice: Lattice) -> None:
         # Storage path for results.
+        self.lattice: Lattice = lattice
         self.filename: str = filename
 
-    @property
     @beartype
-    def integral(self) -> Optional[Sparse]:
+    def integral(self) -> Sparse:
         """Accessor for the energy-integrated spectral function.
 
         `None` is returned if the quantity has not been calculated or stored.
         """
         with File(self.filename, "r") as file:
             if "integral" not in file:
-                return None
+                raise FileNotFoundError("Energy-integrated spectral function not found.")
             else:
                 return unpack(file, "/integral")
 
-    @property
     @beartype
-    def spectral(self) -> Iterator[Optional[Spectral]]:
+    def spectral(self) -> Iterator[Spectral]:
         """Accessor for the energy-resolved spectral function.
 
         `None` is returned if the quantity has not been calculated or stored.
         """
         with File(self.filename, "r") as file:
             if "spectral" not in file:
-                yield None
+                raise FileNotFoundError("Energy-resolved spectral function not found.")
             else:
                 ω = unpack(file, "/energies")
                 for m in file["/spectral"]:
@@ -164,7 +164,7 @@ class Solver:
 
         # Return solution object.
         print(" -> done!")
-        return Solution(self.filename)
+        return Solution(self.filename, self.hamiltonian.lattice)
 
 
 class Kernel:

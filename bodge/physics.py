@@ -149,7 +149,7 @@ class Hamiltonian:
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
         print(" -> normalizing the spectral radius")
-        self.scale: float = norm(self.matrix, 1)
+        self.scale: float = norm(self.matrix, "fro")
         self.matrix /= self.scale
 
         # Reset accessors.
@@ -211,7 +211,7 @@ class Hamiltonian:
         I = self.identity.todense()
 
         # The resolution is controlled by the imaginary energy.
-        η = resolution * 1j
+        η = self.scale * resolution * 1j
 
         # Calculate the spectral function via direct inversion.
         spectral = []
