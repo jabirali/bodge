@@ -76,7 +76,7 @@ class Solver:
         hamiltonian: Hamiltonian,
         energies: int = 512,
         blocksize: int = 1024,
-        radius: int = 4,
+        radius: int = 6,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.
@@ -112,6 +112,7 @@ class Solver:
         with File(self.filename, "w") as file:
             pack(file, "/hamiltonian/matrix", self.hamiltonian.matrix)
             pack(file, "/hamiltonian/struct", self.hamiltonian.struct)
+            pack(file, "/hamiltonian/scale", self.hamiltonian.scale)
             pack(file, "/numerics/blocks", self.blocks)
             pack(file, "/numerics/blocksize", self.blocksize)
             pack(file, "/numerics/energies", self.energies)
@@ -213,6 +214,7 @@ class Kernel:
             with File(self.filename, "r") as file:
                 self.hamiltonian: Sparse = unpack(file, "/hamiltonian/matrix")
                 self.skeleton: Sparse = unpack(file, "/hamiltonian/struct")
+                self.scale = unpack(file, "/hamiltonian/scale")
                 self.blocks: int = unpack(file, "/numerics/blocks")
                 self.blocksize: int = unpack(file, "/numerics/blocksize")
                 self.energies: int = unpack(file, "/numerics/energies")

@@ -6,9 +6,9 @@ from matplotlib.pyplot import legend, plot, show, xlabel, xlim, ylabel
 from bodge import *
 
 t = 1
-Δ0 = t / 3
-μ = t / 2
-m3 = Δ0 / 2
+Δ0 = t
+μ = 0
+m3 = 0
 
 if __name__ == "__main__":
     lattice = CubicLattice((4, 4, 4))
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
-            H[i, i] = -μ * σ0 - m3 * σ3
+            H[i, i] = -μ * σ0 
             Δ[i, i] = Δ0 * jσ2
 
         for i, j in lattice.bonds():
@@ -28,30 +28,28 @@ if __name__ == "__main__":
 
     ws = []
     D1 = []
-    x = lattice[1, 1, 1]
     for ω, A in sol.spectral():
         # x = sol.lattice[1, 1, 1]
         dof = A.blocksize[0]
         A_ii = A.diagonal()
-        A_up = A_ii[0 + x * dof]
-        A_dn = A_ii[1 + x * dof]
+        A_up = np.mean( A_ii[0::dof] )
+        A_dn = np.mean( A_ii[1::dof] )
         # print(len(A_ii), len(A_up), len(A_dn))
         D1.append(A_up)
         ws.append(ω)
         # D = A[x]
         # print(ω, D)
 
-    ws = [w * hamiltonian.scale for w in ws]
-    D1 = [d1 / hamiltonian.scale for d1 in D1]
+    # ws = [w * hamiltonian.scale for w in ws]
+    # D1 = [d1 / hamiltonian.scale for d1 in D1]
 
     D2 = []
     # print(hamiltonian.scale)
-    A2 = hamiltonian.spectralize(ws, resolution=8e-3)
+    A2 = hamiltonian.spectralize(ws, resolution=1e-2)
     for A in A2:
         A_ii = A.diagonal()
-        A_ii = A_ii
-        A_up = A_ii[0 + x * dof]
-        A_dn = A_ii[1 + x * dof]
+        A_up = np.mean( A_ii[0::dof] )
+        A_dn = np.mean( A_ii[1::dof] )
         D2.append(A_up)
 
     plot(ws, D1, "b", ws, D2, "r")
