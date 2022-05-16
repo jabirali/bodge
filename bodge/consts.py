@@ -4,10 +4,10 @@ import numpy as np
 π = np.pi
 
 # Pauli matrices used to represent spin.
-σ0 = np.array([[+1, 0], [0, +1]], dtype=np.complex64)
-σ1 = np.array([[0, +1], [+1, 0]], dtype=np.complex64)
-σ2 = np.array([[0, -1j], [+1j, 0]], dtype=np.complex64)
-σ3 = np.array([[+1, 0], [0, -1]], dtype=np.complex64)
+σ0 = np.array([[+1, 0], [0, +1]], dtype=np.complex128)
+σ1 = np.array([[0, +1], [+1, 0]], dtype=np.complex128)
+σ2 = np.array([[0, -1j], [+1j, 0]], dtype=np.complex128)
+σ3 = np.array([[+1, 0], [0, -1]], dtype=np.complex128)
 
 # Compact notation for imaginary versions.
 jσ0 = 1j * σ0
