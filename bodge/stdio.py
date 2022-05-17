@@ -4,7 +4,7 @@ from rich import print
 from .typing import *
 
 
-@beartype
+@typecheck
 def log(self, msg: str):
     """Log a formatted message to stdout."""
     if isinstance(self, str):
@@ -14,7 +14,7 @@ def log(self, msg: str):
     print(f"[white]:: {name}: [green]{msg}[/green][/white]")
 
 
-@beartype
+@typecheck
 def pack(file: File, path: str, obj: Any):
     """Save an object to a given path in an open HDF file."""
     if type(obj) == Sparse:
@@ -25,7 +25,7 @@ def pack(file: File, path: str, obj: Any):
         file[path] = obj
 
 
-@beartype
+@typecheck
 def unpack(file: File, path: str) -> Any:
     """Load an object at a given path in an open HDF file."""
     if isinstance(file[path], Group):

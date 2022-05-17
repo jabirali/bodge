@@ -24,7 +24,7 @@ class Hamiltonian:
     the construction of megadimensional tight-binding systems (>10^6 sites).
     """
 
-    @beartype
+    @typecheck
     def __init__(self, lattice: Lattice):
         # Lattice instance used as basis coordinates for the system.
         self.lattice: Lattice = lattice
@@ -77,7 +77,7 @@ class Hamiltonian:
         # Simplify direct access to the underlying data structure.
         self.data: Array[np.complex128] = self.matrix.data
 
-    @beartype
+    @typecheck
     def __enter__(self) -> tuple[dict[Coords, Array], dict[Coords, Array]]:
         """Implement a context manager interface for the class.
 
@@ -101,7 +101,7 @@ class Hamiltonian:
         log(self, "Collecting new contributions")
         return self.hopp, self.pair
 
-    @beartype
+    @typecheck
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Implement a context manager interface for the class.
 
@@ -157,7 +157,7 @@ class Hamiltonian:
         del self.hopp
         del self.pair
 
-    @beartype
+    @typecheck
     def index(self, row: Coord, col: Coord) -> Index:
         """Determine the sparse matrix index corresponding to block (row, col).
 
@@ -173,12 +173,12 @@ class Hamiltonian:
         return Index(k)
 
     @property
-    @beartype
+    @typecheck
     def identity(self) -> bsr_matrix:
         """Generate an identity matrix with similar dimensions as the Hamiltonian."""
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
-    @beartype
+    @typecheck
     def diagonalize(self) -> tuple[Array, Array]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 

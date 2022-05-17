@@ -24,13 +24,13 @@ class Solution:
     file, such that the data can be accessed in a more seamless manner.
     """
 
-    @beartype
+    @typecheck
     def __init__(self, filename: str, lattice: Lattice) -> None:
         # Storage path for results.
         self.lattice: Lattice = lattice
         self.filename: str = filename
 
-    @beartype
+    @typecheck
     def integral(self) -> Sparse:
         """Accessor for the energy-integrated spectral function.
 
@@ -42,7 +42,7 @@ class Solution:
             else:
                 return unpack(file, "/integral")
 
-    @beartype
+    @typecheck
     def spectral(self) -> Iterator[Spectral]:
         """Accessor for the energy-resolved spectral function.
 
@@ -68,7 +68,7 @@ class Solver:
     Actual calculations are handled by `Kernel` and its derivatives.
     """
 
-    @beartype
+    @typecheck
     def __init__(
         self,
         kernel: Callable,
@@ -104,7 +104,7 @@ class Solver:
         self.filename = "bodge.hdf"
         self.kernel = kernel(self.filename)
 
-    @beartype
+    @typecheck
     def __call__(self) -> Solution:
         # Load data from `self.filename`.
         log(self, "Preparing system for parallel calculations")
@@ -184,12 +184,12 @@ class Kernel:
     in a derived class, which is responsible for the actual calculations.
     """
 
-    @beartype
+    @typecheck
     def __init__(self, filename: str) -> None:
         # Filename to fetch input data from.
         self.filename: str = filename
 
-    @beartype
+    @typecheck
     def __call__(self, block: int) -> str:
         """Perform calculations at a given block index.
 
@@ -244,7 +244,7 @@ class Kernel:
             os.remove(self.blockname)
             sys.exit(2)
 
-    @beartype
+    @typecheck
     def solve(self) -> None:
         """This method must be implemented by derived classes."""
         raise NotImplementedError
