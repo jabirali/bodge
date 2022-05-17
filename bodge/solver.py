@@ -75,7 +75,7 @@ class Solver:
         hamiltonian: Hamiltonian,
         energies: int = 512,
         blocksize: int = 256,
-        radius: int = 4,
+        radius: int = 5,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.
@@ -93,9 +93,9 @@ class Solver:
 
         # Parallelization is done by division into matrix blocks.
         self.blocksize: int = blocksize * hamiltonian.matrix.blocksize[0]
-        self.blocks: int = self.hamiltonian.shape[1] // blocksize
+        self.blocks: int = self.hamiltonian.shape[1] // self.blocksize
         if self.blocksize * self.blocks != hamiltonian.shape[1]:
-            raise RuntimeError(f"Hamiltonian shape must be a multiple of {blocksize}.")
+            raise RuntimeError(f"The blocksize should evenly divide the number of lattice sites.")
 
         # Whether to save the energy-resolved spectral function.
         self.resolve = resolve
