@@ -6,14 +6,14 @@ from matplotlib.pyplot import legend, plot, show, xlabel, xlim, ylabel
 from bodge import *
 
 t = 1
-Δ0 = t
-μ = 0
-m3 = Δ0/5
+Δ0 = t / 2
+μ = 0.25
+m3 = 0
 
 if __name__ == "__main__":
-    lattice = CubicLattice((8, 8, 8))
+    lattice = CubicLattice((100, 1, 1))
     hamiltonian = Hamiltonian(lattice)
-    solver = Solver(chebyshev, hamiltonian, blocksize=256, energies=1024, resolve=True)
+    solver = Solver(chebyshev, hamiltonian, blocksize=25, energies=512, resolve=True)
     # solver2 = Solver(chebyshev, hamiltonian, blocksize=32, energies=512, radius=20, resolve=True)
 
     with hamiltonian as (H, Δ):
@@ -25,46 +25,35 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     sol = solver()
-    # sol2 = solver2()
-    # print(sol.integral)
 
     ws = []
+    D0 = []
     D1 = []
+    D2 = []
+    x0 = sol.lattice[0, 1, 1]
+    x1 = sol.lattice[1, 1, 1]
+    x2 = sol.lattice[30, 1, 1]
     for ω, A in sol.spectral():
-        x = sol.lattice[3, 3, 3]
         dof = A.blocksize[0]
         A_ii = A.diagonal()
-        A_up = A_ii[0::dof]
-        A_dn = A_ii[1::dof]
-        # print(len(A_ii), len(A_up), len(A_dn))
-        D1.append(A_up[x] + A_dn[x])
+        dos = np.real(A_ii[0::dof] + A_ii[1::dof])
+        D0.append(dos[x0])
+        D1.append(dos[x1])
+        D2.append(dos[x2])
         ws.append(ω)
-        # D = A[x]
-        # print(ω, D)
 
-    # # D3 = []
-    # # for ω, A in sol2.spectral():
-    # #     dof = A.blocksize[0]
-    # #     A_ii = A.diagonal()
-    # #     A_up = np.mean( A_ii[0::dof] )
-    # #     A_dn = np.mean( A_ii[1::dof] )
-    # #     D3.append(A_up + A_dn)
-
+    # A2 = hamiltonian.spectralize(ws, 0.1)
     # D2 = []
-    # # print(hamiltonian.scale)
-    # A2 = hamiltonian.spectralize(ws, resolution=0.7e-2)
     # for A in A2:
     #     A_ii = A.diagonal()
     #     A_up = A_ii[0::dof]
     #     A_dn = A_ii[1::dof]
     #     D2.append(A_up[x] + A_dn[x])
 
-    plot(ws, D1, "k")
-    # plot(ws, D2, "k", ws, D3, "b-", ws, D1, "r--")
-    # legend(["Direct solution", "Chebyshev (radius 5)"])
+    plot(ws, D0, "k", ws, D1, "b", ws, D2, "r")
+    legend(["i = 0", "i = 1", "i = 30"])
     xlabel(r"Energy $\omega/t$")
     ylabel("Density of states")
-    xlim([-15, +15])
     show()
 
     # plot(ws, D)

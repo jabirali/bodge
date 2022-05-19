@@ -75,14 +75,26 @@ class Solver:
         hamiltonian: Hamiltonian,
         energies: int = 512,
         blocksize: int = 256,
-        radius: int = 5,
+        radius: Optional[int] = None,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.
         self.hamiltonian: Hamiltonian = hamiltonian
 
         # Linear scaling is achieved via a Local Krylov cutoff.
-        self.radius: int = radius
+        self.radius: int
+        if radius is not None:
+            self.radius = radius
+        else:
+            match hamiltonian.lattice.dim:
+                case 1:
+                    self.radius = 100
+                case 2:
+                    self.radius = 10
+                case 3:
+                    self.radius = 4
+                case _:
+                    raise RuntimeError("Invalid lattice dimension.")
         if self.radius < 1:
             raise RuntimeError("Krylov cutoff radius must be a positive integer.")
 

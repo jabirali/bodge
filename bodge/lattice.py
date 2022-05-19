@@ -35,6 +35,9 @@ class Lattice:
         # Number of atoms in the lattice.
         self.size: Index = np.prod(shape)
 
+        # Dimension of lattice.
+        self.dim: int = sum([1 for x in self.shape if x > 1])
+
     @typecheck
     def __getitem__(self, coord: Coord) -> Index:
         """Syntactic sugar for converting coordinates into indices."""

@@ -149,7 +149,7 @@ class Hamiltonian:
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
         print(" -> normalizing the spectral radius")
-        self.scale: float = norm(self.matrix, "fro")
+        self.scale: float = 2 * norm(self.matrix, 1)
         self.matrix /= self.scale
 
         # Reset accessors.
@@ -200,7 +200,7 @@ class Hamiltonian:
 
         return eigval, eigvec
 
-    def spectralize(self, energies: ArrayLike, resolution: float = 1e-4) -> list[Array]:
+    def spectralize(self, energies: ArrayLike, resolution: float = 1e-2) -> list[Array]:
         """Calculate the exact spectral function of the system via direct inversion.
 
         Note that this method is quite inefficient since it uses dense matrices;
