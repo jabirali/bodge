@@ -73,7 +73,7 @@ class Solver:
         self,
         kernel: Callable,
         hamiltonian: Hamiltonian,
-        energies: int = 512,
+        energies: int = 200,
         blocksize: int = 256,
         radius: Optional[int] = None,
         resolve: bool = False,
@@ -99,9 +99,7 @@ class Solver:
             raise RuntimeError("Krylov cutoff radius must be a positive integer.")
 
         # Number of energies to calculate the spectral function for.
-        self.energies = energies
-        if not np.log2(self.energies).is_integer():
-            raise RuntimeError("Number of energies should be a power of two.")
+        self.energies: int = energies
 
         # Parallelization is done by division into matrix blocks.
         self.blocksize: int = blocksize * hamiltonian.matrix.blocksize[0]

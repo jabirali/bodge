@@ -27,7 +27,7 @@ class chebyshev(Kernel):
         # Adjust the Chebyshev transform using a Lorentz kernel. This avoids
         # Runge oscillations near sharp corners in the spectral functions.
         # This kernel is equivalent to an imaginary energy ε → ε + iΩλ.
-        λ = 0.02
+        λ = 0.025
         L = np.sinh(λ * (N - n)) / np.sinh(λ * N)
         T *= L
 
@@ -55,8 +55,9 @@ class chebyshev(Kernel):
 
             # Perform the Chebyshev transformation. Element-wise multiplication
             # by P_k preserves only on-site and nearest-neighbor interactions.
+            Pα_k1 = α_k1.multiply(P_k)
             for m in range(M):
-                α_k[m] += T[m, n] * α_k1.multiply(P_k)
+                α_k[m] += T[m, n] * Pα_k1
 
         # Save results to file.
         with File(self.blockname, "w") as file:

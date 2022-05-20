@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 
 import numpy as np
-from matplotlib.pyplot import legend, plot, show, xlabel, xlim, ylabel
+from matplotlib.pyplot import axes, legend, plot, show, subplot, subplots, xlabel, xlim, ylabel
 
 from bodge import *
 
 t = 1
-Δ0 = t / 2
-μ = 0.25
+Δ0 = 0
+μ = 0.5
 m3 = 0
 
 if __name__ == "__main__":
-    lattice = CubicLattice((100, 1, 1))
+    lattice = CubicLattice((10, 10, 10))
     hamiltonian = Hamiltonian(lattice)
-    solver = Solver(chebyshev, hamiltonian, blocksize=25, energies=512, resolve=True)
-    # solver2 = Solver(chebyshev, hamiltonian, blocksize=32, energies=512, radius=20, resolve=True)
-
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
             H[i, i] = -μ * σ0 - m3 * σ3
@@ -24,23 +21,25 @@ if __name__ == "__main__":
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    sol = solver()
-
+    x = lattice[5,5,5]
     ws = []
-    D0 = []
-    D1 = []
-    D2 = []
-    x0 = sol.lattice[0, 1, 1]
-    x1 = sol.lattice[1, 1, 1]
-    x2 = sol.lattice[30, 1, 1]
-    for ω, A in sol.spectral():
-        dof = A.blocksize[0]
-        A_ii = A.diagonal()
-        dos = np.real(A_ii[0::dof] + A_ii[1::dof])
-        D0.append(dos[x0])
-        D1.append(dos[x1])
-        D2.append(dos[x2])
-        ws.append(ω)
+    Ds = []
+    radii = [4]
+    for radius in radii:
+        w = []
+        D = []
+        solver = Solver(chebyshev, hamiltonian, blocksize=200, energies=200, resolve=True, radius=radius)
+        sol = solver()
+        for ω, A in sol.spectral():
+            dof = A.blocksize[0]
+            A_ii = A.diagonal()
+            dos = np.real(A_ii[0::dof] + A_ii[1::dof])
+
+            w.append(ω)
+            D.append(dos[x])
+        Ds.append(np.array(D))
+        ws.append(w)
+
 
     # A2 = hamiltonian.spectralize(ws, 0.1)
     # D2 = []
@@ -50,8 +49,11 @@ if __name__ == "__main__":
     #     A_dn = A_ii[1::dof]
     #     D2.append(A_up[x] + A_dn[x])
 
-    plot(ws, D0, "k", ws, D1, "b", ws, D2, "r")
-    legend(["i = 0", "i = 1", "i = 30"])
+    fig, ax = subplots()
+    for w, D in zip(ws, Ds):
+        ax.plot(w, D)
+    legend(radii)
+    # legend(["i = 0", "i = 1", "i = 30"])
     xlabel(r"Energy $\omega/t$")
     ylabel("Density of states")
     show()
