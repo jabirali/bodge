@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.interpolate as spi
 from scipy.sparse.linalg.matfuncs import _onenorm_matrix_power_nnm
+from numpy.linalg import norm
 from time import time
 
 from bodge import *
@@ -23,7 +24,7 @@ m3 = 0.25
 
 # Numerical parameters.
 energies = [32, 64, 128, 256, 512, 1024]
-radiuses = [1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 64, 128, 256, 512, 1024]
+radiuses = [1, 2, 4, 8, 16, 24, 32, 48, 64, 128, 256, 512, 1024]
 interval = np.linspace(-4, 4, 1024)
 
 # Perform the validation.
@@ -45,12 +46,15 @@ if __name__ == "__main__":
     ωs, ds = solver().density()
     exact = spi.pchip(ωs[::-1], ds[x, ::-1])(interval)
     def error(result):
-        return np.max(np.abs(result - exact))
+        r1 = np.abs(result) / norm(result, 2)
+        r2 = np.abs(exact) / norm(exact, 2)
+
+        return np.dot(r1, r2)
 
     # Perform simulations.
-    print("Energy,Radius,Time,Error")
-    for energy in energies[:-1]:
-        for radius in radiuses[:-1]:
+    print("Energies,Radius,Time,Overlap")
+    for energy in energies:
+        for radius in radiuses:
             # Instantiate solver.
             solver = Solver(chebyshev, hamiltonian, blocksize=128, energies=energy, radius=radius, resolve=True)
 
