@@ -59,6 +59,22 @@ class Solution:
 
                     yield Spectral(ω_m, A_m)
 
+    @typecheck
+    def density(self) -> tuple[Array, Array]:
+        """Calculate the local density of states."""
+        ωs = []
+        ds = []
+        for ω, A in self.spectral():
+            dof = A.blocksize[0]
+            A_ii = A.diagonal()
+            dos = np.real(A_ii[0::dof] + A_ii[1::dof])
+
+            ωs.append(ω)
+            ds.append(dos)
+
+        return np.array(ωs), np.vstack(ds).T
+
+
 
 class Solver:
     """User-facing interface for numerically calculating spectral functions.
