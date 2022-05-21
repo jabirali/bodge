@@ -14,9 +14,7 @@ t = 1
 m3 = 0.25
 
 # Numerical parameters.
-energies = [128, 256, 512, 1024]
-radiuses = [64]
-interval = np.linspace(-4, 4, 1024)
+params = [(256, 16), (512, 32), (1024, 64)]
 
 # Perform the validation.
 if __name__ == "__main__":
@@ -34,20 +32,19 @@ if __name__ == "__main__":
     # Perform simulations.
     x = lattice[64, 0, 0]
     results = {}
-    for energy in energies:
-        for radius in radiuses:
-            # Instantiate solver.
-            solver = Solver(
-                chebyshev,
-                hamiltonian,
-                blocksize=128 // 8,
-                energies=energy,
-                radius=radius,
-                resolve=True,
-            )
+    for energy, radius in params:
+        # Instantiate solver.
+        solver = Solver(
+            chebyshev,
+            hamiltonian,
+            blocksize=128 // 8,
+            energies=energy,
+            radius=radius,
+            resolve=True,
+        )
 
-            # Calculate density of states.
-            results[energy, radius] = solver().density()
+        # Calculate density of states.
+        results[energy, radius] = solver().density()
 
     # Plot the results.
     fig, ax = plt.subplots()

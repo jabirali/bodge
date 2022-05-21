@@ -88,30 +88,18 @@ class Solver:
         self,
         kernel: Callable,
         hamiltonian: Hamiltonian,
-        energies: int = 200,
-        blocksize: int = 256,
-        radius: Optional[int] = None,
+        energies: int = 512,
+        blocksize: int = 32,
+        radius: int = 32,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.
         self.hamiltonian: Hamiltonian = hamiltonian
 
         # Linear scaling is achieved via a Local Krylov cutoff.
-        self.radius: int
-        if radius is not None:
-            self.radius = radius
-        else:
-            match hamiltonian.lattice.dim:
-                case 1:
-                    self.radius = 100
-                case 2:
-                    self.radius = 10
-                case 3:
-                    self.radius = 4
-                case _:
-                    raise RuntimeError("Invalid lattice dimension.")
+        self.radius: int = radius
         if self.radius < 1:
-            raise RuntimeError("Krylov cutoff radius must be a positive integer.")
+            raise RuntimeError("Subspace radius must be a positive integer.")
 
         # Number of energies to calculate the spectral function for.
         self.energies: int = energies

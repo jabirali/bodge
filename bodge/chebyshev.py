@@ -27,7 +27,7 @@ class chebyshev(Kernel):
         # Adjust the Chebyshev transform using a Lorentz kernel. This avoids
         # Runge oscillations near sharp corners in the spectral functions.
         # This kernel is equivalent to an imaginary energy ε → ε + iΩλ.
-        λ = 0.01
+        λ = 1e-2
         L = np.sinh(λ * (N - n)) / np.sinh(λ * N)
         T *= L
 
