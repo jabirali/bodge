@@ -75,7 +75,6 @@ class Solution:
         return np.array(ωs), np.vstack(ds).T
 
 
-
 class Solver:
     """User-facing interface for numerically calculating spectral functions.
 
