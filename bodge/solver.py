@@ -88,21 +88,27 @@ class Solver:
         self,
         kernel: Callable,
         hamiltonian: Hamiltonian,
-        energies: int = 512,
+        energies: int = 256,
         blocksize: int = 64,
-        radius: int = 32,
+        radius: Optional[int] = None,
         resolve: bool = False,
     ) -> None:
         # Save a reference to the Hamiltonian object.
         self.hamiltonian: Hamiltonian = hamiltonian
 
-        # Linear scaling is achieved via a Local Krylov cutoff.
-        self.radius: int = radius
-        if self.radius < 1:
-            raise RuntimeError("Subspace radius must be a positive integer.")
-
         # Number of energies to calculate the spectral function for.
         self.energies: int = energies
+
+        # Linear scaling is achieved via a Local Krylov cutoff.
+        self.radius: int
+        if radius is not None:
+            # Use the provided radius.
+            self.radius = radius
+            if self.radius < 1:
+                raise RuntimeError("Subspace radius must be a positive integer.")
+        else:
+            # Empirically suficcient cutoff.
+            self.radius = self.energies // 8
 
         # Parallelization is done by division into matrix blocks.
         self.blocksize: int = blocksize * hamiltonian.matrix.blocksize[0]
@@ -137,7 +143,7 @@ class Solver:
             try:
                 block_names = pool.imap(self.kernel, range(self.blocks))
                 block_names = [
-                    *tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk")
+                    *tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk", smoothing=0)
                 ]
             except KeyboardInterrupt:
                 print()
