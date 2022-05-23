@@ -149,7 +149,7 @@ class Hamiltonian:
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
         print(" -> normalizing the spectral radius")
-        self.scale: float = 2 * norm(self.matrix, 1)
+        self.scale: float = norm(self.matrix, 1)
         self.matrix /= self.scale
 
         # Reset accessors.
