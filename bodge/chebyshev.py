@@ -24,12 +24,11 @@ class chebyshev(Kernel):
         T = np.cos(π * n[None, :] * (m[:, None] + 1 / 2) / M)
         T[:, 1:] *= 2
 
-        # Adjust the Chebyshev transform using a Lorentz kernel. This avoids
+        # Adjust the Chebyshev transform using a Jackson kernel. This avoids
         # Runge oscillations near sharp corners in the spectral functions.
-        # This kernel is equivalent to an imaginary energy ε → ε + iΩλ.
-        λ = 1e-2
-        L = np.sinh(λ * (N - n)) / np.sinh(λ * N)
-        T *= L
+        ϕ = π / (N + 1)
+        g = (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
+        T *= g
 
         # Compact notation for the essential matrices.
         H = self.hamiltonian

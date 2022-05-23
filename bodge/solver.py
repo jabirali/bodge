@@ -89,7 +89,7 @@ class Solver:
         kernel: Callable,
         hamiltonian: Hamiltonian,
         energies: int = 512,
-        blocksize: int = 32,
+        blocksize: int = 64,
         radius: int = 32,
         resolve: bool = False,
     ) -> None:
