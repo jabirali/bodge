@@ -8,8 +8,8 @@ from h5py import File
 from tqdm import tqdm
 
 from .consts import *
+from .hamiltonian import Hamiltonian
 from .lattice import Lattice
-from .physics import Hamiltonian
 from .stdio import *
 from .typing import *
 
@@ -143,7 +143,13 @@ class Solver:
             try:
                 block_names = pool.imap(self.kernel, range(self.blocks))
                 block_names = [
-                    *tqdm(block_names, total=self.blocks, desc=" -> expanding", unit="blk", smoothing=0)
+                    *tqdm(
+                        block_names,
+                        total=self.blocks,
+                        desc=" -> expanding",
+                        unit="blk",
+                        smoothing=0,
+                    )
                 ]
             except KeyboardInterrupt:
                 print()

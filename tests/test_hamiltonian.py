@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.linalg import eigh
 
+from bodge.hamiltonian import *
 from bodge.lattice import *
-from bodge.physics import *
 
 
 def test_hermitian():

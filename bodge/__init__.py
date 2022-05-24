@@ -1,11 +1,11 @@
 from .chebyshev import *
 from .consts import *
+from .hamiltonian import *
 from .lattice import *
-from .physics import *
 from .solver import *
 
 __author__ = "Jabir Ali Ouassou"
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 __all__ = [
     "CubicLattice",
     "Hamiltonian",
