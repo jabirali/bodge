@@ -11,11 +11,11 @@ t = 1
 Δ0 = 1
 μ = 0.5
 m3 = 0.0
-d = 8
+d = 32
 
 # Numerical parameters.
-params = [ (100 * 2**n, None) for n in range(12) ]
-phases = [π / 2]
+params = [ (200 * n, 64) for n in range(1, 12) ]
+phases = [3 * π / 2]
 
 # Perform the validation.
 if __name__ == "__main__":
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                 Js = (
                     2
                     * hamiltonian.scale
-                    * np.real(
+                    * np.imag(
                         +hamiltonian.data[k, 0, 0] * results.data[k, 0, 0]
                         + hamiltonian.data[k, 1, 1] * results.data[k, 1, 1]
                     )

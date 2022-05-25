@@ -14,7 +14,7 @@ t = 1
 m3 = 0.25
 
 # Numerical parameters.
-params = [(400, None)]
+params = [(1000, None)]
 
 # Perform the validation.
 if __name__ == "__main__":
