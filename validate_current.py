@@ -11,27 +11,16 @@ t = 1
 Δ0 = 1
 μ = 0.5
 m3 = 0.0
-d = 16
+d = 8
 
 # Numerical parameters.
-params = [
-    (200, None),
-    (400, None),
-    (600, None),
-    (800, None),
-    (1000, None),
-    (1200, None),
-    (1400, None),
-    (1600, None),
-    (1800, None),
-    (2000, None),
-]
+params = [ (100 * 2**n, None) for n in range(12) ]
 phases = [π / 2]
 
 # Perform the validation.
 if __name__ == "__main__":
     # Construct a 1D test system.
-    lattice = CubicLattice((48, 16, 1))
+    lattice = CubicLattice((128, 1, 1))
     hamiltonian = Hamiltonian(lattice)
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
@@ -45,12 +34,14 @@ if __name__ == "__main__":
     x2 = (lattice.shape[0] + d) // 2
 
     # Perform simulations.
+    Ep = 0
+    Jp = 0
     for energy, radius in params:
         # Instantiate solver.
         solver = Solver(
             chebyshev,
             hamiltonian,
-            blocksize=lattice.shape[0] // 3,
+            blocksize=lattice.shape[0] // 8,
             energies=energy,
             radius=radius,
             resolve=False,
@@ -74,7 +65,7 @@ if __name__ == "__main__":
                 Js = (
                     2
                     * hamiltonian.scale
-                    * np.imag(
+                    * np.real(
                         +hamiltonian.data[k, 0, 0] * results.data[k, 0, 0]
                         + hamiltonian.data[k, 1, 1] * results.data[k, 1, 1]
                     )
@@ -89,6 +80,7 @@ if __name__ == "__main__":
             diff = np.abs(J.max() - J.min())
             mean = np.abs(np.mean(J))
             tot = np.sum(J)
-            print(energy, φ, diff / (mean + 1e-100))
+            print(energy, φ, diff / (mean + 1e-100), np.abs(tot - Jp)/(np.abs(tot) + np.abs(Jp)), tot)
+            Jp = tot
 
             # print(energy, φ, J)

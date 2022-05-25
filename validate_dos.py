@@ -19,7 +19,7 @@ params = [(400, None)]
 # Perform the validation.
 if __name__ == "__main__":
     # Construct a 1D test system.
-    lattice = CubicLattice((128, 128, 1))
+    lattice = CubicLattice((64, 1, 1))
     hamiltonian = Hamiltonian(lattice)
     with hamiltonian as (H, Δ):
         for i in lattice.sites():
@@ -30,14 +30,14 @@ if __name__ == "__main__":
             H[i, j] = -t * σ0
 
     # Perform simulations.
-    x = lattice[64, 64, 0]
+    x = lattice[31, 0, 0]
     results = {}
     for energy, radius in params:
         # Instantiate solver.
         solver = Solver(
             chebyshev,
             hamiltonian,
-            blocksize=128,
+            blocksize=8,
             energies=energy,
             radius=radius,
             resolve=True,
