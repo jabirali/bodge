@@ -61,7 +61,7 @@ class chebyshev(Kernel):
         # Save results to file.
         with File(self.blockname, "w") as file:
             # Energy-integrated spectral function.
-            A_k = sum(α_k.values())
+            A_k = sum(α_k.values()) / N
 
             pack(file, f"/integral", A_k)
 

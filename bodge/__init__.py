@@ -11,6 +11,7 @@ __all__ = [
     "Hamiltonian",
     "Solver",
     "chebyshev",
+    "π",
     "σ0",
     "σ1",
     "σ2",
