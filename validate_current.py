@@ -66,8 +66,7 @@ if __name__ == "__main__":
                     2
                     * hamiltonian.scale
                     * np.imag(
-                        +hamiltonian.data[k, 0, 0] * results.data[k, 0, 0]
-                        + hamiltonian.data[k, 1, 1] * results.data[k, 1, 1]
+                        np.trace(hamiltonian.data[k, 0:2, 0:2] * results.data[k, 0:2, 0:2])
                     )
                 )
                 if i[0] > x1 and i[0] < x2:

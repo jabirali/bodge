@@ -30,11 +30,6 @@ class chebyshev(Kernel):
         g = (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
         T *= g
 
-        # Adjust the Chebyshev transform using a Lorentz kernel.
-        # λ = 0.01 * Ω
-        # g = np.sinh(λ*(N - n)) / np.sinh(λ * N)
-        # T *= g
-
         # Compact notation for the essential matrices.
         H = self.hamiltonian
         I_k = self.block_identity
@@ -66,7 +61,7 @@ class chebyshev(Kernel):
         # Save results to file.
         with File(self.blockname, "w") as file:
             # Energy-integrated spectral function.
-            A_k = sum([α_km for m, α_km in α_k.items() if ω[m] > 0] ) / (N/2)
+            A_k = sum([α_km * np.heaviside(-ω[m], 0.5) for m, α_km in α_k.items()]) / (M/2)
 
             pack(file, f"/integral", A_k)
 
