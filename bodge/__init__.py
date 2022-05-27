@@ -1,6 +1,6 @@
-from .chebyshev import *
 from .consts import *
 from .hamiltonian import *
+from .kernels import *
 from .lattice import *
 from .solver import *
 
@@ -10,7 +10,7 @@ __all__ = [
     "CubicLattice",
     "Hamiltonian",
     "Solver",
-    "chebyshev",
+    "ChebyshevKernel",
     "π",
     "σ0",
     "σ1",

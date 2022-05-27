@@ -35,7 +35,7 @@ if __name__ == "__main__":
     for energy, radius in params:
         # Instantiate solver.
         solver = Solver(
-            chebyshev,
+            ChebyshevKernel,
             hamiltonian,
             blocksize=8,
             energies=energy,

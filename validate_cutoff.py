@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # Correct result.
     x = lattice[1, 1, 0]
     solver = Solver(
-        chebyshev,
+        ChebyshevKernel,
         hamiltonian,
         blocksize=16,
         energies=max(energies),
@@ -69,7 +69,12 @@ if __name__ == "__main__":
         for radius in radiuses:
             # Instantiate solver.
             solver = Solver(
-                chebyshev, hamiltonian, blocksize=128, energies=energy, radius=radius, resolve=True
+                ChebyshevKernel,
+                hamiltonian,
+                blocksize=128,
+                energies=energy,
+                radius=radius,
+                resolve=True,
             )
 
             # Calculate density of states.

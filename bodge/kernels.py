@@ -1,7 +1,7 @@
 from .solver import *
 
 
-class chebyshev(Kernel):
+class ChebyshevKernel(Kernel):
     """Chebyshev expansion of spectral functions."""
 
     def solve(self) -> None:
@@ -61,7 +61,7 @@ class chebyshev(Kernel):
         # Save results to file.
         with File(self.blockname, "w") as file:
             # Energy-integrated spectral function.
-            A_k = sum([α_km * np.heaviside(-ω[m], 0.5) for m, α_km in α_k.items()]) / (M/2)
+            A_k = sum([α_km * np.heaviside(-ω[m], 0.5) for m, α_km in α_k.items()]) / (M / 2)
 
             pack(file, f"/integral", A_k)
 
