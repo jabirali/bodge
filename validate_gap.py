@@ -10,13 +10,13 @@ from bodge import *
 # Physical parameters.
 t = 1
 μ = 0.5
-Lx = 512
+Lx = 500
 Ly = 2
 Lz = 1
 Δ0 = 0.04
 
 # Numerical parameters.
-params = [(1200, Lx // 2)]
+params = [(1500, Lx // 2)]
 
 # Perform the validation.
 if __name__ == "__main__":
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         solver = Solver(
             ChebyshevKernel,
             hamiltonian,
-            blocksize=1024 // 16,
+            blocksize=Lx // 8,
             energies=energy,
             radius=radius,
             resolve=True,
