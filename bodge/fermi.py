@@ -6,12 +6,13 @@ from .typing import *
 
 
 def chebyshev(X, I, N):
-    """Calculate the Chebyshev matrix polynomials T_n(M)."""
-
+    """Calculate Chebyshev matrix polynomials T_n(X) of order n ∈ [0, N]."""
     T_0 = I
-    T_n = X
+    yield T_0
 
-    for n in range(1, N):
-        T_n, T_0 = 2 * X @ T_n - T_0, T_n
+    T_1 = X
+    yield T_1
 
-    return T_n
+    for n in range(2, N):
+        T_1, T_0 = 2 * X @ T_1 - T_0, T_1
+        yield T_1

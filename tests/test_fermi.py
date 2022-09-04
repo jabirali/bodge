@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from bodge.fermi import chebyshev
 
@@ -10,15 +11,23 @@ def test_chebyshev():
     x = np.linspace(+1, -1, 11)
     X = np.diag(x)
 
-    # Compare the numerical and exact Chebyshev expansions.
+    # Perform analytical and numerical Chebyshev expansions.
     N = 13
     with np.printoptions(precision=2, suppress=True):
-        for n in range(1, 13):
+        # Construct the numerical Chebyshev iterator.
+        chebs = chebyshev(X, I, N)
+
+        # Verify that each Chebyshev polynomial is correct.
+        for n in range(0, N):
+            Tn_bench = np.diag(next(chebs))
             Tn_exact = np.cos(n * np.arccos(x))
-            Tn_bench = np.diag(chebyshev(X, I, n))
 
             print(f"Chebyshev polynomial T_{n}(x):")
             print(Tn_bench)
             print(Tn_exact)
 
             assert np.allclose(Tn_bench, Tn_exact)
+
+        # Verify that the iterator terminates correctly.
+        with pytest.raises(StopIteration) as e:
+            next(chebs)
