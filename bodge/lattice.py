@@ -17,8 +17,8 @@ class Lattice:
 
     Note that you are free to implement optional arguments to these methods.
     For instance, it may be useful to iterate over one sublattice at a time
-    when calling `.sites` on a honeycomb lattice, or to iterate over the
-    x- and y-axes separately when calling `.bonds` on a rectangular lattice.
+    when calling `.sites` on a honeycomb lattice, or to iterate over the x-
+    and y-axes separately when calling `.bonds` on a rectangular lattice.
     However, it must be possible to call both methods without additional
     arguments to traverse all sites and bonds in the lattice, respectively.
     """
@@ -35,7 +35,7 @@ class Lattice:
         # Number of atoms in the lattice.
         self.size: Index = np.prod(shape)
 
-        # Dimension of lattice.
+        # Dimensionality of the lattice.
         self.dim: int = sum([1 for x in self.shape if x > 1])
 
     @typecheck
@@ -73,13 +73,11 @@ class CubicLattice(Lattice):
     @typecheck
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
-
         return coord[2] + coord[1] * self.shape[2] + coord[0] * self.shape[1] * self.shape[2]
 
     @typecheck
     def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice."""
-
         for x in range(self.shape[0]):
             for y in range(self.shape[1]):
                 for z in range(self.shape[2]):
@@ -92,7 +90,6 @@ class CubicLattice(Lattice):
         The `axis` argument allows iterating over bonds along only one
         cardinal axis, where `axis=0` corresponds to the x-axis, etc.
         """
-
         if axis is None:
             # Neighbors along all axes.
             yield from self.bonds(axis=2)

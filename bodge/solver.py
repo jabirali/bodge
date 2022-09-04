@@ -65,12 +65,22 @@ class Solution:
         ωs = []
         ds = []
         for ω, A in self.spectral():
-            dof = A.blocksize[0]
-            A_ii = A.diagonal()
-            dos = np.real(A_ii[0::dof] + A_ii[1::dof])
+            if ω > 0:
+                dof = A.blocksize[0]
+                A_ii = A.diagonal()
+                dos = np.real(A_ii[0::dof] + A_ii[1::dof])
 
-            ωs.append(ω)
-            ds.append(dos)
+                ωs.append(ω)
+                ds.append(dos)
+
+        for ω, A in self.spectral():
+            if ω > 0:
+                dof = A.blocksize[0]
+                A_ii = A.diagonal()
+                dos = np.real(A_ii[2::dof] + A_ii[3::dof])
+
+                ωs.append(-ω)
+                ds.append(dos)
 
         return np.array(ωs), np.vstack(ds).T
 

@@ -38,8 +38,8 @@ class Hamiltonian:
         self.scale: float = 1.0
 
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
-        # sparse matrix. The fastest alternative for this is the COO format,
-        # but we later convert to BSR format with 4x4 dense submatrices.
+        # sparse matrix. The COO format is most efficient for constructing the
+        # matrix, but the BSR format is more computationally efficient later.
         log(self, "Preparing a sparse skeleton")
 
         size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
@@ -66,12 +66,12 @@ class Hamiltonian:
         # Save an integer matrix that encodes the structure of the Hamiltonian,
         # i.e. any potentially present element in the matrix is indicated by 1.
         # This can be used to instantiate new matrices with the same structure.
-        self.struct: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
+        self.struct: Sparse = bsr_matrix(skeleton, dtype=np.int8)
         self.struct.data[...] = 1
 
         # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
-        self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
+        self.matrix: Sparse = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
@@ -84,9 +84,11 @@ class Hamiltonian:
         This lets us write compact `with` blocks like the below, which is much
         more convenient than having to construct the matrix elements explicitly.
 
-            >>> with system as (H, Δ):
-            >>>     H[i, j] = ...
-            >>>     Δ[i, j] = ...
+        ```python
+        with system as (H, Δ):
+            H[i, j] = ...
+            Δ[i, j] = ...
+        ```
 
         Note that the `__exit__` method is responsible for actually transferring
         all the elements of H and Δ to the correct locations in the Hamiltonian.
@@ -112,7 +114,7 @@ class Hamiltonian:
         - Verifying that the constructed Hamiltonian is actually Hermitian;
         - Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
         """
-        # Process hopping: H[i, j].
+        # Process hopping terms: H[i, j].
         log(self, "Updating the matrix elements")
         for (i, j), val in tqdm(self.hopp.items(), desc=" -> hopping", unit="", unit_scale=True):
             # Find this matrix block.
@@ -127,7 +129,7 @@ class Hamiltonian:
                 k2 = self.index(j, i)
                 self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
-        # Process pairing: Δ[i, j].
+        # Process pairing terms: Δ[i, j].
         for (i, j), val in tqdm(self.pair.items(), desc=" -> pairing", unit="", unit_scale=True):
             # Find this matrix block.
             k1 = self.index(i, j)
@@ -174,7 +176,7 @@ class Hamiltonian:
 
     @property
     @typecheck
-    def identity(self) -> bsr_matrix:
+    def identity(self) -> Sparse:
         """Generate an identity matrix with similar dimensions as the Hamiltonian."""
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
@@ -184,9 +186,8 @@ class Hamiltonian:
 
         This calculates the eigenvalues and eigenvectors of the system. Due to
         the particle-hole symmetry, only positive eigenvalues are calculated.
-
-        Note that this method is quite inefficient since it uses dense matrices;
-        it is meant as a benchmark, not for actual large-scale calculations.
+        Note that this method is inefficient since it uses dense matrices; it
+        is meant as a benchmark, not for actual large-scale calculations.
         """
         # Calculate the relevant eigenvalues and eigenvectors.
         log(self, "Calculating eigenstates via direct diagonalization")
@@ -200,7 +201,7 @@ class Hamiltonian:
 
         return eigval, eigvec
 
-    def spectralize(self, energies: ArrayLike, resolution: float = 1e-2) -> list[Array]:
+    def spectral(self, energies: ArrayLike, resolution: float = 1e-2) -> list[Array]:
         """Calculate the exact spectral function of the system via direct inversion.
 
         Note that this method is quite inefficient since it uses dense matrices;
