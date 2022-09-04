@@ -25,4 +25,5 @@ with system as (H, Δ):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-print(system.diagonalize())
+# Test the WIP code.
+from bodge.fermi import *
