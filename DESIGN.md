@@ -81,3 +81,10 @@ I've decided to follow these guidelines:
 	1. The class is meant to be derived, in which case this enforces consistency;
 	2. The members of the object may be directly accessed by other objects,
 	   where this can be used to flag required refactoring after changes.
+
+## Chebyshev approach
+
+We have decided to perform a Chebyshev expansion of the Fermi operator F = f(H)
+instead of the spectral function A(ω) or Green function G(ω). This follows the
+PhD thesis by Benfenati. The reasoning is that it's easier to understand how
+to incorporate finite temperatures in this scheme compared to the others.
