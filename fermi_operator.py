@@ -27,3 +27,6 @@ with system as (H, Δ):
 
 # Test the WIP code.
 from bodge.fermi import *
+
+for T_n in chebyshev(system):
+    print(T_n)
