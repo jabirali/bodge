@@ -4,7 +4,7 @@ import pytest
 from bodge.fermi import chebyshev
 
 
-def test_chebyshev():
+def test_chebyshev_diag():
     """Test that Chebyshev polynomials satisfy T_n(x) = cos[n acos x]."""
     # Construct diagonal matrices with elements in [-1, +1].
     I = np.identity(11)
@@ -28,6 +28,41 @@ def test_chebyshev():
 
             assert np.allclose(Tn_bench, Tn_exact)
 
-        # Verify that the iterator terminates correctly.
+        # Verify that the iterator terminates after N terms.
         with pytest.raises(StopIteration) as e:
             next(chebs)
+
+
+def test_chebyshev_blocks():
+    """Test that Chebyshev polynomials satisfy [T_n(X)_1 ... T_n(X)_K] = T_n(X).
+
+    Here, T_n(X)_k are blocks of the Chebyshev polynomials calculated
+    from identity matrix blocks I_k, while T_n(X) are the Chebyshev
+    polynomials calculated using the complete identity matrix I.
+    """
+    # Construct an identity matrix and a random matrix.
+    I = np.identity(17)
+    X = np.random.randn(17, 17)
+
+    # Divide the identity matrix into blocks.
+    I_1 = I[:, :4]
+    I_2 = I[:, 4:10]
+    I_3 = I[:, 10:]
+
+    assert np.allclose(np.hstack([I_1, I_2, I_3]), I)
+
+    # Construct Chebyshev iterators.
+    chebs_0 = chebyshev(X, I, 13)
+
+    chebs_1 = chebyshev(X, I_1, 13)
+    chebs_2 = chebyshev(X, I_2, 13)
+    chebs_3 = chebyshev(X, I_3, 13)
+
+    # Verify the reconstruction of T_n(X) from blocks.
+    for n, (Tn_0, Tn_1, Tn_2, Tn_3) in enumerate(zip(chebs_0, chebs_1, chebs_2, chebs_3)):
+        Tn = np.hstack([Tn_1, Tn_2, Tn_3])
+
+        print(f"Difference for T_{n}(X):")
+        print(Tn - Tn_0)
+
+        assert np.allclose(Tn, Tn_0)
