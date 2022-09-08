@@ -4,8 +4,8 @@ from scipy.sparse import bsr_matrix, coo_matrix, identity
 from scipy.sparse.linalg import norm
 from tqdm import tqdm
 
-from .consts import *
 from .lattice import Lattice
+from .math import *
 from .stdio import *
 from .typing import *
 

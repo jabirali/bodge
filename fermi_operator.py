@@ -26,7 +26,7 @@ with system as (H, Δ):
         H[i, j] = -t * σ0
 
 # Test the WIP code.
-from bodge.fermi import *
+from bodge.math import *
 
 for T_n in chebyshev(system):
     print(T_n)

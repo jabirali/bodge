@@ -1,6 +1,6 @@
-from .consts import *
 from .hamiltonian import *
 from .lattice import *
+from .math import *
 
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.1.0"

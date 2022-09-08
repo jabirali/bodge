@@ -1,6 +1,6 @@
 import numpy as np
 
-from .consts import *
+from .math import *
 from .typing import *
 
 
