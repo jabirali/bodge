@@ -47,11 +47,12 @@ def test_chebyshev_diag():
 
 
 def test_chebyshev_blocks():
-    """Test that Chebyshev polynomials satisfy [T_n(X)_1 ... T_n(X)_K] = T_n(X).
+    """Test that Chebyshev blocks satisfy [T_n1(X) ... T_nK(X)] = T_n(X).
 
-    Here, T_n(X)_k are blocks of the Chebyshev polynomials calculated
+    Here, T_nk(X) are blocks of the Chebyshev polynomials calculated
     from identity matrix blocks I_k, while T_n(X) are the Chebyshev
     polynomials calculated using the complete identity matrix I.
+    This ensures that we can do parallel blockwise computations.
     """
     # Construct an identity matrix and a random matrix.
     I = np.identity(17)
@@ -79,3 +80,18 @@ def test_chebyshev_blocks():
         print(Tn - Tn_0)
 
         assert np.allclose(Tn, Tn_0)
+
+
+def test_chebyshev_sparse():
+    """Test that dense and sparse computations are equivalent."""
+    I1 = np.identity(16)
+    X1 = np.random.randn(16, 16)
+
+    I2 = Sparse(I1, blocksize=(4, 4))
+    X2 = Sparse(X1, blocksize=(4, 4))
+
+    chebs_1 = chebyshev(X1, I1, 10)
+    chebs_2 = chebyshev(X2, I2, 10)
+
+    for n, (T_n1, T_n2) in enumerate(zip(chebs_1, chebs_2)):
+        assert np.allclose(T_n1, T_n2.todense())
