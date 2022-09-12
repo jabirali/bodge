@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from scipy.sparse import bsr_matrix, csr_matrix
+from scipy.stats import unitary_group
 
 from bodge.math import *
 
@@ -18,7 +19,7 @@ def test_pauli():
     assert np.allclose(σ1 @ σ2 @ σ3, jσ0)
 
 
-def test_chebyshev_diag():
+def test_chebyshev_exact():
     """Test that Chebyshev polynomials satisfy T_n(x) = cos[n acos x]."""
     # Construct diagonal matrices with elements in [-1, +1].
     I = np.identity(11)
@@ -98,7 +99,7 @@ def test_chebyshev_sparse():
         assert np.allclose(T_n1, T_n2.todense())
 
 
-def test_chebyshev_radius():
+def test_chebyshev_cutoff():
     """Test the Local Krylov expansion feature."""
     # Construct a realistic tridiagonal matrix X.
     I = np.identity(64)
@@ -137,8 +138,28 @@ def test_chebyshev_radius():
             assert Tn_2.nnz == (X**R).nnz
 
 
-def test_fermi_expansion():
-    """Test that the Chebyshev expansion of the Fermi function is analytically correct."""
+def test_chebyshev_unitary():
+    """Test that Chebyshev polynomials satisfy U† T_n(D) U = T_n(X)."""
+    # Diagonal matrices with elements in [-1, +1].
+    M = 13
+    I = np.identity(M)
+    D = np.diag(np.linspace(+1, -1, M))
+
+    # Unitary transformation with a matrix U.
+    U = unitary_group.rvs(M)
+    UT = U.T.conj()
+
+    # Chebyshev expansion using non-diagonal matrices.
+    TX = chebyshev(U @ D @ UT, I, 10)
+    TD = chebyshev(D, I, 10)
+
+    # Check the bespoke mathematical properties.
+    for TX_n, TD_n in zip(TX, TD):
+        assert np.allclose(TX_n, U @ TD_n @ UT)
+
+
+def test_fermi_exact():
+    """Test that the Fermi-Chebyshev expansion is analytically correct."""
     # Diagonal matrices with elements in [-1, +1].
     M = 71
     I = np.identity(M)
