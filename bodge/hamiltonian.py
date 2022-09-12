@@ -66,12 +66,12 @@ class Hamiltonian:
         # Save an integer matrix that encodes the structure of the Hamiltonian,
         # i.e. any potentially present element in the matrix is indicated by 1.
         # This can be used to instantiate new matrices with the same structure.
-        self.struct: Sparse = bsr_matrix(skeleton, dtype=np.int8)
+        self.struct: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
         self.struct.data[...] = 1
 
         # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
-        self.matrix: Sparse = bsr_matrix(skeleton, dtype=np.complex128)
+        self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
@@ -176,7 +176,7 @@ class Hamiltonian:
 
     @property
     @typecheck
-    def identity(self) -> Sparse:
+    def identity(self) -> bsr_matrix:
         """Generate an identity matrix with similar dimensions as the Hamiltonian."""
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
@@ -232,7 +232,7 @@ class Hamiltonian:
 
         plt.figure(figsize=(8, 8))
         plt.spy(self.matrix, markersize=1, marker="o", color="k")
-        plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
+        plt.title("Hamiltonian elements stored in the Block bsr_matrix Row (BSR) representation")
         plt.xticks([])
         plt.yticks([])
 

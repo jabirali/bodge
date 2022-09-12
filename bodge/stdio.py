@@ -17,7 +17,7 @@ def log(self, msg: str):
 @typecheck
 def pack(file: File, path: str, obj: Any):
     """Save an object to a given path in an open HDF file."""
-    if type(obj) == Sparse:
+    if type(obj) == bsr_matrix:
         file[path + "/data"] = obj.data
         file[path + "/indices"] = obj.indices
         file[path + "/indptr"] = obj.indptr
@@ -33,6 +33,6 @@ def unpack(file: File, path: str) -> Any:
         indices = file[path + "/indices"][...]
         indptr = file[path + "/indptr"][...]
 
-        return Sparse((data, indices, indptr))
+        return bsr_matrix((data, indices, indptr))
     else:
         return file[path][...]

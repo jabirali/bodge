@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from scipy.sparse import bsr_matrix, csr_matrix
 
 from bodge.math import *
 
@@ -87,11 +88,50 @@ def test_chebyshev_sparse():
     I1 = np.identity(16)
     X1 = np.random.randn(16, 16)
 
-    I2 = Sparse(I1, blocksize=(4, 4))
-    X2 = Sparse(X1, blocksize=(4, 4))
+    I2 = bsr_matrix(I1, blocksize=(4, 4))
+    X2 = bsr_matrix(X1, blocksize=(4, 4))
 
     chebs_1 = chebyshev(X1, I1, 10)
     chebs_2 = chebyshev(X2, I2, 10)
 
     for n, (T_n1, T_n2) in enumerate(zip(chebs_1, chebs_2)):
         assert np.allclose(T_n1, T_n2.todense())
+
+
+def test_chebyshev_radius():
+    """Test the Local Krylov expansion feature."""
+    # Construct a realistic tridiagonal matrix X.
+    I = np.identity(64)
+    X = I.copy()
+    for n in range(64 - 2):
+        X[n, n + 2] = -1 / 2
+        X[n + 2, n] = -1 / 2
+
+    # Convert the above into sparse matrices.
+    X = csr_matrix(X)
+    I = csr_matrix(I)
+
+    # Construct the relevant Chebyshev generators.
+    R = 5
+    cheb_1 = chebyshev(X, I, 2 * R + 1)
+    cheb_2 = chebyshev(X, I, 2 * R + 1, R)
+
+    # Generate the T_n(X) with and without cutoff.
+    for n, (Tn_1, Tn_2) in enumerate(zip(cheb_1, cheb_2)):
+        # The first R matrices should be exactly the same.
+        if n <= R:
+            assert Tn_1.nnz == Tn_2.nnz
+            assert Tn_1.nnz == (X**n).nnz
+            assert np.allclose(Tn_1.todense(), Tn_2.todense())
+
+        # The next matrix is the first with a cutoff. The *stored* elements in
+        # the two matrices should be exactly the same at this point.
+        elif n == R + 1:
+            assert Tn_1.nnz > Tn_2.nnz
+            assert (Tn_1 - Tn_2).nnz == (X ** (R + 1)).nnz - (X**R).nnz
+
+        # The last matrices should scale like X^n or X^R, respectively.
+        else:
+            assert Tn_1.nnz > Tn_2.nnz
+            assert Tn_1.nnz == (X**n).nnz
+            assert Tn_2.nnz == (X**R).nnz
