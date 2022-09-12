@@ -168,7 +168,7 @@ def test_fermi_exact():
 
     # Chebyshev expand the Fermi function f(ε).
     N = 200
-    fs = fermi(0.05, N)
+    fs = fermi_coeff(0.05, N)
     Ts = chebyshev(X, I, N)
 
     f1 = np.zeros(M)

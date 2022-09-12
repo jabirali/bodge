@@ -68,7 +68,7 @@ def chebyshev(X, I, N=1024, R=None):
         yield T_1
 
 
-def fermi(T, N=1024):
+def fermi_coeff(T, N=1024):
     """Chebyshev coefficients of the Fermi function at temperature T.
 
     We define the coefficients f_n such that f(X) = ∑ f_n T_n(X) for any X,
