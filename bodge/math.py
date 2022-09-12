@@ -19,7 +19,7 @@ jσ3 = 1j * σ3
 
 
 def chebyshev(X, I, N=1024, R=None):
-    """Calculate the Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
+    """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
     and these matrices can be either dense `np.array` or sparse `scipy.sparse`.
@@ -66,3 +66,23 @@ def chebyshev(X, I, N=1024, R=None):
                 raise ValueError("Cutoff radius is only supported for `scipy.sparse` matrices!")
 
         yield T_1
+
+
+def fermi(T, N=1024):
+    """Chebyshev coefficients of the Fermi function at temperature T.
+
+    We define the coefficients f_n such that f(X) = ∑ f_n T_n(X) for any X,
+    where the sum goes over 0 ≤ n < N and T_n(X) is found by `chebyshev`.
+    """
+    # Calculate the points φ_k such that cos(φ_k) are Chebyshev nodes.
+    k = np.arange(N)
+    φ = π * (k + 1 / 2) / (2 * N)
+
+    # This expansion follows from f(ε) = [1 - tanh(ε/2T)] / 2.
+    yield 1 / 2
+    for n in range(1, N):
+        match n % 2:
+            case 0:
+                yield 0
+            case 1:
+                yield -np.mean(np.tanh(np.cos(φ) / (2 * T)) * np.cos(n * φ))

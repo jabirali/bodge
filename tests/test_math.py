@@ -135,3 +135,27 @@ def test_chebyshev_radius():
             assert Tn_1.nnz > Tn_2.nnz
             assert Tn_1.nnz == (X**n).nnz
             assert Tn_2.nnz == (X**R).nnz
+
+
+def test_fermi_expansion():
+    """Test that the Chebyshev expansion of the Fermi function is analytically correct."""
+    # Diagonal matrices with elements in [-1, +1].
+    M = 71
+    I = np.identity(M)
+    x = np.linspace(+1, -1, M)
+    X = np.diag(x)
+
+    # Chebyshev expand the Fermi function f(ε).
+    N = 200
+    fs = fermi(0.05, N)
+    Ts = chebyshev(X, I, N)
+
+    f1 = np.zeros(M)
+    for f, T in zip(fs, Ts):
+        f1 += np.diag(f * T)
+
+    # Calculate the Fermi function manually.
+    f2 = 1 / (1 + np.exp(x / 0.05))
+
+    # The two approaches should be identical.
+    assert np.allclose(f1, f2)
