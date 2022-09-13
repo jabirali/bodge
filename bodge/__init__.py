@@ -1,3 +1,4 @@
+from .fermi import *
 from .hamiltonian import *
 from .lattice import *
 from .math import *

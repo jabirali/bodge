@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Test script for the Fermi operator expansion"""
+"""Test script for the Fermi-Chebyshev expansion"""
 
 from bodge import *
 
@@ -11,7 +11,7 @@ t = 1.0
 m3 = 0.2 * t
 
 # Construct the Hamiltonian.
-lattice = CubicLattice((20, 20, 2))
+lattice = CubicLattice((10, 10, 1))
 system = Hamiltonian(lattice)
 
 with system as (H, Δ):
@@ -25,8 +25,8 @@ with system as (H, Δ):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-# Test the WIP code.
-from bodge.math import *
+# Construct the Fermi matrix.
+fermi = FermiMatrix(system, 64)
+F = fermi(0.05)
 
-for T_n in chebyshev(system):
-    print(T_n)
+print(F.diagonal())
