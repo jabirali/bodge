@@ -19,9 +19,6 @@ class FermiMatrix:
         H = self.hamiltonian.matrix
         I = self.hamiltonian.identity
 
-        # TODO: Generate identity blocks I_k instead of using full I
-        # TODO: Perform (parallelizable) expansion of F_nk = [f_n T_n(X)]_k
-
         # Generators for coefficients and matrices.
         fs = self.coeff(temperature)
         gs = jackson(self.order)
