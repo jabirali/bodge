@@ -7,11 +7,11 @@ from bodge import *
 # List of physical parameters.
 t = 1.0
 μ = 0.1 * t
-Δ0 = 0.1 * t
+Δ0 = (0.13 + 0.1j) * t
 m3 = 0.2 * t
 
 # Construct the Hamiltonian.
-lattice = CubicLattice((100, 100, 1))
+lattice = CubicLattice((30, 30, 1))
 system = Hamiltonian(lattice)
 
 with system as (H, Δ):
@@ -26,7 +26,8 @@ with system as (H, Δ):
         H[i, j] = -t * σ0
 
 # Construct the Fermi matrix.
-fermi = FermiMatrix(system, 64)
-F = fermi(0.05)
+fermi = FermiMatrix(system, 100)
+F = fermi(0.05 * system.scale, 32)
 
-print(F.diagonal())
+# Calculate the order parameter.
+print(system.scale * F.diagonal(3)[::4])

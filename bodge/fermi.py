@@ -1,8 +1,9 @@
 import numpy as np
 from tqdm import tqdm
 
-from .hamiltonian import Hamiltonian
+from .hamiltonian import *
 from .math import *
+from .stdio import *
 from .typing import *
 
 
@@ -34,7 +35,7 @@ class FermiMatrix:
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
-        for f, g, T in tqdm(zip(fs, gs, Ts), desc="", unit="", unit_scale=True):
+        for f, g, T in tqdm(zip(fs, gs, Ts), total=self.order):
             if f != 0:
                 self.matrix += (f * g * T).multiply(S)
 
