@@ -80,6 +80,7 @@ def test_sparsity():
 
     # Calculate a matrix product using internal matrices.
     H = system.matrix
+    S = system.struct
     I = system.identity
     G = H @ I
 
@@ -89,3 +90,8 @@ def test_sparsity():
     # Ensure that the identity preserves format and value.
     assert G.blocksize == (4, 4)
     assert np.allclose(G.todense(), H.todense())
+
+    # Ensure the structure matrix is consistent with Hamiltonian.
+    H.data[...] = 1
+    assert S.blocksize == (4, 4)
+    assert np.allclose(H.todense(), S.todense())

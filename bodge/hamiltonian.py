@@ -63,7 +63,13 @@ class Hamiltonian:
 
         skeleton = coo_matrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
 
-        # Use this skeleton to instantiate a complex Hamiltonian matrix.
+        # Save an integer matrix that encodes the structure of the Hamiltonian,
+        # i.e. any potentially present element in the matrix is indicated by 1.
+        # This can be used to instantiate new matrices with the same structure.
+        self.struct: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
+        self.struct.data[...] = 1
+
+        # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
         self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
