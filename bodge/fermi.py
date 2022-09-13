@@ -15,12 +15,10 @@ class FermiMatrix:
         self.matrix: Optional[bsr_matrix] = None
 
     def __call__(self, temperature: float, radius: Optional[int] = None):
-        # Hamiltonian and identity matrix.
+        # Hamiltonian and related matrices.
         H = self.hamiltonian.matrix
+        S = self.hamiltonian.struct
         I = self.hamiltonian.identity
-
-        # TODO: Generate identity blocks I_k instead of using full I
-        # TODO: Perform (parallelizable) expansion of F_nk = [f_n T_n(X)]_k
 
         # Generators for coefficients and matrices.
         fs = self.coeff(temperature)
@@ -33,7 +31,7 @@ class FermiMatrix:
         # Perform kernel polynomial expansion.
         for f, g, T in zip(fs, gs, Ts):
             if f != 0:
-                self.matrix += f * g * T
+                self.matrix += (f * g * T).multiply(S)
 
         return self.matrix
 
