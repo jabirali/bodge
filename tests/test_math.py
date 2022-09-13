@@ -180,3 +180,24 @@ def test_fermi_exact():
 
     # The two approaches should be identical.
     assert np.allclose(f1, f2)
+
+
+def test_jackson_kernel():
+    """Test that the Jackson kernel behaves as a reasonable regularization."""
+    # Prepare one generator with N = 100 and one with N = 1,000,000.
+    jackson_small = jackson_kernel(int(1e2))
+    jackson_large = jackson_kernel(int(1e6))
+
+    # Check that the generator with N = 100 tapers off more quickly than the
+    # one with N = 1,000,000, while decreasing monotonically from one to zero.
+    g_s0 = 1
+    for g_s1, g_l1 in zip(jackson_small, jackson_large):
+        assert g_s1 <= g_s0
+        assert g_s1 <= g_l1
+        assert g_s1 >= 0
+
+        g_s0 = g_s1
+
+    # Check that g_n ≈ 0 for n = N but that g_n ≈ 1 for n ≪ N.
+    assert np.allclose(g_s1, 0, atol=1e-4)
+    assert np.allclose(g_l1, 1, atol=1e-4)

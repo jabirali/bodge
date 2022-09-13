@@ -86,3 +86,15 @@ def fermi_coeff(T, N=1024):
                 yield 0
             case 1:
                 yield -np.mean(np.tanh(np.cos(φ) / (2 * T)) * np.cos(n * φ))
+
+
+def jackson_kernel(N=1024):
+    """Jackson kernel for the Chebyshev expansion.
+
+    These factors g_n are used to calculate F(X) = ∑_n f_n g_n T_n(X) for a
+    finite number of terms 0 ≤ n < N. They can be shown to provide a better
+    approximation of the N → ∞ result than an abrupt cutoff g_n = θ(N - n).
+    """
+    ϕ = π / (N + 1)
+    for n in range(N):
+        yield (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
