@@ -11,7 +11,7 @@ t = 1.0
 m3 = 0.2 * t
 
 # Construct the Hamiltonian.
-lattice = CubicLattice((10, 10, 1))
+lattice = CubicLattice((100, 100, 1))
 system = Hamiltonian(lattice)
 
 with system as (H, Δ):

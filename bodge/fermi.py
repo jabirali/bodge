@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 
 from .hamiltonian import Hamiltonian
 from .math import *
@@ -15,6 +16,9 @@ class FermiMatrix:
         self.matrix: Optional[bsr_matrix] = None
 
     def __call__(self, temperature: float, radius: Optional[int] = None):
+        """Calculate the Fermi matrix at a given temperature."""
+        log(self, "Performing Fermi-Chebyshev expansion")
+
         # Hamiltonian and related matrices.
         H = self.hamiltonian.matrix
         S = self.hamiltonian.struct
@@ -29,7 +33,8 @@ class FermiMatrix:
         self.matrix = bsr_matrix(H.shape, blocksize=H.blocksize, dtype=H.dtype)
 
         # Perform kernel polynomial expansion.
-        for f, g, T in zip(fs, gs, Ts):
+        # TODO: Check adjustments for entropy.
+        for f, g, T in tqdm(zip(fs, gs, Ts), desc="", unit="", unit_scale=True):
             if f != 0:
                 self.matrix += (f * g * T).multiply(S)
 
