@@ -158,35 +158,11 @@ def test_chebyshev_unitary():
         assert np.allclose(TX_n, U @ TD_n @ UT)
 
 
-def test_fermi_exact():
-    """Test that the Fermi-Chebyshev expansion is analytically correct."""
-    # Diagonal matrices with elements in [-1, +1].
-    M = 71
-    I = np.identity(M)
-    x = np.linspace(+1, -1, M)
-    X = np.diag(x)
-
-    # Chebyshev expand the Fermi function f(ε).
-    N = 200
-    fs = fermi_coeff(0.05, N)
-    Ts = chebyshev(X, I, N)
-
-    f1 = np.zeros(M)
-    for f, T in zip(fs, Ts):
-        f1 += np.diag(f * T)
-
-    # Calculate the Fermi function manually.
-    f2 = 1 / (1 + np.exp(x / 0.05))
-
-    # The two approaches should be identical.
-    assert np.allclose(f1, f2)
-
-
 def test_jackson_kernel():
     """Test that the Jackson kernel behaves as a reasonable regularization."""
     # Prepare one generator with N = 100 and one with N = 1,000,000.
-    jackson_small = jackson_kernel(int(1e2))
-    jackson_large = jackson_kernel(int(1e6))
+    jackson_small = jackson(int(1e2))
+    jackson_large = jackson(int(1e6))
 
     # Check that the generator with N = 100 tapers off more quickly than the
     # one with N = 1,000,000, while decreasing monotonically from one to zero.

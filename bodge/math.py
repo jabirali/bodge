@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from .typing import *
@@ -54,8 +56,10 @@ def chebyshev(X, I, N=1024, R=None):
                 # structure of T_R(X), since this matrix contains all the
                 # relevant contributions {X^0, ..., X^R} of the subspace.
                 if n == R:
-                    P = T_1.astype(dtype="int8", copy=False)
-                    P.data[...] = 1
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", np.ComplexWarning)
+                        P = T_1.astype(dtype="int8", copy=False)
+                        P.data[...] = 1
 
                 # Project T_n(x) onto the Local Krylov subspace spanned by
                 # elementwise multiplication by the mask constructed above.
@@ -68,32 +72,12 @@ def chebyshev(X, I, N=1024, R=None):
         yield T_1
 
 
-def fermi_coeff(T, N=1024):
-    """Chebyshev coefficients of the Fermi function at temperature T.
+def jackson(N=1024):
+    """Jackson kernel for preventing Gibbs oscillations in Chebyshev expansions.
 
-    We define the coefficients f_n such that f(X) = ∑ f_n T_n(X) for any X,
-    where the sum goes over 0 ≤ n < N and T_n(X) is found by `chebyshev`.
-    """
-    # Calculate the points φ_k such that cos(φ_k) are Chebyshev nodes.
-    k = np.arange(N)
-    φ = π * (k + 1 / 2) / (2 * N)
-
-    # This expansion follows from f(ε) = [1 - tanh(ε/2T)] / 2.
-    yield 1 / 2
-    for n in range(1, N):
-        match n % 2:
-            case 0:
-                yield 0
-            case 1:
-                yield -np.mean(np.tanh(np.cos(φ) / (2 * T)) * np.cos(n * φ))
-
-
-def jackson_kernel(N=1024):
-    """Jackson kernel for the Chebyshev expansion.
-
-    These factors g_n are used to calculate F(X) = ∑_n f_n g_n T_n(X) for a
-    finite number of terms 0 ≤ n < N. They can be shown to provide a better
-    approximation of the N → ∞ result than an abrupt cutoff g_n = θ(N - n).
+    These factors g_n are used to calculate F(X) = ∑ f_n g_n T_n(X) for a
+    finite number of terms 0 ≤ n < N. They provide a better approximation of
+    F(X) than using an abrupt cutoff at n = N [equivalent to g_n = θ(N - n)].
     """
     ϕ = π / (N + 1)
     for n in range(N):
