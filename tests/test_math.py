@@ -149,7 +149,7 @@ def test_chebyshev_unitary():
     U = unitary_group.rvs(M)
     UT = U.T.conj()
 
-    # Chebyshev expansion using non-diagonal matrices.
+    # Chebyshev expansion using non-diagonal vs. diagonal matrices.
     TX = chebyshev(U @ D @ UT, I, 10)
     TD = chebyshev(D, I, 10)
 
