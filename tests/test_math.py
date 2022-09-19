@@ -30,7 +30,7 @@ def test_chebyshev_exact():
     N = 13
     with np.printoptions(precision=2, suppress=True):
         # Construct the numerical Chebyshev iterator.
-        chebs = chebyshev(X, I, N)
+        chebs = cheb_poly(X, I, N)
 
         # Verify that each Chebyshev polynomial is correct.
         for n in range(0, N):
@@ -68,11 +68,11 @@ def test_chebyshev_blocks():
     assert np.allclose(np.hstack([I_1, I_2, I_3]), I)
 
     # Construct Chebyshev iterators.
-    chebs_0 = chebyshev(X, I, 13)
+    chebs_0 = cheb_poly(X, I, 13)
 
-    chebs_1 = chebyshev(X, I_1, 13)
-    chebs_2 = chebyshev(X, I_2, 13)
-    chebs_3 = chebyshev(X, I_3, 13)
+    chebs_1 = cheb_poly(X, I_1, 13)
+    chebs_2 = cheb_poly(X, I_2, 13)
+    chebs_3 = cheb_poly(X, I_3, 13)
 
     # Verify the reconstruction of T_n(X) from blocks.
     for n, (Tn_0, Tn_1, Tn_2, Tn_3) in enumerate(zip(chebs_0, chebs_1, chebs_2, chebs_3)):
@@ -92,8 +92,8 @@ def test_chebyshev_sparse():
     I2 = bsr_matrix(I1, blocksize=(4, 4))
     X2 = bsr_matrix(X1, blocksize=(4, 4))
 
-    chebs_1 = chebyshev(X1, I1, 10)
-    chebs_2 = chebyshev(X2, I2, 10)
+    chebs_1 = cheb_poly(X1, I1, 10)
+    chebs_2 = cheb_poly(X2, I2, 10)
 
     for n, (T_n1, T_n2) in enumerate(zip(chebs_1, chebs_2)):
         assert np.allclose(T_n1, T_n2.todense())
@@ -114,8 +114,8 @@ def test_chebyshev_cutoff():
 
     # Construct the relevant Chebyshev generators.
     R = 5
-    cheb_1 = chebyshev(X, I, 2 * R + 1)
-    cheb_2 = chebyshev(X, I, 2 * R + 1, R)
+    cheb_1 = cheb_poly(X, I, 2 * R + 1)
+    cheb_2 = cheb_poly(X, I, 2 * R + 1, R)
 
     # Generate the T_n(X) with and without cutoff.
     for n, (Tn_1, Tn_2) in enumerate(zip(cheb_1, cheb_2)):
@@ -150,8 +150,8 @@ def test_chebyshev_unitary():
     UT = U.T.conj()
 
     # Chebyshev expansion using non-diagonal vs. diagonal matrices.
-    TX = chebyshev(U @ D @ UT, I, 10)
-    TD = chebyshev(D, I, 10)
+    TX = cheb_poly(U @ D @ UT, I, 10)
+    TD = cheb_poly(D, I, 10)
 
     # Check the bespoke mathematical properties.
     for TX_n, TD_n in zip(TX, TD):
@@ -161,8 +161,8 @@ def test_chebyshev_unitary():
 def test_jackson_kernel():
     """Test that the Jackson kernel behaves as a reasonable regularization."""
     # Prepare one generator with N = 100 and one with N = 1,000,000.
-    jackson_small = jackson(int(1e2))
-    jackson_large = jackson(int(1e6))
+    jackson_small = cheb_kern(int(1e2))
+    jackson_large = cheb_kern(int(1e6))
 
     # Check that the generator with N = 100 tapers off more quickly than the
     # one with N = 1,000,000, while decreasing monotonically from one to zero.

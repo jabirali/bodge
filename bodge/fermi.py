@@ -11,10 +11,11 @@ class FermiMatrix:
     def __init__(self, hamiltonian: Hamiltonian, order: int):
         # Store initialization arguments.
         self.hamiltonian: Hamiltonian = hamiltonian
+        self.lattice: Lattice = hamiltonian.lattice
         self.order: int = order
 
         # Storage for the Fermi matrix.
-        self.matrix: Optional[bsr_matrix] = None
+        self.matrix: bsr_matrix
 
     def __call__(self, temperature: float, radius: Optional[int] = None):
         """Calculate the Fermi matrix at a given temperature."""
@@ -25,10 +26,14 @@ class FermiMatrix:
         S = self.hamiltonian.struct
         I = self.hamiltonian.identity
 
+        # Fermi function.
+        def f(x):
+            return 1 / (1 + np.exp(x / temperature))
+
         # Generators for coefficients and matrices.
-        fs = self.coeff(temperature)
-        gs = jackson(self.order)
-        Ts = chebyshev(H, I, self.order, radius)
+        Ts = cheb_poly(H, I, self.order, radius)
+        fs = cheb_coeff(f, self.order)
+        gs = cheb_kern(self.order)
 
         # Initialize the Fermi matrix skeleton.
         self.matrix = bsr_matrix(H.shape, blocksize=H.blocksize, dtype=H.dtype)
@@ -36,30 +41,16 @@ class FermiMatrix:
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
         for f, g, T in tqdm(zip(fs, gs, Ts), total=self.order):
-            if f != 0:
-                self.matrix += (f * g * T).multiply(S)
+            self.matrix += (f * g * T).multiply(S)
 
         return self.matrix
 
-    def coeff(self, temperature: float):
-        """Chebyshev coefficients of the Fermi function at a given temperature.
+    def index(self, row: Coord, col: Coord) -> Index:
+        """Sparse matrix index corresponding to block (row, col)."""
+        indices, indptr = self.matrix.indices, self.matrix.indptr
 
-        We define the coefficients f_n such that f(X) = ∑ f_n T_n(X) for any X,
-        where the sum goes over 0 ≤ n < N and T_n(X) is found by `chebyshev`.
-        """
-        # Short-hand notation for parameters.
-        N = self.order
-        T = temperature
+        i, j = self.lattice[row], self.lattice[col]
+        js = indices[indptr[i] : indptr[i + 1]]
+        k = indptr[i] + np.where(js == j)
 
-        # Calculate the φ_k such that ε_k = cos(φ_k) are Chebyshev nodes.
-        k = np.arange(N)
-        φ = π * (k + 1 / 2) / (2 * N)
-
-        # This expansion follows from f(ε) = [1 - tanh(ε/2T)] / 2.
-        yield 1 / 2
-        for n in range(1, N):
-            match n % 2:
-                case 0:
-                    yield 0
-                case 1:
-                    yield -np.mean(np.tanh(np.cos(φ) / (2 * T)) * np.cos(n * φ))
+        return Index(k)
