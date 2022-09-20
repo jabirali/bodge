@@ -72,23 +72,30 @@ def cheb_poly(X, I, N=1024, R=None):
         yield T_1
 
 
-def cheb_coeff(F: Callable, N: int):
+def cheb_coeff(F: Callable, N: int, odd=False, even=False):
     """Generate the Chebyshev coefficients for the given function.
 
     We define the coefficients f_n such that F(X) = ∑ f_n T_n(X) for any X,
     where the sum goes over 0 ≤ n < N and T_n(X) is found by `cheb_poly`.
+    The optional arguments `odd` and `even` can be used to skip calculation
+    of Chebyshev coefficients that are a priori known to be exactly zero.
     """
-    # Calculate the φ_k such that x_k = cos(φ_k) are Chebyshev nodes.
+    # Calculate the ϕ_k such that x_k = cos(ϕ_k) are Chebyshev nodes.
     n = np.arange(N)
-    φ = (n + 1 / 2) * (π / N)
+    ϕ = π * (n + 1 / 2) / N
 
     # Evaluate the provided function at the Chebyshev nodes x_k.
-    f = np.array([F(x_k) for x_k in np.cos(φ)])
+    f = np.array([F(x_k) for x_k in np.cos(ϕ)])
 
     # Perform the Chebyshev expansion.
     yield np.mean(f)
     for n in range(1, N):
-        yield 2 * np.mean(f * np.cos(n * φ))
+        if odd and n % 2 == 0:
+            yield 0
+        elif even and n % 2 == 1:
+            yield 0
+        else:
+            yield 2 * np.mean(f * np.cos(n * ϕ))
 
 
 def cheb_kern(N=1024):
@@ -98,6 +105,10 @@ def cheb_kern(N=1024):
     finite number of terms 0 ≤ n < N. They provide a better approximation of
     F(X) than using an abrupt cutoff at n = N [equivalent to g_n = θ(N - n)].
     """
-    φ = π / (N + 1)
+    ϕ = π / (N + 1)
     for n in range(N):
-        yield (φ / π) * ((N - n + 1) * np.cos(φ * n) + np.sin(φ * n) / np.tan(φ))
+        yield (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
+
+
+def logdet(X):
+    pass

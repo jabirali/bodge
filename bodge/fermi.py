@@ -32,7 +32,7 @@ class FermiMatrix:
 
         # Generators for coefficients and matrices.
         Ts = cheb_poly(H, I, self.order, radius)
-        fs = cheb_coeff(f, self.order)
+        fs = cheb_coeff(f, self.order, odd=True)
         gs = cheb_kern(self.order)
 
         # Initialize the Fermi matrix skeleton.
@@ -41,7 +41,8 @@ class FermiMatrix:
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
         for f, g, T in tqdm(zip(fs, gs, Ts), total=self.order):
-            self.matrix += (f * g * T).multiply(S)
+            if f != 0:
+                self.matrix += (f * g * T).multiply(S)
 
         return self.matrix
 
