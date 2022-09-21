@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from scipy.sparse import bsr_matrix, csr_matrix
+from scipy.linalg import det, eigh
+from scipy.sparse import bsr_matrix, csr_matrix, identity
 from scipy.stats import unitary_group
 
 from bodge.math import *
@@ -177,3 +178,38 @@ def test_jackson_kernel():
     # Check that g_n ≈ 0 for n = N but that g_n ≈ 1 for n ≪ N.
     assert np.allclose(g_s1, 0, atol=1e-4)
     assert np.allclose(g_l1, 1, atol=1e-4)
+
+
+def test_trace():
+    """Test that the stochastic trace is correct for a random matrix."""
+    # Create a random positive-definite hermitian matrix.
+    M = 316
+    X = np.diag(np.random.ranf(M))
+    I = identity(M)
+
+    U = unitary_group.rvs(M)
+    UT = U.T.conj()
+    X = U @ X @ UT
+
+    # Check the trace.
+    tr_stoch = trace(X)
+    tr_exact = np.trace(X)
+    assert np.allclose(tr_exact, tr_stoch, rtol=1e-2)
+
+
+def test_logdet():
+    """Test the logdet is correct for a small random matrix.."""
+    # Create a random positive-definite hermitian matrix.
+    M = 316
+    X = np.diag(np.random.ranf(M))
+    I = identity(M)
+
+    U = unitary_group.rvs(M)
+    UT = U.T.conj()
+    X = U @ X @ UT
+
+    # Calculate the logarithm of the determinant.
+    ld_exact = np.log(det(X))
+    ld_approx = logdet(X, I)
+
+    assert np.allclose(ld_exact, ld_approx, rtol=1e-2)

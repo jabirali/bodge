@@ -20,7 +20,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb_poly(X, I, N=1024, R=None):
+def cheb_poly(X, I, N: int, R=None):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
@@ -98,7 +98,7 @@ def cheb_coeff(F: Callable, N: int, odd=False, even=False):
             yield 2 * np.mean(f * np.cos(n * ϕ))
 
 
-def cheb_kern(N=1024):
+def cheb_kern(N: int):
     """Jackson kernel for preventing Gibbs oscillations in Chebyshev expansions.
 
     These factors g_n are used to calculate F(X) = ∑ f_n g_n T_n(X) for a
@@ -110,5 +110,28 @@ def cheb_kern(N=1024):
         yield (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
 
 
-def logdet(X):
-    pass
+def trace(X, N: int = 128):
+    """Stochastic evaluation of the trace."""
+    M = X.shape[-1]
+
+    tr = 0
+    for n in range(N):
+        # Generate a Gaussian complex vector.
+        v = np.random.randn(M, 2)
+        v = (v[:, :1] + v[:, 1:] * 1j) / np.sqrt(2)
+
+        # Stochastic evaluation of trace.
+        tr += (v.T.conj() @ X @ v) / N
+
+    return tr
+
+
+def logdet(X, I, N: int = 128):
+    """Stochastic Chebyshev evaluation of log det X."""
+    # Perform a Chebyshev expansion.
+    fs = cheb_coeff(lambda x: np.log(1 - x), N)
+    gs = cheb_kern(N)
+    Ts = cheb_poly(I - X, I, N)
+
+    # Calculate log det X.
+    return sum(f * g * trace(T) for f, g, T in zip(fs, gs, Ts))
