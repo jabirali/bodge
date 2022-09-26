@@ -232,7 +232,7 @@ class Hamiltonian:
 
         plt.figure(figsize=(8, 8))
         plt.spy(self.matrix, markersize=1, marker="o", color="k")
-        plt.title("Hamiltonian elements stored in the Block bsr_matrix Row (BSR) representation")
+        plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
         plt.xticks([])
         plt.yticks([])
 

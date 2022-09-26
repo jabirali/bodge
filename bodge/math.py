@@ -105,9 +105,9 @@ def cheb_kern(N: int):
     finite number of terms 0 ≤ n < N. They provide a better approximation of
     F(X) than using an abrupt cutoff at n = N [equivalent to g_n = θ(N - n)].
     """
-    ϕ = π / (N + 1)
+    Π = π / (N + 1)
     for n in range(N):
-        yield (ϕ / π) * ((N - n + 1) * np.cos(ϕ * n) + np.sin(ϕ * n) / np.tan(ϕ))
+        yield (Π / π) * ((N - n + 1) * np.cos(Π * n) + np.sin(Π * n) / np.tan(Π))
 
 
 def trace(X, N: int = 128):

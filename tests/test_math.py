@@ -148,15 +148,15 @@ def test_chebyshev_unitary():
 
     # Unitary transformation with a matrix U.
     U = unitary_group.rvs(M)
-    UT = U.T.conj()
+    Ut = U.T.conj()
 
     # Chebyshev expansion using non-diagonal vs. diagonal matrices.
-    TX = cheb_poly(U @ D @ UT, I, 10)
-    TD = cheb_poly(D, I, 10)
+    Tx = cheb_poly(U @ D @ Ut, I, 10)
+    Td = cheb_poly(D, I, 10)
 
     # Check the bespoke mathematical properties.
-    for TX_n, TD_n in zip(TX, TD):
-        assert np.allclose(TX_n, U @ TD_n @ UT)
+    for Tx_n, Td_n in zip(Tx, Td):
+        assert np.allclose(Tx_n, U @ Td_n @ Ut)
 
 
 def test_jackson_kernel():
@@ -188,8 +188,8 @@ def test_trace():
     I = identity(M)
 
     U = unitary_group.rvs(M)
-    UT = U.T.conj()
-    X = U @ X @ UT
+    Ut = U.T.conj()
+    X = U @ X @ Ut
 
     # Check the trace.
     tr_stoch = trace(X)
@@ -205,8 +205,8 @@ def test_logdet():
     I = identity(M)
 
     U = unitary_group.rvs(M)
-    UT = U.T.conj()
-    X = U @ X @ UT
+    Ut = U.T.conj()
+    X = U @ X @ Ut
 
     # Calculate the logarithm of the determinant.
     ld_exact = np.log(det(X))
