@@ -194,7 +194,7 @@ def test_trace():
     # Check the trace.
     tr_stoch = trace(X)
     tr_exact = np.trace(X)
-    assert np.allclose(tr_exact, tr_stoch, rtol=1e-2)
+    assert np.allclose(tr_exact, tr_stoch, rtol=3e-2)
 
 
 def test_logdet():
@@ -212,4 +212,4 @@ def test_logdet():
     ld_exact = np.log(det(X))
     ld_approx = logdet(X, I)
 
-    assert np.allclose(ld_exact, ld_approx, rtol=1e-2)
+    assert np.allclose(ld_exact, ld_approx, rtol=3e-2)
