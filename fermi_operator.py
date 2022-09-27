@@ -30,11 +30,14 @@ with system as (H, Δ):
 
 # Construct the Fermi matrix.
 fermi = FermiMatrix(system, 30)
-with fermi(0.05, 32) as (g, f):
-    for i in lattice.sites():
-        if i[1] == 20:
-            print((-system.scale / 2) * np.trace(f[i, i] @ jσ2) / Δ0)
-    # print(g)
+fermi(0.05, 32)
+
+print(fermi.gap_ss())
+
+# for i in lattice.sites():
+#     if i[1] == 20:
+#         print((-system.scale / 2) * np.trace(f[i, i] @ jσ2) / Δ0)
+# print(g)
 
 # Δ = system.scale * F.diagonal(3)[::4]
 
