@@ -65,14 +65,19 @@ class FermiMatrix:
 
         # Simplify the access to the constructed matrix.
         for i, j in tqdm(self.lattice, desc=" -> extracting", unit=""):
-            # Find the lattice-transposed matrix block. This is useful because
+            # Find the lattice-transposed matrix blocks. This is useful because
             # the Fermi matrix block F[i, j] contains the reversed ⟨cj^† ci⟩.
-            k = self.index(j, i)
+            k1 = self.index(j, i)
+            k2 = self.index(i, j)
 
             # Fill the accessor dictionaries with spin-resolved blocks.
-            if k is not None:
-                self.hopp[(i, j)] = self.matrix.data[k, :2, :2].T
-                self.pair[(i, j)] = self.matrix.data[k, :2, 2:].T
+            if k1 is not None:
+                self.hopp[(i, j)] = self.matrix.data[k1, :2, :2].T
+                self.pair[(i, j)] = self.matrix.data[k1, :2, 2:].T
+
+            if k2 is not None:
+                self.hopp[(j, i)] = self.matrix.data[k2, :2, :2].T
+                self.pair[(j, i)] = self.matrix.data[k2, :2, 2:].T
 
         return self
 
@@ -86,9 +91,20 @@ class FermiMatrix:
 
         return Index(k) if k.size > 0 else None
 
-    def gap_ss(self, U=1):
-        """Calculate the singlet order parameter."""
-        Δ = np.zeros(self.lattice.shape)
-        print(Δ)
+    def order_swave(self):
+        """Calculate the s-wave singlet order parameter."""
+        Ω = self.hamiltonian.scale
+        Δ = np.zeros(self.lattice.shape, dtype=np.complex128)
+        for i in self.lattice.sites():
+            Δ[i] = -(Ω / 2) * np.trace(self.pair[i, i] @ jσ2)
 
         return Δ
+
+    def current_elec(self, axis):
+        """Calculate the electric current on the lattice."""
+        Ω = self.hamiltonian.scale
+        J = np.zeros(self.lattice.shape, dtype=np.float64)
+        for i, j in self.lattice.bonds(axis):
+            J[i] = (Ω / 2) * np.imag(np.trace(self.hopp[i, j] - self.hopp[j, i]))
+
+        return J

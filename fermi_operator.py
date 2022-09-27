@@ -14,14 +14,14 @@ t = 1.0
 m3 = 0.2 * t
 
 # Construct the Hamiltonian.
-lattice = CubicLattice((40, 40, 1))
+lattice = CubicLattice((30, 30, 1))
 system = Hamiltonian(lattice)
 
 with system as (H, Δ):
     for i in lattice.sites():
-        if i[0] < 20:
+        if i[0] < 15:
             H[i, i] = -μ * σ0
-            Δ[i, i] = Δ0 * jσ2
+            Δ[i, i] = Δ0 * np.exp(1j * 0.01 * i[1]) * jσ2
         else:
             H[i, i] = -μ * σ0 - m3 * σ3
 
@@ -32,14 +32,12 @@ with system as (H, Δ):
 fermi = FermiMatrix(system, 30)
 fermi(0.05, 32)
 
-print(fermi.gap_ss())
+plt.figure()
+plt.imshow(np.abs(fermi.order_swave()))
+plt.colorbar()
 
-# for i in lattice.sites():
-#     if i[1] == 20:
-#         print((-system.scale / 2) * np.trace(f[i, i] @ jσ2) / Δ0)
-# print(g)
+plt.figure()
+plt.imshow(fermi.current_elec(1))
+plt.colorbar()
 
-# Δ = system.scale * F.diagonal(3)[::4]
-
-# plt.plot(np.real(Δ))
-# plt.show()
+plt.show()
