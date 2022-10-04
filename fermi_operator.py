@@ -17,7 +17,7 @@ t = 1
 Δ0 = 0.13 + 0.1j
 m3 = 0.2
 
-T = 1e-4 * t
+T = 1e-8 * t
 
 # Construct the Hamiltonian.
 lattice = CubicLattice((L, L, 1))
@@ -27,7 +27,7 @@ fermi = FermiMatrix(system, 200)
 U = np.zeros(lattice.shape)
 for i in lattice.sites():
     # if i[0] <= L // 2:
-    U[i] = 1
+    U[i] = 1.1
 
 Δ_old = 0.01
 with system as (H, Δ):
@@ -37,18 +37,18 @@ with system as (H, Δ):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-# Determine initial guess.
+# Determine initial guess via geometric binary search.
 Δ_min = 1e-16
-Δ_max = 1
+Δ_max = 1e2
 for n in range(10):
-    Δ_init = (Δ_min + Δ_max) / 2
+    Δ_init = np.sqrt(Δ_min * Δ_max)
 
     with system as (H, Δ):
         for i in lattice.sites():
             Δ[i, i] = Δ_init * jσ2
 
     Δ_diff = fermi(T).order_swave(U)
-    if np.abs(np.sum(Δ_diff * U)) > np.abs(np.sum(U)):
+    if np.abs(np.mean(Δ_diff)) > Δ_init:
         Δ_min = Δ_init
     else:
         Δ_max = Δ_init
