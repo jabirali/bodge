@@ -47,7 +47,7 @@ class FermiMatrix:
 
         # Define the Fermi function.
         def f(x):
-            return 1 / (1 + np.exp(Ω * x / temperature))
+            return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
 
         # Generators for coefficients and matrices.
         Ts = cheb_poly(H, I, self.order, radius)
@@ -91,20 +91,29 @@ class FermiMatrix:
 
         return Index(k) if k.size > 0 else None
 
-    def order_swave(self):
+    def order_swave(self, coupling):
         """Calculate the s-wave singlet order parameter."""
+        # TODO: Stencil for p-wave, d-wave, etc.
+        U = coupling
         Ω = self.hamiltonian.scale
         Δ = np.zeros(self.lattice.shape, dtype=np.complex128)
         for i in self.lattice.sites():
-            Δ[i] = -(Ω / 2) * np.trace(self.pair[i, i] @ jσ2)
+            Δ[i] = -(U[i] / 2) * np.trace(self.pair[i, i] @ jσ2)
 
         return Δ
 
     def current_elec(self, axis):
         """Calculate the electric current on the lattice."""
+        # TODO: Factors t_ij
         Ω = self.hamiltonian.scale
         J = np.zeros(self.lattice.shape, dtype=np.float64)
         for i, j in self.lattice.bonds(axis):
             J[i] = (Ω / 2) * np.imag(np.trace(self.hopp[i, j] - self.hopp[j, i]))
 
         return J
+
+    def entropy(self):
+        pass
+
+    def free_energy(self):
+        pass

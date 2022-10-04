@@ -127,7 +127,11 @@ def trace(X, N: int = 128):
 
 
 def logdet(X, I, N: int = 128):
-    """Stochastic Chebyshev evaluation of log det X."""
+    """Stochastic Chebyshev evaluation of log det X.
+
+    TODO: Replace I with a random vector, and integrate the stochastic trace.
+    TODO: Create an exact version based on matrix diagonalization.
+    """
     # Perform a Chebyshev expansion.
     fs = cheb_coeff(lambda x: np.log(1 - x), N)
     gs = cheb_kern(N)
