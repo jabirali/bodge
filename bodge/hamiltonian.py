@@ -40,8 +40,6 @@ class Hamiltonian:
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The COO format is most efficient for constructing the
         # matrix, but the BSR format is more computationally efficient later.
-        log(self, "Preparing a sparse skeleton")
-
         size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
 
         rows = np.zeros(size, dtype=np.int64)
@@ -100,7 +98,6 @@ class Hamiltonian:
         self.hopp = {}
         self.pair = {}
 
-        log(self, "Collecting new contributions")
         return self.hopp, self.pair
 
     @typecheck
@@ -115,8 +112,9 @@ class Hamiltonian:
         - Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
         """
         # Process hopping terms: H[i, j].
-        log(self, "Updating the matrix elements")
-        for (i, j), val in tqdm(self.hopp.items(), desc=" -> hopping", unit="", unit_scale=True):
+        for (i, j), val in tqdm(
+            self.hopp.items(), desc="H hopping", unit="", unit_scale=True, leave=False
+        ):
             # Find this matrix block.
             k1 = self.index(i, j)
 
@@ -130,7 +128,9 @@ class Hamiltonian:
                 self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
         # Process pairing terms: Δ[i, j].
-        for (i, j), val in tqdm(self.pair.items(), desc=" -> pairing", unit="", unit_scale=True):
+        for (i, j), val in tqdm(
+            self.pair.items(), desc="H pairing", unit="", unit_scale=True, leave=False
+        ):
             # Find this matrix block.
             k1 = self.index(i, j)
 
@@ -144,18 +144,15 @@ class Hamiltonian:
                 self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
         # Verify that the matrix is Hermitian.
-        print(" -> checking that the matrix is hermitian")
         if np.max(self.matrix - self.matrix.getH()) > 1e-6:
             raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
-        print(" -> normalizing the spectral radius")
         self.scale: float = norm(self.matrix, 1)
         self.matrix /= self.scale
 
         # Reset accessors.
-        print(" -> done!\n")
         del self.hopp
         del self.pair
 
@@ -190,7 +187,6 @@ class Hamiltonian:
         is meant as a benchmark, not for actual large-scale calculations.
         """
         # Calculate the relevant eigenvalues and eigenvectors.
-        log(self, "Calculating eigenstates via direct diagonalization")
         H = self.scale * self.matrix.todense()
         eigval, eigvec = eigh(H, subset_by_value=(0, np.inf))
 
@@ -216,8 +212,7 @@ class Hamiltonian:
 
         # Calculate the spectral function via direct inversion.
         spectral = []
-        log(self, "Calculating spectral function via direct inversion")
-        for ω in tqdm(energies, desc=" -> energies", unit="", unit_scale=True):
+        for ω in tqdm(energies, desc=" -> energies", unit="", unit_scale=True, leave=False):
             Gᴿ = inv((ω + η) * I - H)
             Gᴬ = inv((ω - η) * I - H)
             A = (Gᴿ - Gᴬ) / (-2j * π)

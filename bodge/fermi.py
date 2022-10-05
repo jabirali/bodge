@@ -33,8 +33,6 @@ class FermiMatrix:
 
     def __call__(self, temperature: float, radius: Optional[int] = None):
         """Calculate the Fermi matrix at a given temperature."""
-        log(self, "Fermi-Chebyshev expansion")
-
         # Reset any pre-existing accessors.
         self.hopp = {}
         self.pair = {}
@@ -59,12 +57,14 @@ class FermiMatrix:
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
-        for f, g, T in tqdm(zip(fs, gs, Ts), desc=" -> expanding", unit="", total=self.order):
+        for f, g, T in tqdm(
+            zip(fs, gs, Ts), desc="F expansion", unit="", total=self.order, leave=False
+        ):
             if f != 0:
                 self.matrix += (f * g * T).multiply(S)
 
         # Simplify the access to the constructed matrix.
-        for i, j in tqdm(self.lattice, desc=" -> extracting", unit=""):
+        for i, j in tqdm(self.lattice, desc="F extraction", unit="", leave=False):
             # Find the lattice-transposed matrix blocks. This is useful because
             # the Fermi matrix block F[i, j] contains the reversed ⟨cj^† ci⟩.
             k1 = self.index(j, i)

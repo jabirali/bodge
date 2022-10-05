@@ -4,6 +4,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import trange
 
 from bodge import *
 
@@ -11,25 +12,24 @@ from bodge import *
 U = {}
 
 # List of physical parameters.
-Lx = 30
-Ly = 30
+Lx = 50
+Ly = 20
+
 t = 1
 μ = 0.1
-Δ0 = 0.13 + 0.1j
-m3 = 0.2
 
-T = 1e-3 * t
+T = 1e-10 * t
 
 # Construct the Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
-fermi = FermiMatrix(system, 200)
+fermi = FermiMatrix(system, 100)
 
 U = np.zeros(lattice.shape)
 for i in lattice.sites():
     # if (i[0] - L // 2) ** 2 + (i[1] - L // 2) ** 2 < (L // 3) ** 2:
     # U[i] = 1.6  # 1.1
-    U[i] = 1.1
+    U[i] = 1.5
 
 # Δ_old = 0.01
 with system as (H, Δ):
@@ -52,7 +52,7 @@ with system as (H, Δ):
 #         Δ[i, i] = Δ_init * jσ2
 Δ_min = 1e-6
 Δ_max = 1
-for n in range(6):
+for n in trange(6, desc="Δ bootstrap", leave=False):
     Δ_init = np.sqrt(Δ_min * Δ_max)
 
     with system as (H, Δ):
@@ -74,11 +74,11 @@ for n in range(6):
     else:
         Δ_max = Δ_init
 
-    print(Δ_min, Δ_init, Δ_max)
+    # print(Δ_min, Δ_init, Δ_max)
 
 # Construct the Fermi matrix.
 Δs = [Δ_init]
-for n in range(1, 100):
+for n in trange(1, 100, desc="Δ converge", leave=False):
     Δ_new = fermi(T).order_swave(U)
     Δs.append(np.mean(Δ_new))
 
@@ -95,13 +95,14 @@ for n in range(1, 100):
         for i in lattice.sites():
             Δ[i, i] = Δ_new[i] * jσ2
 
+    print(f"Current gap: {np.mean(Δ_new)}")
     plt.figure()
-    plt.plot(np.abs(Δ_new)[:, Ly // 2, 0])
-    plt.ylim([0, None])
-    # plt.imshow(np.abs(Δ_new), vmin=0)
-    # plt.colorbar()
+    # plt.plot(np.abs(Δ_new)[:, Ly // 2, 0])
+    # plt.ylim([0, None])
+    plt.imshow(np.abs(Δ_new), vmin=0)
+    plt.colorbar()
     plt.show()
-    print(n, np.sign(np.real(diff)), np.abs(diff), np.mean(Δs[-1]))
+    # print(n, np.sign(np.real(diff)), np.abs(diff), np.mean(Δs[-1]))
 
 
 # Δs = fermi(T).order_swave(U)
