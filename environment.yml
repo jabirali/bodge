@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python
+  - python>=3.10
   - beartype
   - black
   - h5py
@@ -15,3 +15,5 @@ dependencies:
   - scipy
   - seaborn
   - tqdm
+  - pip:
+    - prefetch_generator

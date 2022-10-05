@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+from prefetch_generator import background
 
 from .typing import *
 
@@ -20,6 +21,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
+@background()
 def cheb_poly(X, I, N: int, R=None):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
