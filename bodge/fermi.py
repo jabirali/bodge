@@ -1,5 +1,7 @@
 import numpy as np
-from tqdm import tqdm
+from prefetch_generator import BackgroundGenerator
+from scipy.sparse import hstack
+from tqdm import tqdm, trange
 
 from .hamiltonian import *
 from .math import *
@@ -48,7 +50,8 @@ class FermiMatrix:
             return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
 
         # Generators for coefficients and matrices.
-        Ts = cheb_poly(H, I, self.order, radius)
+        # Ts = [BackgroundGenerator(cheb_poly(H, I, self.order, radius)) for I in idblk(H.shape[0])]
+        Ts = [cheb_poly(H, I, self.order, radius) for I in idblk(H.shape[0])]
         fs = cheb_coeff(f, self.order, odd=True)
         gs = cheb_kern(self.order)
 
@@ -57,11 +60,12 @@ class FermiMatrix:
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
-        for f, g, T in tqdm(
-            zip(fs, gs, Ts), desc="F expansion", unit="", total=self.order, leave=False
-        ):
+        for n in trange(self.order, desc="F expansion", unit="", leave=False):
+            f = next(fs)
+            g = next(gs)
+            T = [next(T_k) for T_k in Ts]
             if f != 0:
-                self.matrix += (f * g * T).multiply(S)
+                self.matrix += (f * g * hstack(T)).multiply(S)
 
         # Simplify the access to the constructed matrix.
         for i, j in tqdm(self.lattice, desc="F extraction", unit="", leave=False):

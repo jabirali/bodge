@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from scipy.linalg import det, eigh
-from scipy.sparse import bsr_matrix, csr_matrix, identity
+from scipy.sparse import bsr_matrix, csr_matrix, hstack, identity
 from scipy.stats import unitary_group
 
 from bodge.math import *
@@ -213,3 +213,12 @@ def test_logdet():
     ld_approx = logdet(X, I)
 
     assert np.allclose(ld_exact, ld_approx, rtol=3e-2)
+
+
+def test_idblk():
+    """Test the identity matrix block algorithm."""
+    N = 4 * 13
+    I1 = hstack([I_k for I_k in idblk(N)])
+    I2 = identity(N)
+
+    assert (I1.todense() == I2.todense()).all()

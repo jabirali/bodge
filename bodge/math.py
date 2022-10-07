@@ -1,7 +1,9 @@
+import multiprocessing as mp
 import warnings
 
 import numpy as np
 from prefetch_generator import background
+from scipy.sparse import dia_matrix
 
 from .typing import *
 
@@ -21,7 +23,28 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-@background()
+def kpm(F, X, I, N, R=None):
+    """Parallelized Chebyshev-based Kernel Polynomial Method (KPM)."""
+
+    # Perform a KPM transformation of F(x).
+    fs = cheb_coeff(F, N)
+    gs = cheb_kern(N)
+    ks = [f * g for f, g in zip(fs, gs)]
+
+    # blocks = idblk(N)
+    # idblk(N)
+
+    # Create a parallel kernel
+    def kernel(I_k):
+        # Instantiate the Chebyshev generator.
+        Ts = cheb_poly(X, I, N)
+
+        # I = idblk(N)
+
+    # Instantiate subgenerators.
+
+
+@background(3)
 def cheb_poly(X, I, N: int, R=None):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
@@ -141,3 +164,28 @@ def logdet(X, I, N: int = 128):
 
     # Calculate log det X.
     return sum(f * g * trace(T) for f, g, T in zip(fs, gs, Ts))
+
+
+# def idblk(k, N, K):
+#     """Return the k'th column block of an N×N identity matrix."""
+#     blocksize = blocksize * (N // (4 * blocks))
+
+#     bl
+#     offset = 0
+
+#     # Partition an N-dimensional matrix correspondingly.
+#     for n in range(blocks):
+#         # Determine the current blocksize.
+#         if n == 0:
+#             blocksize += N - blocks * blocksize
+
+#         # Construct the current identity block.
+#         shape = (N, blocksize)
+#         diag = np.repeat(np.int8(1), blocksize)
+#         identity = dia_matrix((diag, [offset]), shape, dtype=np.int8)
+
+#         # Future identity blocks are offset by constructed ones.
+#         offset -= blocksize
+
+#         # Return each identity block.
+#         yield identity.tobsr((4, 4))
