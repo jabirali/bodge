@@ -1,8 +1,10 @@
 import warnings
 from math import ceil
 
+import multiprocess as mp
 import numpy as np
 import scipy.sparse as sps
+from tqdm import trange
 
 from .typing import *
 
@@ -20,6 +22,35 @@ jσ0 = 1j * σ0
 jσ1 = 1j * σ1
 jσ2 = 1j * σ2
 jσ3 = 1j * σ3
+
+
+def cheb(F, X, N, R=None) -> bsr_matrix:
+    """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
+    # Coefficients for the kernel polynomial method.
+    f = cheb_coeff(F, N)
+    g = cheb_kern(N)
+    c = [f_n * g_n for f_n, g_n in zip(f, g)]
+
+    # Blockwise calculation of the Chebyshev expansion.
+    K = mp.cpu_count() - 1
+
+    def kernel(k):
+        I_k = idblk(block=k, blocks=K, dim=X.shape[0])
+        if I_k is None:
+            return None
+
+        T_k = cheb_poly(X, I_k, N, R)
+        F_k = 0
+        for c_n, T_kn in zip(c, T_k):
+            F_k += c_n * T_kn
+
+        return F_k
+
+    # Parallel execution of the blockwise calculation.
+    with mp.Pool() as pool:
+        F = pool.map(kernel, trange(K, desc="cheb", unit="blk", smoothing=0, leave=False))
+
+    return sps.hstack([F_k for F_k in F if F_k is not None], "bsr")
 
 
 def cheb_poly(X, I, N: int, R=None):

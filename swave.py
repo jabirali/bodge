@@ -23,7 +23,7 @@ T = 1e-10 * t
 # Construct the Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
-fermi = FermiMatrix(system, 100)
+fermi = FermiMatrix(system, 200)
 
 U = np.zeros(lattice.shape)
 for i in lattice.sites():
@@ -39,47 +39,46 @@ with system as (H, Δ):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-# Δ_init = 0.04
-# with system as (H, Δ):
-#     for i in lattice.sites():
-#         Δ[i, i] = Δ_init * jσ2
+Δ_init = 0.2065
+with system as (H, Δ):
+    for i in lattice.sites():
+        Δ[i, i] = Δ_init * jσ2
 
 # Determine initial guess via geometric binary search.
-# Δ_init = 0.0606
 
 # with system as (H, Δ):
 #     for i in lattice.sites():
 #         Δ[i, i] = Δ_init * jσ2
-Δ_min = 1e-6
-Δ_max = 1
-for n in trange(6, desc="Δ bootstrap", leave=False):
-    Δ_init = np.sqrt(Δ_min * Δ_max)
+# Δ_min = 1e-6
+# Δ_max = 1
+# for n in trange(6, desc="Δ bootstrap", leave=False):
+#     Δ_init = np.sqrt(Δ_min * Δ_max)
 
-    with system as (H, Δ):
-        for i in lattice.sites():
-            if U[i] != 0:
-                Δ[i, i] = Δ_init * jσ2
+#     with system as (H, Δ):
+#         for i in lattice.sites():
+#             if U[i] != 0:
+#                 Δ[i, i] = Δ_init * jσ2
 
-    Δ_diff = fermi(T).order_swave(U)
+#     Δ_diff = fermi(T).order_swave(U)
 
-    new = 0
-    old = 0
-    for i in lattice.sites():
-        if U[i] != 0:
-            new += Δ_diff[i]
-            old += Δ_init
+#     new = 0
+#     old = 0
+#     for i in lattice.sites():
+#         if U[i] != 0:
+#             new += Δ_diff[i]
+#             old += Δ_init
 
-    if np.abs(new) > old:
-        Δ_min = Δ_init
-    else:
-        Δ_max = Δ_init
+#     if np.abs(new) > old:
+#         Δ_min = Δ_init
+#     else:
+#         Δ_max = Δ_init
 
-    # print(Δ_min, Δ_init, Δ_max)
+# print(Δ_min, Δ_init, Δ_max)
 
 # Construct the Fermi matrix.
 Δs = [Δ_init]
 for n in trange(1, 100, desc="Δ converge", leave=False):
-    Δ_new = fermi(T).order_swave(U)
+    Δ_new = fermi(T, 20).order_swave(U)
     Δs.append(np.mean(Δ_new))
 
     # Steffensens method

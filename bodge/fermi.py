@@ -47,21 +47,9 @@ class FermiMatrix:
         def f(x):
             return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
 
-        # Generators for coefficients and matrices.
-        Ts = cheb_poly(H, I, self.order, radius)
-        fs = cheb_coeff(f, self.order, odd=True)
-        gs = cheb_kern(self.order)
-
-        # Initialize the Fermi matrix skeleton.
-        self.matrix = bsr_matrix(H.shape, blocksize=H.blocksize, dtype=H.dtype)
-
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy.
-        for f, g, T in tqdm(
-            zip(fs, gs, Ts), desc="F expansion", unit="", total=self.order, leave=False
-        ):
-            if f != 0:
-                self.matrix += (f * g * T).multiply(S)
+        self.matrix = cheb(f, H, self.order, radius).multiply(S)
 
         # Simplify the access to the constructed matrix.
         for i, j in tqdm(self.lattice, desc="F extraction", unit="", leave=False):

@@ -16,4 +16,4 @@ dependencies:
   - seaborn
   - tqdm
   - pip:
-    - prefetch_generator
+    - multiprocess
