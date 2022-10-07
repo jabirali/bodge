@@ -47,7 +47,7 @@ with system as (H, Δ, V):
 
 Δ_min = 1e-6
 Δ_max = 1
-for n in trange(6, desc="boot", unit="cyc"):
+for n in trange(12, desc="boot", unit="cyc", leave=False):
     # Hamiltonian update.
     Δ_init = np.sqrt(Δ_min * Δ_max)
     with system as (H, Δ, V):
@@ -80,6 +80,9 @@ with open("temperatures.csv", "w") as f:
 
             # Convergence control.
             if len(Δs) > 4:
+                gap = np.real(np.mean(Δs[-1]))
+                diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
+
                 if diff < 1e-6:
                     break
                 else:
@@ -90,19 +93,16 @@ with open("temperatures.csv", "w") as f:
                 for i in lattice.sites():
                     Δ[i, i] = Δs[-1][i] * jσ2
 
-            # Status information.
-            if len(Δs) > 1:
-                diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
-                gap = np.real(np.mean(Δs[-1]))
+            # Debug information.
+            # if len(Δs) > 1:
+            #     print()
+            #     print(f"Gap: {gap}")
+            #     print(f"Diff: {diff}")
 
-                print()
-                print(f"Gap: {gap}")
-                print(f"Diff: {diff}")
-
-                plt.figure()
-                plt.imshow(np.abs(Δs[-1]), vmin=0)
-                plt.colorbar()
-                plt.show()
+            #     plt.figure()
+            #     plt.imshow(np.abs(Δs[-1]), vmin=0)
+            #     plt.colorbar()
+            #     plt.show()
 
         writer.writerow([T, gap, diff])
         f.flush()
