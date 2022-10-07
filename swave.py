@@ -77,31 +77,30 @@ with system as (H, Δ):
 
 # Construct the Fermi matrix.
 Δs = [Δ_init]
+Δa = Δ_init
+α = 0.01
 for n in trange(1, 100, desc="Δ converge", leave=False):
-    Δ_new = fermi(T, 20).order_swave(U)
-    Δs.append(np.mean(Δ_new))
+    # Convergence acceleration method.
+    Δs.append(fermi(T, 20).order_swave(U))
+    if n % 4 == 0:
+        Δa = Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])
+    else:
+        Δa = Δs[-1] * α + Δa * (1 - α)
 
-    # Steffensens method
-    # if n % 6 == 0:
-    #     Δs.append(Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3]))
-    #     diff = np.mean(Δs[-1] / Δs[-3])
-    # else:
-    #     diff = Δs[-1] / Δs[-2]
-
-    diff = Δs[-1] / Δs[-2]
+    diff = 1 - Δs[-1] / Δs[-2]
 
     with system as (H, Δ):
         for i in lattice.sites():
-            Δ[i, i] = Δ_new[i] * jσ2
+            Δ[i, i] = Δa[i] * jσ2
 
-    print(f"Current gap: {np.mean(Δ_new)}")
+    print()
+    print(f"Gap: {np.real(np.mean(Δs[-1]))}")
+    print(f"Diff: {np.real(np.mean(diff))}")
+
     plt.figure()
-    # plt.plot(np.abs(Δ_new)[:, Ly // 2, 0])
-    # plt.ylim([0, None])
-    plt.imshow(np.abs(Δ_new), vmin=0)
+    plt.imshow(np.abs(Δs[-1]), vmin=0)
     plt.colorbar()
     plt.show()
-    # print(n, np.sign(np.real(diff)), np.abs(diff), np.mean(Δs[-1]))
 
 
 # Δs = fermi(T).order_swave(U)
