@@ -24,10 +24,10 @@ lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 fermi = FermiMatrix(system, 200)
 
-with system as (H, Δ, U):
+with system as (H, Δ, V):
     for i in lattice.sites():
         H[i, i] = -μ * σ0
-        U[i, i] = -U
+        V[i, i] = -U
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
@@ -38,40 +38,37 @@ with system as (H, Δ, U):
 for n in trange(6, desc="boot", unit="cyc", leave=False):
     # Hamiltonian update.
     Δ_init = np.sqrt(Δ_min * Δ_max)
-    with system as (H, Δ, U):
+    with system as (H, Δ, V):
         for i in lattice.sites():
-            if U[i, i] != 0:
-                Δ[i, i] = Δ_init * jσ2
-
-    # Order parameter update.
-    Δ_diff = np.abs(fermi(T).order_swave())
+            Δ[i, i] = Δ_init * jσ2
 
     # Convergence control.
-    Δ_diff = np.where(Δ_diff > 0, Δ_diff, Δ_init)
-    if Δ_diff > Δ_init:
+    Δ2 = np.abs(fermi(T).order_swave())
+    Δ1 = np.where(Δ2 > 0, Δ_init, 0)
+
+    if np.mean(Δ2) > np.mean(Δ1):
         Δ_min = Δ_init
     else:
         Δ_max = Δ_init
 
 # Convergence via accelerated self-consistency iteration.
-Δs = [Δ_init * np.ones_like(U)]
+Δs = [Δ_init]
 for n in trange(100, desc="conv", unit="cyc", leave=False):
+    # Convergence control and acceleration.
+    if len(Δs) > 3:
+        if diff < 1e-6:
+            break
+        else:
+            Δs = [Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])]
+
     # Hamiltonian update.
-    with system as (H, Δ, U):
+    with system as (H, Δ, V):
         for i in lattice.sites():
             Δ[i, i] = Δs[-1][i] * jσ2
 
     # Order parameter update.
     Δs.append(fermi(T, R).order_swave())
     diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
-
-    # Convergence control and acceleration.
-    if len(Δs) > 3:
-        if diff < 1e-6:
-            break
-        else:
-            Δs[-1] = Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])
-        Δs = Δs[-1:]
 
     # Status information.
     print()

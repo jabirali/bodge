@@ -76,20 +76,22 @@ class Hamiltonian:
         self.data: Array[np.complex128] = self.matrix.data
 
         # Storage for any Hubbard-type potentials on the lattice.
-        self.pot = np.zeros(self.shape)
+        self.pot: dict[Coords, float] = {}
 
     @typecheck
-    def __enter__(self) -> tuple[dict[Coords, Array], dict[Coords, Array], Array]:
+    def __enter__(
+        self,
+    ) -> tuple[dict[Coords, Array], dict[Coords, Array], dict[Coords, float]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
         more convenient than having to construct the matrix elements explicitly.
 
         ```python
-        with system as (H, Δ, U):
+        with system as (H, Δ, V):
             H[i, j] = ...
             Δ[i, j] = ...
-            U[i, j] = ...
+            V[i, j] = ...
         ```
 
         Note that the `__exit__` method is responsible for actually transferring
