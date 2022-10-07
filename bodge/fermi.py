@@ -79,14 +79,14 @@ class FermiMatrix:
 
         return Index(k) if k.size > 0 else None
 
-    def order_swave(self, coupling):
+    def order_swave(self):
         """Calculate the s-wave singlet order parameter."""
         # TODO: Stencil for p-wave, d-wave, etc.
-        U = coupling
+        V = self.hamiltonian.pot
         Ω = self.hamiltonian.scale
         Δ = np.zeros(self.lattice.shape, dtype=np.complex128)
         for i in self.lattice.sites():
-            Δ[i] = -(U[i] / 2) * np.trace(self.pair[i, i] @ jσ2)
+            Δ[i] = (V[i, i] / 2) * np.trace(self.pair[i, i] @ jσ2)
 
         return Δ
 

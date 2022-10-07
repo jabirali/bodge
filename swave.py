@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Test script for the Fermi-Chebyshev expansion"""
+"""Self-consistent calculation for s-wave superconductors."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,42 +8,29 @@ from tqdm import trange
 
 from bodge import *
 
-# Physical parameters.
-U = {}
-
 # List of physical parameters.
-Lx = 50
-Ly = 20
+Lx = 32
+Ly = 32
 
 t = 1
 μ = 0.1
+U = 1.5
 
 R = None
-T = 1e-10 * t
+T = 1e-6 * t
 
 # Construct the Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 fermi = FermiMatrix(system, 200)
 
-U = np.zeros(lattice.shape)
-for i in lattice.sites():
-    # if (i[0] - L // 2) ** 2 + (i[1] - L // 2) ** 2 < (L // 3) ** 2:
-    # U[i] = 1.6  # 1.1
-    U[i] = 1.5
-
-# Δ_old = 0.01
-with system as (H, Δ):
+with system as (H, Δ, U):
     for i in lattice.sites():
         H[i, i] = -μ * σ0
+        U[i, i] = -U
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
-
-# Δ_init = 0.2065
-# with system as (H, Δ):
-#     for i in lattice.sites():
-#         Δ[i, i] = Δ_init * jσ2
 
 # Determine initial guess via geometric binary search.
 Δ_min = 1e-6
@@ -51,30 +38,31 @@ with system as (H, Δ):
 for n in trange(6, desc="boot", unit="cyc", leave=False):
     # Hamiltonian update.
     Δ_init = np.sqrt(Δ_min * Δ_max)
-    with system as (H, Δ):
+    with system as (H, Δ, U):
         for i in lattice.sites():
-            if U[i] != 0:
+            if U[i, i] != 0:
                 Δ[i, i] = Δ_init * jσ2
 
     # Order parameter update.
-    Δ_diff = fermi(T).order_swave(U)
+    Δ_diff = np.abs(fermi(T).order_swave())
 
     # Convergence control.
-    if np.sum(np.abs(U * Δ_diff)) > np.sum(np.abs(U * Δ_init)):
+    Δ_diff = np.where(Δ_diff > 0, Δ_diff, Δ_init)
+    if Δ_diff > Δ_init:
         Δ_min = Δ_init
     else:
         Δ_max = Δ_init
 
-# Construct the Fermi matrix.
+# Convergence via accelerated self-consistency iteration.
 Δs = [Δ_init * np.ones_like(U)]
 for n in trange(100, desc="conv", unit="cyc", leave=False):
     # Hamiltonian update.
-    with system as (H, Δ):
+    with system as (H, Δ, U):
         for i in lattice.sites():
             Δ[i, i] = Δs[-1][i] * jσ2
 
     # Order parameter update.
-    Δs.append(fermi(T, R).order_swave(U))
+    Δs.append(fermi(T, R).order_swave())
     diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
 
     # Convergence control and acceleration.
@@ -95,18 +83,3 @@ for n in trange(100, desc="conv", unit="cyc", leave=False):
     plt.imshow(np.abs(Δs[-1]), vmin=0)
     plt.colorbar()
     plt.show()
-
-
-# Δs = fermi(T).order_swave(U)
-# print(Δs / 1e-10)
-
-
-# plt.figure()
-# plt.imshow(np.abs(U))
-# plt.colorbar()
-
-# plt.figure()
-# plt.imshow(fermi.current_elec(axis=1))
-# plt.colorbar()
-
-# plt.show()

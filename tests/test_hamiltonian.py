@@ -11,7 +11,7 @@ def test_hermitian():
     lattice = CubicLattice((3, 5, 7))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ):
+    with system as (H, Δ, _):
         for i in lattice.sites():
             H[i, i] = 1 * σ3 + 2 * σ2
             Δ[i, i] = 5 * σ0 - 3 * σ2
@@ -30,7 +30,7 @@ def test_eigenvectors():
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ):
+    with system as (H, Δ, _):
         for i in lattice.sites():
             H[i, i] = 4 * σ0
             if i[0] > 5:
@@ -69,7 +69,7 @@ def test_sparsity():
     lattice = CubicLattice((3, 5, 7))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ):
+    with system as (H, Δ, _):
         for i in lattice.sites():
             H[i, i] = 1 * σ3 + 2 * σ2
             Δ[i, i] = 5 * σ0 - 3 * σ2
