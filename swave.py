@@ -78,12 +78,13 @@ with system as (H, Δ):
 # Construct the Fermi matrix.
 Δs = [Δ_init]
 Δa = Δ_init
-α = 0.01
+α = 1
 for n in trange(1, 100, desc="Δ converge", leave=False):
     # Convergence acceleration method.
     Δs.append(fermi(T, 20).order_swave(U))
     if n % 4 == 0:
         Δa = Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])
+
     else:
         Δa = Δs[-1] * α + Δa * (1 - α)
 
