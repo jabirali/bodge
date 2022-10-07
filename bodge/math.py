@@ -49,7 +49,7 @@ def cheb(F, X, N, R=None) -> bsr_matrix:
     with mp.Pool() as pool:
         F = pool.map(kernel, range(K))
 
-    return sps.hstack([F_k for F_k in F if F_k is not None], "bsr")
+    return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
 def cheb_poly(X, I, N: int, R=None):

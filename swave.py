@@ -56,7 +56,8 @@ for n in trange(6, desc="boot", unit="cyc"):
                 Δ[i, i] = Δ_init * jσ2
 
     # Convergence control.
-    Δ2 = np.abs(fermi(T).order_swave())
+    F = fermi(T)
+    Δ2 = np.abs(F.order_swave())
     Δ1 = np.where(Δ2 > 0, Δ_init, 0)
 
     if np.mean(Δ2) > np.mean(Δ1):

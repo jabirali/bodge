@@ -47,8 +47,8 @@ class FermiMatrix:
             return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
 
         # Perform kernel polynomial expansion.
-        # TODO: Check adjustments for entropy.
-        self.matrix = cheb(f, H, self.order, radius).multiply(S)
+        # TODO: Check adjustments for entropy, or whether to .multiply(S).
+        self.matrix = cheb(f, H, self.order, radius)
 
         # Simplify the access to the constructed matrix.
         for i, j in self.lattice:
