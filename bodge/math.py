@@ -4,7 +4,6 @@ from math import ceil
 import multiprocess as mp
 import numpy as np
 import scipy.sparse as sps
-from tqdm import trange
 
 from .typing import *
 
@@ -48,7 +47,7 @@ def cheb(F, X, N, R=None) -> bsr_matrix:
 
     # Parallel execution of the blockwise calculation.
     with mp.Pool() as pool:
-        F = pool.map(kernel, trange(K, desc="cheb", unit="blk", smoothing=0, leave=False))
+        F = pool.map(kernel, range(K))
 
     return sps.hstack([F_k for F_k in F if F_k is not None], "bsr")
 

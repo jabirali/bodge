@@ -2,7 +2,6 @@ import numpy as np
 from scipy.linalg import eigh, inv
 from scipy.sparse import bsr_matrix, coo_matrix, identity
 from scipy.sparse.linalg import norm
-from tqdm import tqdm
 
 from .lattice import Lattice
 from .math import *
@@ -118,9 +117,7 @@ class Hamiltonian:
         - Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
         """
         # Process hopping terms: H[i, j].
-        for (i, j), val in tqdm(
-            self.hopp.items(), desc="H hopping", unit="", unit_scale=True, leave=False
-        ):
+        for (i, j), val in self.hopp.items():
             # Find this matrix block.
             k1 = self.index(i, j)
 
@@ -134,9 +131,7 @@ class Hamiltonian:
                 self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
 
         # Process pairing terms: Δ[i, j].
-        for (i, j), val in tqdm(
-            self.pair.items(), desc="H pairing", unit="", unit_scale=True, leave=False
-        ):
+        for (i, j), val in self.pair.items():
             # Find this matrix block.
             k1 = self.index(i, j)
 
@@ -218,7 +213,7 @@ class Hamiltonian:
 
         # Calculate the spectral function via direct inversion.
         spectral = []
-        for ω in tqdm(energies, desc=" -> energies", unit="", unit_scale=True, leave=False):
+        for ω in energies:
             Gᴿ = inv((ω + η) * I - H)
             Gᴬ = inv((ω - η) * I - H)
             A = (Gᴿ - Gᴬ) / (-2j * π)

@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 from .hamiltonian import *
 from .math import *
@@ -52,7 +51,7 @@ class FermiMatrix:
         self.matrix = cheb(f, H, self.order, radius).multiply(S)
 
         # Simplify the access to the constructed matrix.
-        for i, j in tqdm(self.lattice, desc="F extraction", unit="", leave=False):
+        for i, j in self.lattice:
             # Find the lattice-transposed matrix blocks. This is useful because
             # the Fermi matrix block F[i, j] contains the reversed ⟨cj^† ci⟩.
             k1 = self.index(j, i)

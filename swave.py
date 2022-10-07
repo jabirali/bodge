@@ -2,9 +2,12 @@
 
 """Self-consistent calculation for s-wave superconductors."""
 
+import csv
+from typing import ClassVar
+
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import trange
+from tqdm import tqdm, trange
 
 from bodge import *
 
@@ -13,8 +16,8 @@ from bodge import *
 # ------------------------------------------------------------
 
 # Physical parameters.
-Lx = 20
-Ly = 20
+Lx = 24
+Ly = 24
 
 t = 1
 μ = 0.1
@@ -44,7 +47,7 @@ with system as (H, Δ, V):
 
 Δ_min = 1e-6
 Δ_max = 1
-for n in trange(6, desc="boot", unit="cyc", leave=False):
+for n in trange(6, desc="boot", unit="cyc"):
     # Hamiltonian update.
     Δ_init = np.sqrt(Δ_min * Δ_max)
     with system as (H, Δ, V):
@@ -65,32 +68,40 @@ for n in trange(6, desc="boot", unit="cyc", leave=False):
 # Convergence via accelerated self-consistency iteration.
 # ------------------------------------------------------------
 
-Δs = []
-for n in trange(100, desc="conv", unit="cyc", leave=False):
-    # Order parameter update.
-    Δs.append(fermi(T, R).order_swave())
+with open("temperatures.csv", "w") as f:
+    writer = csv.writer(f)
 
-    # Convergence control.
-    if len(Δs) > 4:
-        if diff < 1e-6:
-            break
-        else:
-            Δs = [Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])]
+    for T in tqdm(np.linspace(1e-6, 1e-1, 100), desc="sweep", unit="tmp"):
+        Δs = []
+        for n in trange(100, desc="conv", unit="cyc", leave=False):
+            # Order parameter update.
+            Δs.append(fermi(T, R).order_swave())
 
-    # Hamiltonian update.
-    with system as (H, Δ, V):
-        for i in lattice.sites():
-            Δ[i, i] = Δs[-1][i] * jσ2
+            # Convergence control.
+            if len(Δs) > 4:
+                if diff < 1e-6:
+                    break
+                else:
+                    Δs = [Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])]
 
-    # Status information.
-    if len(Δs) > 1:
-        diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
+            # Hamiltonian update.
+            with system as (H, Δ, V):
+                for i in lattice.sites():
+                    Δ[i, i] = Δs[-1][i] * jσ2
 
-        print()
-        print(f"Gap: {np.real(np.mean(Δs[-1]))}")
-        print(f"Diff: {np.real(np.mean(diff))}")
+            # Status information.
+            if len(Δs) > 1:
+                diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
+                gap = np.real(np.mean(Δs[-1]))
 
-        plt.figure()
-        plt.imshow(np.abs(Δs[-1]), vmin=0)
-        plt.colorbar()
-        plt.show()
+                print()
+                print(f"Gap: {gap}")
+                print(f"Diff: {diff}")
+
+                plt.figure()
+                plt.imshow(np.abs(Δs[-1]), vmin=0)
+                plt.colorbar()
+                plt.show()
+
+        writer.writerow([T, gap, diff])
+        f.flush()
