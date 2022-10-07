@@ -1,6 +1,8 @@
 import warnings
+from math import ceil
 
 import numpy as np
+import scipy.sparse as sps
 
 from .typing import *
 
@@ -139,3 +141,24 @@ def logdet(X, I, N: int = 128):
 
     # Calculate log det X.
     return sum(f * g * trace(T) for f, g, T in zip(fs, gs, Ts))
+
+
+def idblk(block, blocks, dim):
+    """Partition the identity matrix into column blocks."""
+    # Determine blocksize and offset for this block.
+    blocksize = 4 * ceil(dim / (4 * blocks))
+    offset = block * blocksize
+
+    # Blocksize correction for the last blocks in the batch.
+    if offset >= dim:
+        return None
+    elif offset + blocksize >= dim:
+        blocksize = dim - offset
+
+    # Create the corresponding block of the identity matrix.
+    shape = (dim, blocksize)
+    diag = np.repeat(np.int8(1), blocksize)
+    matrix = sps.dia_matrix((diag, [-offset]), shape, dtype=np.int8)
+
+    # Return each identity block.
+    return matrix.tobsr((4, 4))

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
+import scipy.sparse as sps
 from scipy.linalg import det, eigh
-from scipy.sparse import bsr_matrix, csr_matrix, identity
 from scipy.stats import unitary_group
 
 from bodge.math import *
@@ -90,8 +90,8 @@ def test_chebyshev_sparse():
     I1 = np.identity(16)
     X1 = np.random.randn(16, 16)
 
-    I2 = bsr_matrix(I1, blocksize=(4, 4))
-    X2 = bsr_matrix(X1, blocksize=(4, 4))
+    I2 = sps.bsr_matrix(I1, blocksize=(4, 4))
+    X2 = sps.bsr_matrix(X1, blocksize=(4, 4))
 
     chebs_1 = cheb_poly(X1, I1, 10)
     chebs_2 = cheb_poly(X2, I2, 10)
@@ -110,8 +110,8 @@ def test_chebyshev_cutoff():
         X[n + 2, n] = -1 / 2
 
     # Convert the above into sparse matrices.
-    X = csr_matrix(X)
-    I = csr_matrix(I)
+    X = sps.csr_matrix(X)
+    I = sps.csr_matrix(I)
 
     # Construct the relevant Chebyshev generators.
     R = 5
@@ -185,7 +185,7 @@ def test_trace():
     # Create a random positive-definite hermitian matrix.
     M = 316
     X = np.diag(np.random.ranf(M))
-    I = identity(M)
+    I = sps.identity(M)
 
     U = unitary_group.rvs(M)
     Ut = U.T.conj()
@@ -198,11 +198,11 @@ def test_trace():
 
 
 def test_logdet():
-    """Test the logdet is correct for a small random matrix.."""
+    """Test the logdet is correct for a small random matrix."""
     # Create a random positive-definite hermitian matrix.
     M = 316
     X = np.diag(np.random.ranf(M))
-    I = identity(M)
+    I = sps.identity(M)
 
     U = unitary_group.rvs(M)
     Ut = U.T.conj()
@@ -213,3 +213,13 @@ def test_logdet():
     ld_approx = logdet(X, I)
 
     assert np.allclose(ld_exact, ld_approx, rtol=3e-2)
+
+
+def test_idblk():
+    """Test that identity blocks stack to an identity matrix."""
+    N = 4 * 13
+    for K in range(1, 13):
+        Is = [idblk(k, K, N) for k in range(K)]
+        I1 = sps.hstack([I_k for I_k in Is if I_k is not None])
+        I2 = sps.identity(N)
+        assert (I1.todense() == I2.todense()).all()
