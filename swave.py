@@ -18,6 +18,7 @@ Ly = 20
 t = 1
 μ = 0.1
 
+R = None
 T = 1e-10 * t
 
 # Construct the Hamiltonian.
@@ -39,65 +40,57 @@ with system as (H, Δ):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-Δ_init = 0.2065
-with system as (H, Δ):
-    for i in lattice.sites():
-        Δ[i, i] = Δ_init * jσ2
-
-# Determine initial guess via geometric binary search.
-
+# Δ_init = 0.2065
 # with system as (H, Δ):
 #     for i in lattice.sites():
 #         Δ[i, i] = Δ_init * jσ2
-# Δ_min = 1e-6
-# Δ_max = 1
-# for n in trange(6, desc="Δ bootstrap", leave=False):
-#     Δ_init = np.sqrt(Δ_min * Δ_max)
 
-#     with system as (H, Δ):
-#         for i in lattice.sites():
-#             if U[i] != 0:
-#                 Δ[i, i] = Δ_init * jσ2
-
-#     Δ_diff = fermi(T).order_swave(U)
-
-#     new = 0
-#     old = 0
-#     for i in lattice.sites():
-#         if U[i] != 0:
-#             new += Δ_diff[i]
-#             old += Δ_init
-
-#     if np.abs(new) > old:
-#         Δ_min = Δ_init
-#     else:
-#         Δ_max = Δ_init
-
-# print(Δ_min, Δ_init, Δ_max)
-
-# Construct the Fermi matrix.
-Δs = [Δ_init]
-Δa = Δ_init
-α = 1
-for n in trange(1, 100, desc="Δ converge", leave=False):
-    # Convergence acceleration method.
-    Δs.append(fermi(T, 20).order_swave(U))
-    if n % 4 == 0:
-        Δa = Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])
-
-    else:
-        Δa = Δs[-1] * α + Δa * (1 - α)
-
-    diff = 1 - Δs[-1] / Δs[-2]
-
+# Determine initial guess via geometric binary search.
+Δ_min = 1e-6
+Δ_max = 1
+for n in trange(6, desc="boot", unit="cyc", leave=False):
+    # Hamiltonian update.
+    Δ_init = np.sqrt(Δ_min * Δ_max)
     with system as (H, Δ):
         for i in lattice.sites():
-            Δ[i, i] = Δa[i] * jσ2
+            if U[i] != 0:
+                Δ[i, i] = Δ_init * jσ2
 
+    # Order parameter update.
+    Δ_diff = fermi(T).order_swave(U)
+
+    # Convergence control.
+    if np.sum(np.abs(U * Δ_diff)) > np.sum(np.abs(U * Δ_init)):
+        Δ_min = Δ_init
+    else:
+        Δ_max = Δ_init
+
+# Construct the Fermi matrix.
+Δs = [Δ_init * np.ones_like(U)]
+for n in trange(100, desc="conv", unit="cyc", leave=False):
+    # Hamiltonian update.
+    with system as (H, Δ):
+        for i in lattice.sites():
+            Δ[i, i] = Δs[-1][i] * jσ2
+
+    # Order parameter update.
+    Δs.append(fermi(T, R).order_swave(U))
+    diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
+
+    # Convergence control and acceleration.
+    if len(Δs) > 3:
+        if diff < 1e-6:
+            break
+        else:
+            Δs[-1] = Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])
+        Δs = Δs[-1:]
+
+    # Status information.
     print()
     print(f"Gap: {np.real(np.mean(Δs[-1]))}")
     print(f"Diff: {np.real(np.mean(diff))}")
 
+    # Status plot.
     plt.figure()
     plt.imshow(np.abs(Δs[-1]), vmin=0)
     plt.colorbar()

@@ -32,7 +32,7 @@ def cheb(F, X, N, R=None) -> bsr_matrix:
     c = [f_n * g_n for f_n, g_n in zip(f, g)]
 
     # Blockwise calculation of the Chebyshev expansion.
-    K = mp.cpu_count() - 1
+    K = mp.cpu_count()
 
     def kernel(k):
         I_k = idblk(block=k, blocks=K, dim=X.shape[0])
