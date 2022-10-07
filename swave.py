@@ -12,8 +12,8 @@ from bodge import *
 U = {}
 
 # List of physical parameters.
-Lx = 100
-Ly = 100
+Lx = 50
+Ly = 20
 
 t = 1
 μ = 0.1
