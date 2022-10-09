@@ -31,7 +31,7 @@ R = None
 # Non-superconducting Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
-fermi = FermiMatrix(system, 200)
+fermi = FermiMatrix(system, 1000)
 
 with system as (H, Δ, V):
     for i in lattice.sites():
@@ -69,24 +69,28 @@ for n in trange(12, desc="boot", unit="cyc", leave=False):
 # Convergence via accelerated self-consistency iteration.
 # ------------------------------------------------------------
 
-with open("temperatures.csv", "w") as f:
+with open("phase.csv", "w") as f:
     writer = csv.writer(f)
 
-    for T in tqdm(np.linspace(1e-6, 1e-1, 100), desc="sweep", unit="tmp"):
+    for T in tqdm(np.linspace(1e-6, 1e-1, 30), desc="sweep", unit="tmp"):
         Δs = []
+        δs = []
+
         for n in trange(100, desc="conv", unit="cyc", leave=False):
             # Order parameter update.
             Δs.append(fermi(T, R).order_swave())
 
             # Convergence control.
-            if len(Δs) > 4:
+            if len(Δs) > 2:
                 gap = np.real(np.mean(Δs[-1]))
-                diff = np.mean(np.abs(1 - Δs[-1] / Δs[-2]))
+                diff = np.max(np.abs(Δs[-1] - Δs[-2]))
 
-                if diff < 1e-6:
+                if diff < Δ_init * 1e-4:
                     break
-                else:
-                    Δs = [Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])]
+
+            # Convergence acceleration.
+            if len(Δs) > 4 and gap > Δ_init * 1e-2:
+                Δs = [Δs[-3] - (Δs[-2] - Δs[-3]) ** 2 / (Δs[-1] - 2 * Δs[-2] + Δs[-3])]
 
             # Hamiltonian update.
             with system as (H, Δ, V):

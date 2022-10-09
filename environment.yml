@@ -15,5 +15,6 @@ dependencies:
   - scipy
   - seaborn
   - tqdm
+  - pip
   - pip:
     - multiprocess
