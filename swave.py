@@ -3,7 +3,6 @@
 """Self-consistent calculation for s-wave superconductors."""
 
 import csv
-from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,11 +71,9 @@ for n in trange(12, desc="boot", unit="cyc", leave=False):
 with open("phase.csv", "w") as f:
     writer = csv.writer(f)
 
-    for T in tqdm(np.linspace(1e-6, 1e-1, 30), desc="sweep", unit="tmp"):
+    for T in tqdm(np.linspace(1e-6, 2e-1, 100), desc="sweep", unit="tmp"):
         Δs = []
-        δs = []
-
-        for n in trange(100, desc="conv", unit="cyc", leave=False):
+        for n in trange(300, desc="conv", unit="cyc", leave=False):
             # Order parameter update.
             Δs.append(fermi(T, R).order_swave())
 
