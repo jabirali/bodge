@@ -103,4 +103,9 @@ class FermiMatrix:
         pass
 
     def free_energy(self):
+        V = self.hamiltonian.pot
+        
+        # for i in self.lattice.sites():
+        #     V_i = self.hamiltonian.pot
+        #     Δ_i = 
         pass

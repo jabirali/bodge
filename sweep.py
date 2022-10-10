@@ -29,10 +29,10 @@ with system as (H, Δ, V):
 with open("sweep.csv", "w") as f:
     writer = csv.writer(f)
 
-    for N in tqdm([100, 200, 300, 400, 500, 600, 800, 1000], desc="N", leave=False):
+    for N in tqdm([10, 50, 100, 200, 300, 400, 500, 600, 800, 1000], desc="N", leave=False):
         F = FermiMatrix(system, N)
 
-        for U in tqdm(np.linspace(0, 3, 31), desc="U", leave=False):
+        for U in tqdm(np.linspace(0, 2, 21), desc="U", leave=False):
             with system as (H, Δ, V):
                 for i in lattice.sites():
                     V[i, i] = -U
