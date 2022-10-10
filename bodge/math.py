@@ -100,6 +100,8 @@ def cheb_poly(X, I, N: int, R=None):
 
             except AttributeError:
                 raise ValueError("Cutoff radius is only supported for `scipy.sparse` matrices!")
+            except UnboundLocalError:
+                raise ValueError("Cutoff radius must be minimum 2.")
 
         yield T_1
 

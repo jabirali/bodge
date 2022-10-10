@@ -78,9 +78,7 @@ class Hamiltonian:
         self.pot: dict[Coords, float] = {}
 
     @typecheck
-    def __enter__(
-        self,
-    ) -> tuple[dict[Coords, Array], dict[Coords, Array], dict[Coords, float]]:
+    def __enter__(self) -> tuple[dict[Coords, Array], dict[Coords, Array], dict[Coords, float]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
