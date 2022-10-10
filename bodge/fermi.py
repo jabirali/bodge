@@ -42,6 +42,11 @@ class FermiMatrix:
         I = self.hamiltonian.identity
         Ω = self.hamiltonian.scale
 
+        # Normalize the tolerance.
+        if tol is not None:
+            tol /= Ω
+            print(Ω)
+
         # Define the Fermi function.
         def f(x):
             return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2

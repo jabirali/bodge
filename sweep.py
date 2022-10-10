@@ -30,7 +30,7 @@ with system as (H, Δ, V):
 with open("sweep3.csv", "w") as f:
     writer = csv.writer(f)
 
-    for tol in tqdm([1e-1, 5e-2, 2e-2, 1e-3, 5e-3, 2e-3, 1e-3, 5e-4, 2e-4, 1e-4, None], desc="tol", leave=False):
+    for tol in tqdm([1e-1, 5e-2, 2e-2, 1e-2, 5e-3, 2e-3, 1e-3, 5e-4, 2e-4, 1e-4, None], desc="tol", leave=False):
         Δ_min = 0
         Δ_max = 1
         for n in trange(20, desc="Δ", leave=False):

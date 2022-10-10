@@ -63,7 +63,7 @@ def cheb_poly(X, I, N: int, tol=None):
     Chebyshev polynomials, which is useful for parallel construction of T_n(X).
 
     TODO: Update doscstring below.
-    
+
     If the optional cutoff radius R is specified, the T_n(X) are projected
     onto the Local Krylov subspace spanned by {X^0, ..., X^R}, so that the
     T_n(X) for n > R are prevented from growing denser than T_R(X). This
