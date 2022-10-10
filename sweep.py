@@ -27,12 +27,12 @@ with system as (H, Δ, V):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-with open("sweep.csv", "w") as f:
+with open("sweep3.csv", "w") as f:
     writer = csv.writer(f)
 
-    for tol in tqdm([1e-1, 3e-2, 1e-2, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6], desc="tol"):
+    for tol in tqdm([1e-1, 5e-2, 2e-2, 1e-3, 5e-3, 2e-3, 1e-3, 5e-4, 2e-4, 1e-4, None], desc="tol", leave=False):
         Δ_min = 0
-        Δ_max = 2
+        Δ_max = 1
         for n in trange(20, desc="Δ", leave=False):
             # Hamiltonian update.
             Δ_init = (Δ_min + Δ_max)/2

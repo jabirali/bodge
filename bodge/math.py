@@ -1,6 +1,5 @@
 import warnings
 from math import ceil
-
 import multiprocess as mp
 import numpy as np
 import scipy.sparse as sps
@@ -63,6 +62,8 @@ def cheb_poly(X, I, N: int, tol=None):
     This function will then calculate the corresponding blocks [T_n(X)]_k of the
     Chebyshev polynomials, which is useful for parallel construction of T_n(X).
 
+    TODO: Update doscstring below.
+    
     If the optional cutoff radius R is specified, the T_n(X) are projected
     onto the Local Krylov subspace spanned by {X^0, ..., X^R}, so that the
     T_n(X) for n > R are prevented from growing denser than T_R(X). This
@@ -83,12 +84,11 @@ def cheb_poly(X, I, N: int, tol=None):
 
         # Local Krylov projection if a cutoff radius is specified.
         if tol:
-            drop = np.sum(np.abs(T_1.data), axis=(1,2)) < tol
+            drop = np.max(np.abs(T_1.data), axis=(1, 2)) < tol
             T_1.data[drop, ...] = 0
             T_1.eliminate_zeros()
 
         yield T_1
-
 
 def cheb_coeff(F: Callable, N: int, odd=False, even=False):
     """Generate the Chebyshev coefficients for the given function.
