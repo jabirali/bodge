@@ -13,15 +13,16 @@ Ly = 24
 t = 1
 μ = 0
 T = 1e-6 * t
-
-R = None
+U = 1
 
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
+fermi = FermiMatrix(system, 1000)
 
 with system as (H, Δ, V):
     for i in lattice.sites():
         H[i, i] = -μ * σ0
+        V[i, i] = -U
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
@@ -29,32 +30,25 @@ with system as (H, Δ, V):
 with open("sweep.csv", "w") as f:
     writer = csv.writer(f)
 
-    for N in tqdm([10, 50, 100, 200, 300, 400, 500, 600, 800, 1000], desc="N", leave=False):
-        F = FermiMatrix(system, N)
-
-        for U in tqdm(np.linspace(0, 2, 21), desc="U", leave=False):
+    for tol in tqdm([1e-1, 3e-2, 1e-2, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6], desc="tol"):
+        Δ_min = 0
+        Δ_max = 2
+        for n in trange(20, desc="Δ", leave=False):
+            # Hamiltonian update.
+            Δ_init = (Δ_min + Δ_max)/2
             with system as (H, Δ, V):
                 for i in lattice.sites():
-                    V[i, i] = -U
+                    if V[i, i] != 0:
+                        Δ[i, i] = Δ_init * jσ2
 
-            Δ_min = 0
-            Δ_max = 2
-            for n in trange(20, desc="Δ", leave=False):
-                # Hamiltonian update.
-                Δ_init = (Δ_min + Δ_max)/2
-                with system as (H, Δ, V):
-                    for i in lattice.sites():
-                        if V[i, i] != 0:
-                            Δ[i, i] = Δ_init * jσ2
+            # Convergence control.
+            Δ2 = np.abs(fermi(T, tol).order_swave())
+            Δ1 = np.where(Δ2 > 0, Δ_init, 0)
 
-                # Convergence control.
-                Δ2 = np.abs(F(T).order_swave())
-                Δ1 = np.where(Δ2 > 0, Δ_init, 0)
+            if np.median(Δ2) > np.median(Δ1):
+                Δ_min = Δ_init
+            else:
+                Δ_max = Δ_init
 
-                if np.mean(Δ2) > np.mean(Δ1):
-                    Δ_min = Δ_init
-                else:
-                    Δ_max = Δ_init
-
-            writer.writerow([N, U, (Δ_min + Δ_max)/2])
+            writer.writerow([tol, (Δ_min + Δ_max)/2])
             f.flush()

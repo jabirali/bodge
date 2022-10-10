@@ -23,7 +23,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, R=None) -> bsr_matrix:
+def cheb(F, X, N, tol=None) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -38,7 +38,7 @@ def cheb(F, X, N, R=None) -> bsr_matrix:
         if I_k is None:
             return None
 
-        T_k = cheb_poly(X, I_k, N, R)
+        T_k = cheb_poly(X, I_k, N, tol)
         F_k = 0
         for c_n, T_kn in zip(c, T_k):
             F_k += c_n * T_kn
@@ -52,7 +52,7 @@ def cheb(F, X, N, R=None) -> bsr_matrix:
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
-def cheb_poly(X, I, N: int, R=None):
+def cheb_poly(X, I, N: int, tol=None):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
@@ -82,26 +82,10 @@ def cheb_poly(X, I, N: int, R=None):
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
 
         # Local Krylov projection if a cutoff radius is specified.
-        if R is not None:
-            try:
-                # Construct a Local Krylov subspace mask from the sparsity
-                # structure of T_R(X), since this matrix contains all the
-                # relevant contributions {X^0, ..., X^R} of the subspace.
-                if n == R:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", np.ComplexWarning)
-                        P = T_1.astype(dtype="int8", copy=False)
-                        P.data[...] = 1
-
-                # Project T_n(x) onto the Local Krylov subspace spanned by
-                # elementwise multiplication by the mask constructed above.
-                elif n > R:
-                    T_1 = T_1.multiply(P)
-
-            except AttributeError:
-                raise ValueError("Cutoff radius is only supported for `scipy.sparse` matrices!")
-            except UnboundLocalError:
-                raise ValueError("Cutoff radius must be minimum 2.")
+        if tol:
+            drop = np.sum(np.abs(T_1.data), axis=(1,2)) < tol
+            T_1.data[drop, ...] = 0
+            T_1.eliminate_zeros()
 
         yield T_1
 
