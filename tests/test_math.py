@@ -218,8 +218,10 @@ def test_logdet():
 def test_idblk():
     """Test that identity blocks stack to an identity matrix."""
     N = 4 * 13
-    for K in range(1, 13):
-        Is = [idblk(k, K, N) for k in range(K)]
-        I1 = sps.hstack([I_k for I_k in Is if I_k is not None])
-        I2 = sps.identity(N)
-        assert (I1.todense() == I2.todense()).all()
+    M = 4 * 3
+    K = 6
+
+    Is = [idblk(k, M, N) for k in range(K)]
+    I1 = sps.hstack([I_k for I_k in Is if I_k is not None])
+    I2 = sps.identity(N)
+    assert (I1.todense() == I2.todense()).all()

@@ -1,5 +1,6 @@
 import warnings
 from math import ceil
+
 import multiprocess as mp
 import numpy as np
 import scipy.sparse as sps
@@ -23,7 +24,9 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True) -> bsr_matrix:
+def cheb(
+    F, X, N, R=None, filter: Optional[Callable] = None, preserve=False, pbar=True
+) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -37,6 +40,7 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
     # Blockwise calculation of the Chebyshev expansion.
     W = 64
     K = ceil(X.shape[1] / W)
+
     def kernel(k):
         # Identity block.
         I_k = idblk(block=k, blocksize=W, dim=X.shape[0])
@@ -44,15 +48,18 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
             return None
 
         # Structure block.
-        S_k = X @ I_k
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', np.ComplexWarning)
-            mask = np.sum(np.abs(S_k.data), axis=(1,2)) != 0
-            S_k.data[mask, ...] = 1
-            S_k = bsr_matrix(S_k, blocksize=(4,4), dtype=np.int8) 
+        if preserve:
+            S_k = X @ I_k
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", np.ComplexWarning)
+                mask = np.sum(np.abs(S_k.data), axis=(1, 2)) != 0
+                S_k.data[mask, ...] = 1
+                S_k = bsr_matrix(S_k, blocksize=(4, 4), dtype=np.int8)
+        else:
+            S_k = 1
 
         # Chebyshev expansion.
-        T_k = cheb_poly(X, I_k, N, tol)
+        T_k = cheb_poly(X, I_k, N, R)
         F_k = 0
         for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
             if filter(n):
@@ -63,7 +70,7 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
     # Parallel execution of the blockwise calculation.
     with mp.Pool() as pool:
         if pbar:
-            blocks = trange(K, unit='blk', desc='cheb', leave=False)
+            blocks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
         else:
             blocks = range(K)
 
@@ -72,7 +79,7 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
-def cheb_poly(X, I, N: int, tol: float = 0.0):
+def cheb_poly(X, I, N: int, R=None):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
@@ -104,12 +111,30 @@ def cheb_poly(X, I, N: int, tol: float = 0.0):
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
 
         # Local Krylov projection if a cutoff radius is specified.
-        if tol > 0:
-            drop = np.max(np.abs(T_1.data), axis=(1, 2)) < tol
-            T_1.data[drop, ...] = 0
-            T_1.eliminate_zeros()
+        if R is not None:
+            try:
+                # Construct a Local Krylov subspace mask from the sparsity
+                # structure of T_R(X), since this matrix contains all the
+                # relevant contributions {X^0, ..., X^R} of the subspace.
+                if n == R:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", np.ComplexWarning)
+                        P = T_1.astype(dtype="int8", copy=False)
+                        P.data[...] = 1
+
+                # Project T_n(x) onto the Local Krylov subspace spanned by
+                # elementwise multiplication by the mask constructed above.
+                elif n > R:
+                    T_1 = T_1.multiply(P)
+
+            except AttributeError:
+                raise ValueError("Cutoff radius is only supported for `scipy.sparse` matrices!")
+
+            except UnboundLocalError:
+                raise ValueError("Cutoff radius must be minimum 2.")
 
         yield T_1
+
 
 def cheb_coeff(F: Callable, N: int):
     """Generate the Chebyshev coefficients for the given function.
@@ -117,7 +142,7 @@ def cheb_coeff(F: Callable, N: int):
     We define the coefficients f_n such that F(X) = ∑ f_n T_n(X) for any X,
     where the sum goes over 0 ≤ n < N and T_n(X) is found by `cheb_poly`.
 
-    The optional argument `filter` can be set to a function that 
+    The optional argument `filter` can be set to a function that
     The optional arguments `odd` and `even` can be used to skip calculation
     of Chebyshev coefficients that are a priori known to be exactly zero.
     """

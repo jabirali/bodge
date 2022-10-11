@@ -71,7 +71,7 @@ for n in trange(12, desc="Δ0", unit="val"):
 δ = Δ0 * 1e-4
 T_min = 1e-10
 T_max = 2 * (Δ0 / 1.764)
-Tc = (T_min + T_max)/2
+Tc = (T_min + T_max) / 2
 
 with system as (H, Δ, V):
     for i in lattice.sites():
@@ -89,6 +89,6 @@ for n in trange(12, desc="Tc", unit="val"):
         T_min = Tc
     else:
         T_max = Tc
-    Tc = (T_min + T_max)/2
+    Tc = (T_min + T_max) / 2
 
     print(f"Tc: {Tc}")
