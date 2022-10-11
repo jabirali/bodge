@@ -35,18 +35,28 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    W = 512
+    W = 64
     K = ceil(X.shape[1] / W)
     def kernel(k):
+        # Identity block.
         I_k = idblk(block=k, blocksize=W, dim=X.shape[0])
         if I_k is None:
             return None
 
+        # Structure block.
+        S_k = X @ I_k
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', np.ComplexWarning)
+            mask = np.sum(np.abs(S_k.data), axis=(1,2)) != 0
+            S_k.data[mask, ...] = 1
+            S_k = bsr_matrix(S_k, blocksize=(4,4), dtype=np.int8) 
+
+        # Chebyshev expansion.
         T_k = cheb_poly(X, I_k, N, tol)
         F_k = 0
         for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
             if filter(n):
-                F_k += c_n * T_kn
+                F_k += c_n * T_kn.multiply(S_k)
 
         return F_k
 
@@ -57,7 +67,7 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True
         else:
             blocks = range(K)
 
-        F = pool.map(kernel, blocks)
+        F = pool.map(kernel, blocks, chunksize=1)
 
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
