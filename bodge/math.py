@@ -22,12 +22,16 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, tol=None) -> bsr_matrix:
+def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
     g = cheb_kern(N)
     c = [f_n * g_n for f_n, g_n in zip(f, g)]
+
+    # Prepare the index filter function.
+    if filter is None:
+        filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
     K = mp.cpu_count()
@@ -39,8 +43,9 @@ def cheb(F, X, N, tol=None) -> bsr_matrix:
 
         T_k = cheb_poly(X, I_k, N, tol)
         F_k = 0
-        for c_n, T_kn in zip(c, T_k):
-            F_k += c_n * T_kn
+        for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
+            if filter(n):
+                F_k += c_n * T_kn
 
         return F_k
 
@@ -51,7 +56,7 @@ def cheb(F, X, N, tol=None) -> bsr_matrix:
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
-def cheb_poly(X, I, N: int, tol=None):
+def cheb_poly(X, I, N: int, tol: float = 0.0):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
@@ -83,18 +88,20 @@ def cheb_poly(X, I, N: int, tol=None):
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
 
         # Local Krylov projection if a cutoff radius is specified.
-        if tol:
+        if tol > 0:
             drop = np.max(np.abs(T_1.data), axis=(1, 2)) < tol
             T_1.data[drop, ...] = 0
             T_1.eliminate_zeros()
 
         yield T_1
 
-def cheb_coeff(F: Callable, N: int, odd=False, even=False):
+def cheb_coeff(F: Callable, N: int):
     """Generate the Chebyshev coefficients for the given function.
 
     We define the coefficients f_n such that F(X) = ∑ f_n T_n(X) for any X,
     where the sum goes over 0 ≤ n < N and T_n(X) is found by `cheb_poly`.
+
+    The optional argument `filter` can be set to a function that 
     The optional arguments `odd` and `even` can be used to skip calculation
     of Chebyshev coefficients that are a priori known to be exactly zero.
     """
@@ -108,12 +115,7 @@ def cheb_coeff(F: Callable, N: int, odd=False, even=False):
     # Perform the Chebyshev expansion.
     yield np.mean(f)
     for n in range(1, N):
-        if odd and n % 2 == 0:
-            yield 0
-        elif even and n % 2 == 1:
-            yield 0
-        else:
-            yield 2 * np.mean(f * np.cos(n * ϕ))
+        yield 2 * np.mean(f * np.cos(n * ϕ))
 
 
 def cheb_kern(N: int):

@@ -30,7 +30,7 @@ class FermiMatrix:
         self.hopp: dict[Coords, Array]
         self.pair: dict[Coords, Array]
 
-    def __call__(self, temperature: float, tol: Optional[float] = None):
+    def __call__(self, temperature: float, tol: float = 0.0):
         """Calculate the Fermi matrix at a given temperature."""
         # Reset any pre-existing accessors.
         self.hopp = {}
@@ -42,18 +42,13 @@ class FermiMatrix:
         I = self.hamiltonian.identity
         Ω = self.hamiltonian.scale
 
-        # Normalize the tolerance.
-        if tol is not None:
-            tol /= Ω
-            print(Ω)
-
         # Define the Fermi function.
         def f(x):
             return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy, or whether to .multiply(S).
-        self.matrix = cheb(f, H, self.order, tol)
+        self.matrix = cheb(f, H, self.order, tol / Ω, filter=lambda n: n % 2 == 1)
 
         # Simplify the access to the constructed matrix.
         for i, j in self.lattice:
@@ -90,7 +85,9 @@ class FermiMatrix:
         Ω = self.hamiltonian.scale
         Δ = np.zeros(self.lattice.shape, dtype=np.complex128)
         for i in self.lattice.sites():
-            Δ[i] = (V[i, i] / 2) * np.trace(self.pair[i, i] @ jσ2)
+            if (i, i) in V:
+                # TODO: DefaultDict or actual matrix
+                Δ[i] = (V[i, i] / 2) * np.trace(self.pair[i, i] @ jσ2)
 
         return Δ
 
