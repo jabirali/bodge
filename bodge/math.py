@@ -3,6 +3,7 @@ from math import ceil
 import multiprocess as mp
 import numpy as np
 import scipy.sparse as sps
+from tqdm import trange
 
 from .typing import *
 
@@ -22,7 +23,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None) -> bsr_matrix:
+def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None, pbar=True) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -34,10 +35,10 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None) -> bsr_ma
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    K = mp.cpu_count()
-
+    W = 512
+    K = ceil(X.shape[1] / W)
     def kernel(k):
-        I_k = idblk(block=k, blocks=K, dim=X.shape[0])
+        I_k = idblk(block=k, blocksize=W, dim=X.shape[0])
         if I_k is None:
             return None
 
@@ -51,7 +52,12 @@ def cheb(F, X, N, tol: float = 0.0, filter: Optional[Callable] = None) -> bsr_ma
 
     # Parallel execution of the blockwise calculation.
     with mp.Pool() as pool:
-        F = pool.map(kernel, range(K))
+        if pbar:
+            blocks = trange(K, unit='blk', desc='cheb', leave=False)
+        else:
+            blocks = range(K)
+
+        F = pool.map(kernel, blocks)
 
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
@@ -161,10 +167,9 @@ def logdet(X, I, N: int = 128):
     return sum(f * g * trace(T) for f, g, T in zip(fs, gs, Ts))
 
 
-def idblk(block, blocks, dim):
+def idblk(block, blocksize, dim):
     """Partition the identity matrix into column blocks."""
     # Determine blocksize and offset for this block.
-    blocksize = 4 * ceil(dim / (4 * blocks))
     offset = block * blocksize
 
     # Blocksize correction for the last blocks in the batch.
