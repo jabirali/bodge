@@ -25,7 +25,7 @@ jσ3 = 1j * σ3
 
 
 def cheb(
-    F, X, N, R=None, filter: Optional[Callable] = None, preserve=False, pbar=True
+    F, X, N, R=None, filter: Optional[Callable] = None, preserve=True, pbar=True
 ) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
