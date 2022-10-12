@@ -3,6 +3,7 @@
 import csv
 from time import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm, trange
 
@@ -11,7 +12,7 @@ from bodge import *
 with open("sweep5.csv", "w") as f:
     writer = csv.writer(f)
 
-    Lx = 192
+    Lx = 32
     Ly = 32
 
     t = 1
@@ -22,7 +23,7 @@ with open("sweep5.csv", "w") as f:
 
     lattice = CubicLattice((Lx, Ly, 1))
     system = Hamiltonian(lattice)
-    fermi = FermiMatrix(system, 1024)
+    fermi = FermiMatrix(system, 400)
 
     with system as (H, Δ, V):
         for i in lattice.sites():
@@ -34,10 +35,17 @@ with open("sweep5.csv", "w") as f:
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    for R in trange(2, 256):
-        start = time()
-        Δ = np.abs(fermi(T, R).order_swave())
-        end = time()
+    start = time()
+    Δ = np.abs(fermi(T).order_swave())
+    end = time()
 
-        writer.writerow([R, Δ[127, 15, 0], end - start])
-        f.flush()
+    # print()
+    # plt.figure()
+    # plt.imshow(Δ, vmin=0)
+    # plt.colorbar()
+    # plt.show()
+    # print()
+
+    writer.writerow([Δ[127, 15, 0], end - start])
+    print([Δ[127, 15, 0], end - start])
+    f.flush()

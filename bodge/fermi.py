@@ -30,7 +30,7 @@ class FermiMatrix:
         self.hopp: dict[Coords, Array]
         self.pair: dict[Coords, Array]
 
-    def __call__(self, temperature: float, radius=None):
+    def __call__(self, temperature: float):
         """Calculate the Fermi matrix at a given temperature."""
         # Reset any pre-existing accessors.
         self.hopp = {}
@@ -51,7 +51,7 @@ class FermiMatrix:
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy, or whether to .multiply(S).
-        self.matrix = cheb(fermi, H, self.order, radius, odd)
+        self.matrix = cheb(fermi, H, self.order, filter=odd)
 
         # Simplify the access to the constructed matrix.
         for i, j in self.lattice:

@@ -95,15 +95,15 @@ with open("phase.csv", "w") as f:
                     Δ[i, i] = Δs[-1][i] * jσ2
 
             # Debug information.
-            # if len(Δs) > 1:
-            #     print()
-            #     print(f"Gap: {gap}")
-            #     print(f"Diff: {diff}")
+            if len(Δs) > 1:
+                print()
+                print(f"Gap: {gap}")
+                print(f"Diff: {diff}")
 
-            #     plt.figure()
-            #     plt.imshow(np.abs(Δs[-1]), vmin=0)
-            #     plt.colorbar()
-            #     plt.show()
+                plt.figure()
+                plt.imshow(np.abs(Δs[-1]), vmin=0)
+                plt.colorbar()
+                plt.show()
 
         writer.writerow([T, gap, diff])
         f.flush()

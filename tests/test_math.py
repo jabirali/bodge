@@ -100,45 +100,6 @@ def test_chebyshev_sparse():
         assert np.allclose(T_n1, T_n2.todense())
 
 
-def test_chebyshev_cutoff():
-    """Test the Local Krylov expansion feature."""
-    # Construct a realistic tridiagonal matrix X.
-    I = np.identity(64)
-    X = I.copy()
-    for n in range(64 - 2):
-        X[n, n + 2] = -1 / 2
-        X[n + 2, n] = -1 / 2
-
-    # Convert the above into sparse matrices.
-    X = sps.csr_matrix(X)
-    I = sps.csr_matrix(I)
-
-    # Construct the relevant Chebyshev generators.
-    R = 5
-    cheb_1 = cheb_poly(X, I, 2 * R + 1)
-    cheb_2 = cheb_poly(X, I, 2 * R + 1, R)
-
-    # Generate the T_n(X) with and without cutoff.
-    for n, (Tn_1, Tn_2) in enumerate(zip(cheb_1, cheb_2)):
-        # The first R matrices should be exactly the same.
-        if n <= R:
-            assert Tn_1.nnz == Tn_2.nnz
-            assert Tn_1.nnz == (X**n).nnz
-            assert np.allclose(Tn_1.todense(), Tn_2.todense())
-
-        # The next matrix is the first with a cutoff. The *stored* elements in
-        # the two matrices should be exactly the same at this point.
-        elif n == R + 1:
-            assert Tn_1.nnz > Tn_2.nnz
-            assert (Tn_1 - Tn_2).nnz == (X ** (R + 1)).nnz - (X**R).nnz
-
-        # The last matrices should scale like X^n or X^R, respectively.
-        else:
-            assert Tn_1.nnz > Tn_2.nnz
-            assert Tn_1.nnz == (X**n).nnz
-            assert Tn_2.nnz == (X**R).nnz
-
-
 def test_chebyshev_unitary():
     """Test that Chebyshev polynomials satisfy U† T_n(D) U = T_n(X)."""
     # Diagonal matrices with elements in [-1, +1].
@@ -178,41 +139,6 @@ def test_jackson_kernel():
     # Check that g_n ≈ 0 for n = N but that g_n ≈ 1 for n ≪ N.
     assert np.allclose(g_s1, 0, atol=1e-4)
     assert np.allclose(g_l1, 1, atol=1e-4)
-
-
-def test_trace():
-    """Test that the stochastic trace is correct for a random matrix."""
-    # Create a random positive-definite hermitian matrix.
-    M = 316
-    X = np.diag(np.random.ranf(M))
-    I = sps.identity(M)
-
-    U = unitary_group.rvs(M)
-    Ut = U.T.conj()
-    X = U @ X @ Ut
-
-    # Check the trace.
-    tr_stoch = trace(X)
-    tr_exact = np.trace(X)
-    assert np.allclose(tr_exact, tr_stoch, rtol=3e-2)
-
-
-def test_logdet():
-    """Test the logdet is correct for a small random matrix."""
-    # Create a random positive-definite hermitian matrix.
-    M = 316
-    X = np.diag(np.random.ranf(M))
-    I = sps.identity(M)
-
-    U = unitary_group.rvs(M)
-    Ut = U.T.conj()
-    X = U @ X @ Ut
-
-    # Calculate the logarithm of the determinant.
-    ld_exact = np.log(det(X))
-    ld_approx = logdet(X, I)
-
-    assert np.allclose(ld_exact, ld_approx, rtol=3e-2)
 
 
 def test_idblk():

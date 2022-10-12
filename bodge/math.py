@@ -24,9 +24,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(
-    F, X, N, R=None, filter: Optional[Callable] = None, preserve=True, pbar=True
-) -> bsr_matrix:
+def cheb(F, X, N, filter: Optional[Callable] = None, preserve=False, pbar=True) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -38,7 +36,7 @@ def cheb(
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    W = 64
+    W = 16
     K = ceil(X.shape[1] / W)
 
     def kernel(k):
@@ -59,11 +57,11 @@ def cheb(
             S_k = 1
 
         # Chebyshev expansion.
-        T_k = cheb_poly(X, I_k, N, R)
+        T_k = cheb_poly(X, I_k, N)
         F_k = 0
         for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
-            if filter(n):
-                F_k += c_n * T_kn.multiply(S_k)
+            # if filter(n):
+            F_k += c_n * T_kn.multiply(S_k)
 
         return F_k
 
@@ -79,7 +77,7 @@ def cheb(
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
-def cheb_poly(X, I, N: int, R=None):
+def cheb_poly(X, I, N: int):
     """Chebyshev matrix polynomials T_n(X) for 0 ≤ n < N.
 
     The arguments X and I should be square matrices with the same dimensions,
@@ -109,29 +107,6 @@ def cheb_poly(X, I, N: int, R=None):
     # T_n(X) is calculated via the Chebyshev recursion relation.
     for n in range(2, N):
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
-
-        # Local Krylov projection if a cutoff radius is specified.
-        if R is not None:
-            try:
-                # Construct a Local Krylov subspace mask from the sparsity
-                # structure of T_R(X), since this matrix contains all the
-                # relevant contributions {X^0, ..., X^R} of the subspace.
-                if n == R:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", np.ComplexWarning)
-                        P = T_1.astype(dtype="int8", copy=False)
-                        P.data[...] = 1
-
-                # Project T_n(x) onto the Local Krylov subspace spanned by
-                # elementwise multiplication by the mask constructed above.
-                elif n > R:
-                    T_1 = T_1.multiply(P)
-
-            except AttributeError:
-                raise ValueError("Cutoff radius is only supported for `scipy.sparse` matrices!")
-
-            except UnboundLocalError:
-                raise ValueError("Cutoff radius must be minimum 2.")
 
         yield T_1
 
@@ -169,37 +144,6 @@ def cheb_kern(N: int):
     Π = π / (N + 1)
     for n in range(N):
         yield (Π / π) * ((N - n + 1) * np.cos(Π * n) + np.sin(Π * n) / np.tan(Π))
-
-
-def trace(X, N: int = 128):
-    """Stochastic evaluation of the trace."""
-    M = X.shape[-1]
-
-    tr = 0
-    for n in range(N):
-        # Generate a Gaussian complex vector.
-        v = np.random.randn(M, 2)
-        v = (v[:, :1] + v[:, 1:] * 1j) / np.sqrt(2)
-
-        # Stochastic evaluation of trace.
-        tr += (v.T.conj() @ X @ v) / N
-
-    return tr
-
-
-def logdet(X, I, N: int = 128):
-    """Stochastic Chebyshev evaluation of log det X.
-
-    TODO: Replace I with a random vector, and integrate the stochastic trace.
-    TODO: Create an exact version based on matrix diagonalization.
-    """
-    # Perform a Chebyshev expansion.
-    fs = cheb_coeff(lambda x: np.log(1 - x), N)
-    gs = cheb_kern(N)
-    Ts = cheb_poly(I - X, I, N)
-
-    # Calculate log det X.
-    return sum(f * g * trace(T) for f, g, T in zip(fs, gs, Ts))
 
 
 def idblk(block, blocksize, dim):
