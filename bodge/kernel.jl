@@ -1,6 +1,7 @@
 using HDF5
 # using Threads
 using SparseArrays
+# using MKLSparse
 
 """
     load()
@@ -28,7 +29,7 @@ end
 
 function cheb(H)
 	println(H.m)
-	Threads.@threads for j in 1:32
+	Threads.@threads for j in 1:(4*32)
 		v1 = spzeros(H.m)
 		v1[j] = 1
 

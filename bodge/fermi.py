@@ -51,7 +51,7 @@ class FermiMatrix:
 
         # Perform kernel polynomial expansion.
         # TODO: Check adjustments for entropy, or whether to .multiply(S).
-        self.matrix = cheb(fermi, H, self.order, filter=odd)
+        self.matrix = cheb(fermi, H, S, self.order, filter=odd)
 
         # Simplify the access to the constructed matrix.
         for i, j in self.lattice:

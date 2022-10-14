@@ -24,7 +24,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, filter: Optional[Callable] = None, preserve=True, pbar=True) -> bsr_matrix:
+def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -47,12 +47,13 @@ def cheb(F, X, N, filter: Optional[Callable] = None, preserve=True, pbar=True) -
 
         # Structure block.
         if preserve:
-            S_k = X @ I_k
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", np.ComplexWarning)
-                mask = np.sum(np.abs(S_k.data), axis=(1, 2)) != 0
-                S_k.data[mask, ...] = 1
-                S_k = bsr_matrix(S_k, blocksize=(4, 4), dtype=np.int8)
+            S_k = S @ I_k
+            # S_k = X @ I_k
+            # with warnings.catch_warnings():
+            #     warnings.simplefilter("ignore", np.ComplexWarning)
+            #     mask = np.sum(np.abs(S_k.data), axis=(1, 2)) != 0
+            #     S_k.data[mask, ...] = 1
+            #     S_k = bsr_matrix(S_k, blocksize=(4, 4), dtype=np.int8)
         else:
             S_k = 1
 
