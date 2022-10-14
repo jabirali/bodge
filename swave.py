@@ -43,26 +43,26 @@ with system as (H, Δ, V):
 # ------------------------------------------------------------
 # Determine initial guess via geometric binary search.
 # ------------------------------------------------------------
+Δ_init = 0.06
+# Δ_min = 1e-6
+# Δ_max = 1
+# for n in trange(12, desc="boot", unit="cyc", leave=False):
+#     # Hamiltonian update.
+#     Δ_init = np.sqrt(Δ_min * Δ_max)
+#     with system as (H, Δ, V):
+#         for i in lattice.sites():
+#             if V[i, i] != 0:
+#                 Δ[i, i] = Δ_init * jσ2
 
-Δ_min = 1e-6
-Δ_max = 1
-for n in trange(12, desc="boot", unit="cyc", leave=False):
-    # Hamiltonian update.
-    Δ_init = np.sqrt(Δ_min * Δ_max)
-    with system as (H, Δ, V):
-        for i in lattice.sites():
-            if V[i, i] != 0:
-                Δ[i, i] = Δ_init * jσ2
+#     # Convergence control.
+#     F = fermi(T)
+#     Δ2 = np.abs(F.order_swave())
+#     Δ1 = np.where(Δ2 > 0, Δ_init, 0)
 
-    # Convergence control.
-    F = fermi(T)
-    Δ2 = np.abs(F.order_swave())
-    Δ1 = np.where(Δ2 > 0, Δ_init, 0)
-
-    if np.mean(Δ2) > np.mean(Δ1):
-        Δ_min = Δ_init
-    else:
-        Δ_max = Δ_init
+#     if np.mean(Δ2) > np.mean(Δ1):
+#         Δ_min = Δ_init
+#     else:
+#         Δ_max = Δ_init
 
 # ------------------------------------------------------------
 # Convergence via accelerated self-consistency iteration.
@@ -75,7 +75,7 @@ with open("phase.csv", "w") as f:
         Δs = []
         for n in trange(300, desc="conv", unit="cyc", leave=False):
             # Order parameter update.
-            Δs.append(fermi(T, R).order_swave())
+            Δs.append(fermi(T).order_swave())
 
             # Convergence control.
             if len(Δs) > 2:

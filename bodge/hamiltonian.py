@@ -3,6 +3,7 @@ import numpy as np
 from scipy.linalg import eigh, inv
 from scipy.sparse import bsr_matrix, coo_matrix, identity
 from scipy.sparse.linalg import norm
+import multiprocess as mp
 
 from .lattice import Lattice
 from .math import *
@@ -72,8 +73,14 @@ class Hamiltonian:
         self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
+        # Parallel shared array.
+        # data = self.matrix.data
+        # X = mp.RawArray('c', int(data.shape[0]*16*4*4))
+        # self.matrix.data = np.frombuffer(X, dtype=self.matrix.data.dtype).reshape(self.matrix.data.shape)
+
         # Simplify direct access to the underlying data structure.
         self.data: Array[np.complex128] = self.matrix.data
+
 
         # Storage for any Hubbard-type potentials on the lattice.
         self.pot: dict[Coords, float] = {}

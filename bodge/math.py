@@ -46,6 +46,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
             return None
 
         # Structure block.
+        # TODO: Rename to mask.
         if preserve:
             S_k = S @ I_k
             # S_k = X @ I_k
@@ -59,10 +60,10 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
 
         # Chebyshev expansion.
         T_k = cheb_poly(X, I_k, N)
-        F_k = 0
+        F_k = 0j
         for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
             if filter(n):
-                F_k += c_n * S_k.multiply(T_kn)
+                F_k += c_n * T_kn.multiply(S_k)
 
         return F_k
 
@@ -75,6 +76,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
 
         F = pool.map(kernel, blocks, chunksize=1)
 
+    # TODO: Add COO matrices instead of stacking BSR matrices?
     return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
 
 
@@ -149,6 +151,7 @@ def cheb_kern(N: int):
 
 def idblk(block, blocksize, dim):
     """Partition the identity matrix into column blocks."""
+    # TODO: Generate from a given i-list.
     # Determine blocksize and offset for this block.
     offset = block * blocksize
 
