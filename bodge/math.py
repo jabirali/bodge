@@ -39,6 +39,9 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
     W = 32
     K = ceil(X.shape[1] / W)
 
+    X = X.tocsr()
+    S = S.tocsr()
+
     def kernel(k):
         # Identity block.
         I_k = idblk(block=k, blocksize=W, dim=X.shape[0])
@@ -49,12 +52,6 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
         # TODO: Rename to mask.
         if preserve:
             S_k = S @ I_k
-            # S_k = X @ I_k
-            # with warnings.catch_warnings():
-            #     warnings.simplefilter("ignore", np.ComplexWarning)
-            #     mask = np.sum(np.abs(S_k.data), axis=(1, 2)) != 0
-            #     S_k.data[mask, ...] = 1
-            #     S_k = bsr_matrix(S_k, blocksize=(4, 4), dtype=np.int8)
         else:
             S_k = 1
 
@@ -167,4 +164,4 @@ def idblk(block, blocksize, dim):
     matrix = sps.dia_matrix((diag, [-offset]), shape, dtype=np.int8)
 
     # Return each identity block.
-    return matrix.tobsr((4, 4))
+    return matrix.tocsr()

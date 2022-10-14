@@ -73,11 +73,6 @@ class Hamiltonian:
         self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
-        # Parallel shared array.
-        # data = self.matrix.data
-        # X = mp.RawArray('c', int(data.shape[0]*16*4*4))
-        # self.matrix.data = np.frombuffer(X, dtype=self.matrix.data.dtype).reshape(self.matrix.data.shape)
-
         # Simplify direct access to the underlying data structure.
         self.data: Array[np.complex128] = self.matrix.data
 
