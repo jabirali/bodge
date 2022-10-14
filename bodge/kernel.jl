@@ -28,18 +28,20 @@ end
 
 function cheb(H)
 	println(H.m)
-	Threads.@threads for j in 1:8
-		b = 32
-		v1 = spzeros(H.m, b)
-		for k in 1:b
-			v1[b*(j-1)+k+1, k] = 1
-		end
+	Threads.@threads for j in 1:32
+		v1 = spzeros(H.m)
+		v1[j] = 1
 
 		v2 = H * v1
+
+		v = v1
 
 		for i in 1:500
 			v1 = 2 * (H * v2) - v1 
 			v2 = 2 * (H * v1) - v2 
+
+			v += v1
+			v += v2
 		end
 		display(v2[j])
 	end
