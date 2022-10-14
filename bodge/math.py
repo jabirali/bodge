@@ -24,7 +24,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, N, filter: Optional[Callable] = None, preserve=False, pbar=True) -> bsr_matrix:
+def cheb(F, X, N, filter: Optional[Callable] = None, preserve=True, pbar=True) -> bsr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
@@ -36,7 +36,7 @@ def cheb(F, X, N, filter: Optional[Callable] = None, preserve=False, pbar=True) 
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    W = 16
+    W = 32
     K = ceil(X.shape[1] / W)
 
     def kernel(k):
@@ -60,8 +60,8 @@ def cheb(F, X, N, filter: Optional[Callable] = None, preserve=False, pbar=True) 
         T_k = cheb_poly(X, I_k, N)
         F_k = 0
         for n, (c_n, T_kn) in enumerate(zip(c, T_k)):
-            # if filter(n):
-            F_k += c_n * T_kn.multiply(S_k)
+            if filter(n):
+                F_k += c_n * S_k.multiply(T_kn)
 
         return F_k
 
