@@ -24,8 +24,12 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True) -> bsr_matrix:
+def cheb(F, X, S, N, filter: Optional[Callable] = None) -> sps.csr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
+    # Use CSR matrices for numerical performance.
+    X = sps.csr_matrix(X)
+    S = sps.csr_matrix(S)
+
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
     g = cheb_kern(N)
@@ -39,8 +43,6 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
     W = 32
     K = ceil(X.shape[1] / W)
 
-    X = X.tocsr()
-    S = S.tocsr()
 
     def kernel(k):
         # Identity block.
@@ -49,11 +51,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
             return None
 
         # Structure block.
-        # TODO: Rename to mask.
-        if preserve:
-            S_k = S @ I_k
-        else:
-            S_k = 1
+        S_k = S @ I_k
 
         # Chebyshev expansion.
         T_k = cheb_poly(X, I_k, N)
@@ -66,15 +64,13 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, preserve=True, pbar=True
 
     # Parallel execution of the blockwise calculation.
     with mp.Pool() as pool:
-        if pbar:
-            blocks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
-        else:
-            blocks = range(K)
+        blocks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
+        results = pool.map(kernel, blocks, chunksize=1)
 
-        F = pool.map(kernel, blocks, chunksize=1)
+    # Merge the resulting blocks.
+    F: sps.csr_matrix = sps.hstack([F_k for F_k in F if F_k is not None])
 
-    # TODO: Add COO matrices instead of stacking BSR matrices?
-    return sps.hstack([F_k for F_k in F if F_k is not None]).tobsr((4, 4))
+    return F
 
 
 def cheb_poly(X, I, N: int):

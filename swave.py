@@ -15,8 +15,8 @@ from bodge import *
 # ------------------------------------------------------------
 
 # Physical parameters.
-Lx = 100
-Ly = 100
+Lx = 32
+Ly = 32
 
 t = 1
 μ = 0.1
@@ -78,7 +78,7 @@ with open("phase.csv", "w") as f:
             Δs.append(fermi(T).order_swave())
 
             # Convergence control.
-            if len(Δs) > 2:
+            if len(Δs) > 1:
                 gap = np.real(np.mean(Δs[-1]))
                 diff = np.max(np.abs(Δs[-1] - Δs[-2]))
 
