@@ -24,7 +24,7 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 
-def cheb(F, X, S, N, filter: Optional[Callable] = None) -> sps.csr_matrix:
+def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> sps.csr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Use CSR matrices for numerical performance.
     X = sps.csr_matrix(X)
@@ -40,7 +40,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None) -> sps.csr_matrix:
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    W = 32
+    W = ceil(1024 ** 2 / X.shape[0])  # 1MB blocks
     K = ceil(X.shape[1] / W)
 
 
@@ -64,11 +64,11 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None) -> sps.csr_matrix:
 
     # Parallel execution of the blockwise calculation.
     with mp.Pool() as pool:
-        blocks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
-        results = pool.map(kernel, blocks, chunksize=1)
+        ks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
+        Fs = pool.map(kernel, ks, chunksize=1)
 
     # Merge the resulting blocks.
-    F: sps.csr_matrix = sps.hstack([F_k for F_k in F if F_k is not None])
+    F: sps.csr_matrix = sps.hstack([F_k for F_k in Fs if F_k is not None])
 
     return F
 
