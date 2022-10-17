@@ -1,9 +1,11 @@
-name: bodge
+name: bodge_intel
 channels:
+  - intel
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.10
+  - python
+  - mkl
   - beartype
   - black
   - h5py

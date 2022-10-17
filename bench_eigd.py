@@ -22,7 +22,7 @@ def fe(x):
 def entropy(x):
     return np.sum(np.log(fe(x)))
 
-with open("bench6.csv", "w") as f:
+with open("bench_intel_eigd.csv", "w") as f:
     writer = csv.writer(f)
     
     for L in trange(2, 201, 2):

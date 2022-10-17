@@ -40,7 +40,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
         filter = lambda _: True
 
     # Blockwise calculation of the Chebyshev expansion.
-    W = ceil(1024 ** 2 / X.shape[0])  # 1MB blocks
+    W = min(ceil(1024 ** 2 / X.shape[0]), ceil(X.shape[1]/50))  # 1MB blocks
     K = ceil(X.shape[1] / W)
 
 
@@ -102,7 +102,13 @@ def cheb_poly(X, I, N: int):
 
     # T_n(X) is calculated via the Chebyshev recursion relation.
     for n in range(2, N):
+        # Chebyshev expansion
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
+
+        # Local Krylov
+        # mask = np.abs(T_1.data) < 1e-6
+        # T_1.data[mask] = 0
+        # T_1.eliminate_zeros()
 
         yield T_1
 

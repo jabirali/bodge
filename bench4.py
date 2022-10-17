@@ -22,10 +22,10 @@ def fe(x):
 def entropy(x):
     return np.sum(np.log(fe(x)))
 
-with open("bench6.csv", "w") as f:
+with open("bench4.csv", "w") as f:
     writer = csv.writer(f)
     
-    for L in trange(2, 201, 2):
+    for L in trange(2, 401, 2):
         # Non-superconducting Hamiltonian.
         lattice = CubicLattice((L, L, 1))
         system = Hamiltonian(lattice)
@@ -41,25 +41,12 @@ with open("bench6.csv", "w") as f:
                 H[i, j] = -t * σ0
 
 
-        # t_cheb = time()
-        # Δ = np.mean(fermi(T).order_swave())
-        # t_cheb = time() - t_cheb
-        # writer.writerow([L, 'cheb', t_cheb])
-        # f.flush()
-
-        t_eigs = time()
-        E1 = system.eigenvalues(method='dense')
-        t_eigs = time() - t_eigs
-        writer.writerow([L, 'eigd', t_eigs])
+        t_cheb = time()
+        Δ = np.mean(fermi(T).order_swave())
+        t_cheb = time() - t_cheb
+        writer.writerow([L, 'nagai', t_cheb])
         f.flush()
 
-        # t_eigs = time()
-        # E2 = system.eigenvalues(method='sparse')
-        # t_eigs = time() - t_eigs
-        # writer.writerow([L, 'eigs', t_eigs])
-        # f.flush()
-
-        # writer.writerow([L, 'serr', 1 - entropy(E2)/entropy(E1)])
         writer.writerow([])
 
 
