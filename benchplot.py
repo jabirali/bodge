@@ -20,8 +20,8 @@ def f3(x, a):
 def f3e(x, a):
     return a * x**5
 
-def f4e(x, a, b):
-	return 0.2*np.exp(a*x)
+def f4e(x, a):
+	return a * 2**(x/6.0)
 
 df['t'] = df.groupby(['L', 'M'])['t'].transform('min')
 df.drop_duplicates(inplace=True)
@@ -43,8 +43,9 @@ for method in df.M.unique():
 		case 'diag':
 			plt.plot(L, t, '.', color='#92c5de', label = r'Diagonalization (SciPy)')
 			p, _ = curve_fit(f4e, L[24:], t[24:])
+			print(p)
 			plt.plot(L2, f4e(L2, *p), '-', color='#92c5de', label = None)
-			plt.annotate(r'$\mathcal{O}(e^L)$', (90, 9*3600))
+			plt.annotate(r'$\mathcal{O}(2^{L /6})$', (97, 26*3600))
 		case 'eigd':
 			plt.plot(L, t, '.', color='#0571b0', label = r'Eigenvalues (SciPy)')
 			p, _ = curve_fit(f3, L[10:], t[10:])
@@ -76,11 +77,11 @@ plt.legend()
 plt.grid()
 plt.title(r'$L×L$ lattice on a node with 52 CPU cores and 175 GB RAM')
 plt.yscale('log')
-plt.yticks([1, 4, 15, 60, 4*60, 15*60, 60*60, 4*60*60, 15*60*60], ['1 sec', '4 sec', '15 sec', '1 min', '4 min', '15 min', '1 hour', '4 hours', '15 hours'])
+plt.yticks([1, 4, 15, 60, 4*60, 15*60, 60*60, 4*60*60, 15*60*60, 2*24*60*60], ['1 sec', '4 sec', '15 sec', '1 min', '4 min', '15 min', '1 hour', '4 hours', '15 hours', '48 hours'])
 plt.xticks([16*n for n in range(200//16)])
 plt.xlim([16, 160])
-plt.ylim([1, 15*60*60])
-plt.xlabel(r'Lattice dimension $L/a$')
+plt.ylim([1, 2*24*60*60])
+plt.xlabel(r'Lattice scale $L/a$')
 plt.ylabel('Time per self-consistency iteration')
 # plt.xscale('log')
 plt.tight_layout()

@@ -39,11 +39,19 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
     if filter is None:
         filter = lambda _: True
 
-    # Blockwise calculation of the Chebyshev expansion.
-    W = min(ceil(1024 ** 2 / X.shape[0]), ceil(X.shape[1]/50))  # 1MB blocks
+    # Determine optimal blocksize for parallel calculations. Too few blocks
+    # wastes processor power, while too large blocks wastes memory and cache.
+    W_cpu = ceil(X.shape[1]/mp.cpu_count())  # 1 block/core.
+    W_mem = ceil(1024 ** 2 / X.shape[0])  # 1 MB blocks.
+
+    if W_cpu < W_mem:
+        W = W_cpu
+    else:
+        W = W_cpu * ceil(W_mem / W_cpu)
+
     K = ceil(X.shape[1] / W)
 
-
+    # Blockwise calculation of the Chebyshev expansion.
     def kernel(k):
         # Identity block.
         I_k = idblk(block=k, blocksize=W, dim=X.shape[0])
@@ -102,13 +110,7 @@ def cheb_poly(X, I, N: int):
 
     # T_n(X) is calculated via the Chebyshev recursion relation.
     for n in range(2, N):
-        # Chebyshev expansion
         T_1, T_0 = 2 * (X @ T_1) - T_0, T_1
-
-        # Local Krylov
-        # mask = np.abs(T_1.data) < 1e-6
-        # T_1.data[mask] = 0
-        # T_1.eliminate_zeros()
 
         yield T_1
 

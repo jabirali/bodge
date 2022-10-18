@@ -15,8 +15,8 @@ from bodge import *
 # ------------------------------------------------------------
 
 # Physical parameters.
-Lx = 100
-Ly = 100
+Lx = 24
+Ly = 24
 
 t = 1
 μ = 0.1
@@ -30,7 +30,7 @@ R = None
 # Non-superconducting Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
-fermi = FermiMatrix(system, 1000)
+fermi = FermiMatrix(system, 2000)
 
 with system as (H, Δ, V):
     for i in lattice.sites():
