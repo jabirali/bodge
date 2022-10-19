@@ -43,12 +43,8 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
     # wastes processor power, while too large blocks wastes memory and cache.
     W_cpu = ceil(X.shape[1]/mp.cpu_count())  # 1 block/core.
     W_mem = ceil(1024 ** 2 / X.shape[0])  # 1 MB blocks.
-
-    if W_cpu < W_mem:
-        W = W_cpu
-    else:
-        W = W_cpu * ceil(W_mem / W_cpu)
-
+    
+    W = min(W_cpu, W_mem)
     K = ceil(X.shape[1] / W)
 
     # Blockwise calculation of the Chebyshev expansion.
