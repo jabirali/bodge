@@ -24,7 +24,7 @@ fermi = FermiMatrix(system, 2000)
 
 D = np.zeros((Lx,Ly,3,3))
 
-def dvector(gap: float, desc: str):
+def dvector(desc: str):
     # Basis vectors for spin axes.
     e_x = np.array([[1, 0, 0]])
     e_y = np.array([[0, 1, 0]])
@@ -66,7 +66,7 @@ def dvector(gap: float, desc: str):
 
     return deval
 
-Δ_p = dvector(0.1 * t, "e_z * (p_x + jp_y)")
+Δ_p = dvector("0.125 * (e_x + je_y) * (p_x + jp_y)")
 
 with system as (H, Δ, V):
     for i in lattice.sites():
