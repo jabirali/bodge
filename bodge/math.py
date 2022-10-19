@@ -17,11 +17,15 @@ from .typing import *
 σ2 = np.array([[0, -1j], [+1j, 0]], dtype=np.complex128)
 σ3 = np.array([[+1, 0], [0, -1]], dtype=np.complex128)
 
+σ = np.stack([σ1, σ2, σ3])
+
 # Compact notation for imaginary versions.
 jσ0 = 1j * σ0
 jσ1 = 1j * σ1
 jσ2 = 1j * σ2
 jσ3 = 1j * σ3
+
+jσ = np.stack([jσ1, jσ2, jσ3])
 
 
 def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> sps.csr_matrix:
@@ -43,7 +47,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
     # wastes processor power, while too large blocks wastes memory and cache.
     W_cpu = ceil(X.shape[1]/mp.cpu_count())  # 1 block/core.
     W_mem = ceil(1024 ** 2 / X.shape[0])  # 1 MB blocks.
-    
+
     W = min(W_cpu, W_mem)
     K = ceil(X.shape[1] / W)
 

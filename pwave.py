@@ -25,6 +25,7 @@ fermi = FermiMatrix(system, 2000)
 D = np.zeros((Lx,Ly,3,3))
 
 def dvector(desc: str):
+    """Convert a d-vector expression into a p-wave gap function."""
     # Basis vectors for spin axes.
     e_x = np.array([[1, 0, 0]])
     e_y = np.array([[0, 1, 0]])
@@ -43,28 +44,34 @@ def dvector(desc: str):
     jp_y = 1j * p_y
     jp_z = 1j * p_z
 
-    # Convert the expression to numerics.
-    D = eval(desc)  # TODO: Make this safe again.
-    σ = np.stack([σ1 @ jσ2, σ2 @ jσ2, σ3 @ jσ2])
+    # Convert the d-vector expression to a 3x3 numerical matrix.
+    D = eval(desc)
 
-    # Construct the actual dvector in matrix form
-    d = np.einsum('ij,jnm->inm', D, σ)
+    # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = p ⋅ (D σ jσ2)
+    # for p along the three cardinal directions {e_x, e_y, e_z}.
+    Δ = np.einsum('pq,qab,bc -> pac', D, σ, jσ2)
 
-    # Function for evaluating the dvector.
-    def deval(i: Coord, j: Coord):
-        diff = Coord(np.array(j) - np.array(i))
+    # Function for evaluating Δ(p) on the lattice.
+    def Δ_p(i: Coord, j: Coord):
+        diff = (j[0] - i[0], j[1] - i[1], j[2] - i[2])
 
         match diff:
             case (1, 0, 0):
-                return d[0]
+                return +Δ[0]
             case (0, 1, 0):
-                return d[1]
+                return +Δ[1]
             case (0, 0, 1):
-                return d[2]
+                return +Δ[2]
+            case (-1, 0, 0):
+                return -Δ[0]
+            case (0, -1, 0):
+                return -Δ[1]
+            case (0, 0, -1):
+                return -Δ[2]
             case _:
                 return 0*σ0
 
-    return deval
+    return Δ_p
 
 Δ_p = dvector("0.125 * (e_x + je_y) * (p_x + jp_y)")
 
