@@ -4,6 +4,7 @@ import csv
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.linalg import norm
 from tqdm import tqdm, trange
 
 from bodge import *
@@ -53,32 +54,29 @@ def dvector(desc: str):
 
     # Function for evaluating Δ(p) on the lattice.
     def Δ_p(i: Coord, j: Coord):
-        diff = (j[0] - i[0], j[1] - i[1], j[2] - i[2])
-
-        match diff:
-            case (1, 0, 0):
-                return +Δ[0]
-            case (0, 1, 0):
-                return +Δ[1]
-            case (0, 0, 1):
-                return +Δ[2]
-            case (-1, 0, 0):
-                return -Δ[0]
-            case (0, -1, 0):
-                return -Δ[1]
-            case (0, 0, -1):
-                return -Δ[2]
-            case _:
-                return 0*σ0
+        δ = np.array(j) - np.array(i)
+        if norm(δ) == 1:
+            return np.einsum('i,iab -> ab', δ, Δ)
+        else:
+            return 0 * σ0
 
     return Δ_p
 
-Δ_p = dvector("0.125 * (e_x + je_y) * (p_x + jp_y)")
+Δ_p = dvector("e_z * p_y")
+print(Δ_p((0,0,0), (1,0,0)))
+print(Δ_p((0,0,0), (0,1,0)))
+print(Δ_p((0,1,0), (0,0,0)))
 
-with system as (H, Δ, V):
-    for i in lattice.sites():
-        H[i, i] = -μ * σ0
+Δ_p = dvector("p_y * e_z")
+print(Δ_p((0,0,0), (1,0,0)))
+print(Δ_p((0,0,0), (0,1,0)))
+print(Δ_p((0,1,0), (0,0,0)))
 
-    for i, j in lattice.bonds():
-        H[i, j] = -t * σ0
-        Δ[i, j] = -Δ_p(i, j)
+# with system as (H, Δ, V):
+#     for i in lattice.sites():
+#         H[i, i] = -μ * σ0
+
+#     for i, j in lattice.bonds(axis=1):
+#         H[i, j] = -t * σ0
+#         Δ[i, j] = -Δ_p(i, j)
+#         print(Δ_p(i,j))
