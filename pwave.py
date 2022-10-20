@@ -28,9 +28,9 @@ D = np.zeros((Lx,Ly,3,3))
 def dvector(desc: str):
     """Convert a d-vector expression into a p-wave gap function."""
     # Basis vectors for spin axes.
-    e_x = np.array([[1, 0, 0]])
-    e_y = np.array([[0, 1, 0]])
-    e_z = np.array([[0, 0, 1]])
+    e_x = np.array([[1], [0], [0]])
+    e_y = np.array([[0], [1], [0]])
+    e_z = np.array([[0], [0], [1]])
 
     je_x = 1j * e_x
     je_y = 1j * e_y
@@ -48,15 +48,16 @@ def dvector(desc: str):
     # Convert the d-vector expression to a 3x3 numerical matrix.
     D = eval(desc)
 
-    # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = p ⋅ (D σ jσ2)
-    # for p along the three cardinal directions {e_x, e_y, e_z}.
-    Δ = np.einsum('pq,qab,bc -> pac', D, σ, jσ2)
+    # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = [(D p) ⋅ σ] jσ2.
+    # In practice, we do this by calculating Δ = Dᵀ σ jσ2, such
+    # that we simply end up with the gap matrix Δ(p) = Δ ⋅ p.
+    Δ = np.einsum('kp,kab,bc -> pac', D, σ, jσ2)
 
     # Function for evaluating Δ(p) on the lattice.
     def Δ_p(i: Coord, j: Coord):
         δ = np.array(j) - np.array(i)
         if norm(δ) == 1:
-            return np.einsum('i,iab -> ab', δ, Δ)
+            return np.einsum('iab,i -> ab', Δ, δ)
         else:
             return 0 * σ0
 
