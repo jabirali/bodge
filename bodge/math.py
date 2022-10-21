@@ -34,6 +34,10 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
     X = sps.csr_matrix(X)
     S = sps.csr_matrix(S)
 
+    # Discard intentionally left zero-blocks from the matrices.
+    X.eliminate_zeros()
+    S.eliminate_zeros()
+
     # Coefficients for the kernel polynomial method.
     f = cheb_coeff(F, N)
     g = cheb_kern(N)
