@@ -264,3 +264,10 @@ class Hamiltonian:
 
         plt.tight_layout()
         plt.show()
+
+    def compile(self):
+        """Return an optimal numerical representation of the matrix."""
+        H = sps.csr_matrix(self.matrix)
+        H.eliminate_zeros()
+
+        return H
