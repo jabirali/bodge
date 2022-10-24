@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from time import time
 import csv
 
 import matplotlib.pyplot as plt
@@ -10,7 +11,13 @@ from tqdm import tqdm, trange
 from bodge import *
 from bodge.typing import Coord
 
-Lx = 24
+# TODO:
+# - Test bound state by getting k=6 lowest positive eigenvalues.
+# - Extract the eigenvectors as function of lattice coords: |u[lattice[i]]|^2 + |v[lattice[i]]^2 ?
+# - Plot eigenvectors with eigenvalues below some threshold with different colors
+# Alternatively, use Nagai's Ax=b solving of resolvent operator with sparse A.
+
+Lx = 40
 Ly = 24
 
 t = 1
@@ -73,11 +80,47 @@ print(Δ_p((0,0,0), (1,0,0)))
 print(Δ_p((0,0,0), (0,1,0)))
 print(Δ_p((0,1,0), (0,0,0)))
 
-# with system as (H, Δ, V):
-#     for i in lattice.sites():
-#         H[i, i] = -μ * σ0
+with system as (H, Δ, V):
+    for i in lattice.sites():
+        if not (i[0] > 8 and i[0] < Lx-8 and i[1] > 8):
+            H[i, i] = -μ * σ0
 
-#     for i, j in lattice.bonds(axis=1):
-#         H[i, j] = -t * σ0
-#         Δ[i, j] = -Δ_p(i, j)
-#         print(Δ_p(i,j))
+    for i, j in lattice.bonds():
+        if not (i[0] > 8 and i[0] < Lx-8 and i[1] > 8) \
+        and not (j[0] > 8 and j[0] < Lx-8 and j[1] > 8):
+            H[i, j] = -t * σ0
+
+tic = time()
+print(system.matrix.tocsr().nnz)
+F = fermi(T)
+print(time() - tic)
+
+with system as (H, Δ, V):
+    for i in lattice.sites():
+        H[i, i] = -μ * σ0
+
+    for i, j in lattice.bonds():
+        H[i, j] = -t * σ0
+
+tic = time()
+print(system.matrix.tocsr().nnz)
+F = fermi(T)
+print(time() - tic)
+
+Lx = 24
+Ly = 24
+
+t = 1
+μ = 0.1
+U = 1.5
+
+T = 1e-6 * t
+
+lattice = CubicLattice((Lx, Ly, 1))
+system = Hamiltonian(lattice)
+fermi = FermiMatrix(system, 2000)
+
+tic = time()
+print(system.matrix.tocsr().nnz)
+F = fermi(T)
+print(time() - tic)
