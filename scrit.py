@@ -17,7 +17,7 @@ Ly = 20
 
 t = 1.0
 μ = 0.0
-U = t/3
+U = t / 3
 
 # Non-superconducting Hamiltonian.
 lattice = CubicLattice((Lx, Ly, 1))
@@ -40,7 +40,7 @@ for N in trange(200, 20000, 200):
     T = 1e-6
     Δ_min = 0.00
     Δ_max = 0.03
-    Δ0 = (Δ_min + Δ_max)/2
+    Δ0 = (Δ_min + Δ_max) / 2
 
     fermi = FermiMatrix(system, N)
     for n in trange(12, desc="Δ0", unit="val"):
@@ -60,7 +60,7 @@ for N in trange(200, 20000, 200):
         else:
             Δ_max = Δ0
 
-        Δ0 = (Δ_min + Δ_max)/2
+        Δ0 = (Δ_min + Δ_max) / 2
         print(f"\n\nΔ0({N}): {Δ0}\n")
 
 # Δ0 = 0.009936523437500002 * t

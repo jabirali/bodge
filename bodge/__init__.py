@@ -2,6 +2,7 @@ from .fermi import *
 from .hamiltonian import *
 from .lattice import *
 from .math import *
+from .utils import *
 
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.1.0"
@@ -9,6 +10,7 @@ __all__ = [
     "CubicLattice",
     "Hamiltonian",
     "FermiMatrix",
+    "dvector",
     "π",
     "σ",
     "σ0",

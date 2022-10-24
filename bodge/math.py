@@ -28,7 +28,7 @@ jσ3 = 1j * σ3
 jσ = np.stack([jσ1, jσ2, jσ3])
 
 
-def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> sps.csr_matrix:
+def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps.csr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # Use CSR matrices for numerical performance.
     X = sps.csr_matrix(X)
@@ -49,8 +49,8 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter = None) -> s
 
     # Determine optimal blocksize for parallel calculations. Too few blocks
     # wastes processor power, while too large blocks wastes memory and cache.
-    W_cpu = ceil(X.shape[1]/mp.cpu_count())  # 1 block/core.
-    W_mem = ceil(1024 ** 2 / X.shape[0])  # 1 MB blocks.
+    W_cpu = ceil(X.shape[1] / mp.cpu_count())  # 1 block/core.
+    W_mem = ceil(1024**2 / X.shape[0])  # 1 MB blocks.
 
     W = min(W_cpu, W_mem)
     K = ceil(X.shape[1] / W)

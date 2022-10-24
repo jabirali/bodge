@@ -1,8 +1,8 @@
+import multiprocess as mp
 import numpy as np
 from scipy.linalg import eigh, inv
 from scipy.sparse import bsr_matrix, coo_matrix, identity
-from scipy.sparse.linalg import norm, eigsh
-import multiprocess as mp
+from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
 from .math import *
@@ -74,7 +74,6 @@ class Hamiltonian:
 
         # Simplify direct access to the underlying data structure.
         self.data: Array[np.complex128] = self.matrix.data
-
 
         # Storage for any Hubbard-type potentials on the lattice.
         self.pot: dict[Coords, float] = {}
@@ -205,13 +204,18 @@ class Hamiltonian:
         Due to particle-hole symmetry, only positive eigenvalues are calculated.
         Note that this method is inefficient since it uses dense matrices.
         """
-        if method == 'dense':
+        if method == "dense":
             H = self.scale * self.matrix.todense()
-            E = eigh(H, overwrite_a=True, eigvals_only=True, driver='evr')
-        elif method == 'sparse':
+            E = eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
+        elif method == "sparse":
             H = self.scale * self.matrix
-            E = eigsh(H, H.shape[0] - 2, which='SM', tol=1e-8, return_eigenvectors=False,)
-
+            E = eigsh(
+                H,
+                H.shape[0] - 2,
+                which="SM",
+                tol=1e-8,
+                return_eigenvectors=False,
+            )
 
         return np.array(sorted(E_k for E_k in E if E_k > 0))
 
