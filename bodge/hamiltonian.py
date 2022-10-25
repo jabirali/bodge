@@ -1,7 +1,7 @@
 import multiprocess as mp
 import numpy as np
 from scipy.linalg import eigh, inv
-from scipy.sparse import bsr_matrix, coo_matrix, identity
+from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity
 from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
@@ -178,70 +178,12 @@ class Hamiltonian:
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
     @typecheck
-    def diagonalize(self) -> tuple[Array, Array]:
-        """Calculate the exact eigenstates of the system via direct diagonalization.
+    def compile(self) -> csr_matrix:
+        """Return an optimal numerical representation of the matrix."""
+        H = sps.csr_matrix(self.matrix)
+        H.eliminate_zeros()
 
-        This calculates the eigenvalues and eigenvectors of the system. Due to
-        the particle-hole symmetry, only positive eigenvalues are calculated.
-        Note that this method is inefficient since it uses dense matrices; it
-        is meant as a benchmark, not for actual large-scale calculations.
-        """
-        # Calculate the relevant eigenvalues and eigenvectors.
-        H = self.scale * self.matrix.todense()
-        eigval, eigvec = eigh(H, subset_by_value=(0, np.inf))
-
-        # Restructure the eigenvectors to have the format eigvec[n, i, α],
-        # where n corresponds to eigenvalue E[n], i is a position index, and
-        # α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
-        eigvec = eigvec.T.reshape((eigval.size, -1, 4))
-
-        return eigval, eigvec
-
-    @typecheck
-    def eigenvalues(self, method: str) -> Array:
-        """Calculate the exact eigenvalues of the system.
-
-        Due to particle-hole symmetry, only positive eigenvalues are calculated.
-        Note that this method is inefficient since it uses dense matrices.
-        """
-        if method == "dense":
-            H = self.scale * self.matrix.todense()
-            E = eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
-        elif method == "sparse":
-            H = self.scale * self.matrix
-            E = eigsh(
-                H,
-                H.shape[0] - 2,
-                which="SM",
-                tol=1e-8,
-                return_eigenvectors=False,
-            )
-
-        return np.array(sorted(E_k for E_k in E if E_k > 0))
-
-    def spectral(self, energies: ArrayLike, resolution: float = 1e-2) -> list[Array]:
-        """Calculate the exact spectral function of the system via direct inversion.
-
-        Note that this method is quite inefficient since it uses dense matrices;
-        it is meant as a benchmark, not for actual large-scale calculations.
-        """
-        # Restore the Hamiltonian scale and switch to dense matrices.
-        H = self.scale * self.matrix.todense()
-        I = self.identity.todense()
-
-        # The resolution is controlled by the imaginary energy.
-        η = self.scale * resolution * 1j
-
-        # Calculate the spectral function via direct inversion.
-        spectral = []
-        for ω in energies:
-            Gᴿ = inv((ω + η) * I - H)
-            Gᴬ = inv((ω - η) * I - H)
-            A = (Gᴿ - Gᴬ) / (-2j * π)
-
-            spectral.append(A)
-
-        return spectral
+        return H
 
     def plot(self, grid: bool = False):
         """Visualize the sparsity structure of the generated matrix."""
@@ -264,10 +206,3 @@ class Hamiltonian:
 
         plt.tight_layout()
         plt.show()
-
-    def compile(self):
-        """Return an optimal numerical representation of the matrix."""
-        H = sps.csr_matrix(self.matrix)
-        H.eliminate_zeros()
-
-        return H

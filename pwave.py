@@ -17,8 +17,8 @@ from bodge import *
 # - Plot eigenvectors with eigenvalues below some threshold with different colors
 # Alternatively, use Nagai's Ax=b solving of resolvent operator with sparse A.
 
-Lx = 24
-Ly = 24
+Lx = 32
+Ly = 32
 
 t = 1
 μ = 0
@@ -28,7 +28,7 @@ T = 1e-6 * t
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 
-Δ_0 = t
+Δ_0 = 0.1 * t
 Δ_p = dvector("e_z * p_y")
 
 with system as (H, Δ, V):
@@ -39,25 +39,35 @@ with system as (H, Δ, V):
         H[i, j] = -t * σ0
         Δ[i, j] = -Δ_0 * Δ_p(i, j)
 
-H = system.compile()
+# H = system.compile()
 
-eigval, eigvec = eigsh(system.scale * H, 8, which="SM")
-# print(eigvec.shape)
-eigvec = eigvec.T.reshape((eigval.size, -1, 4))
+A = system.spectral([0.0])[0]
 
-# eigval, eigvec = system.diagonalize()
+# eigval, eigvec = eigsh(system.scale * H, 8, which="SM")
+# # print(eigvec.shape)
+# eigvec = eigvec.T.reshape((eigval.size, -1, 4))
 
-# bound = []
-minim = np.min(np.abs(eigval))
+# # eigval, eigvec = system.diagonalize()
+
+# # bound = []
+# minim = np.min(np.abs(eigval))
+
+# D = np.zeros((Lx, Ly))
+# for n, ε_n in enumerate(eigval):
+#     if ε_n > 0 and np.allclose(ε_n, minim):
+#         for i in lattice.sites():
+#             # print(i, lattice[i])
+#             for r in range(4):
+#                 D[i[0], i[1]] += np.abs(eigvec[n, lattice[i], r]) ** 2
+# print(A)
 
 D = np.zeros((Lx, Ly))
-for n, ε_n in enumerate(eigval):
-    if ε_n > 0 and np.allclose(ε_n, minim):
-        for i in lattice.sites():
-            # print(i, lattice[i])
-            for r in range(4):
-                D[i[0], i[1]] += np.abs(eigvec[n, lattice[i], r]) ** 2
+for i in lattice.sites():
+    D[i[0], i[1]] += np.real(A[0 + 4 * lattice[i], 0 + 4 * lattice[i]])
+    D[i[0], i[1]] += np.real(A[1 + 4 * lattice[i], 1 + 4 * lattice[i]])
+
 plt.imshow(D)
+plt.colorbar()
 plt.show()
 # bound.append(np.abs(eigvec[i]))
 
