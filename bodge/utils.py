@@ -36,7 +36,7 @@ def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3)
     I = system.identity.todense()
 
     # The resolution is controlled by the imaginary energy.
-    η = system.scale * resolution * 1j
+    η = resolution * 1j
 
     # Calculate the spectral function via direct inversion.
     spectral = []
