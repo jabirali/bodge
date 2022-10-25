@@ -31,10 +31,10 @@ def test_bonds():
     lat = CubicLattice((2, 3, 5))
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=0):
         # Verify neighbors along the x-axis.
-        assert x2 == x1 + 1 and y2 == y1 and z2 == z1
+        assert (x2 == x1 + 1 or x2 == x1 - 1) and y2 == y1 and z2 == z1
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=1):
         # Verify neighbors along the y-axis.
-        assert x2 == x1 and y2 == y1 + 1 and z2 == z1
+        assert x2 == x1 and (y2 == y1 + 1 or y2 == y1 - 1) and z2 == z1
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=2):
         # Verify neighbors along the z-axis.
-        assert x2 == x1 and y2 == y1 and z2 == z1 + 1
+        assert x2 == x1 and y2 == y1 and (z2 == z1 + 1 or z2 == z1 - 1)

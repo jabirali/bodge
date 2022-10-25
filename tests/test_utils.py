@@ -1,6 +1,7 @@
-from bodge.hamiltonian import *
-from bodge.lattice import *
-from bodge.utils import *
+import numpy as np
+from scipy.linalg import eigh
+
+from bodge import *
 
 
 def test_diagonalize():
@@ -111,3 +112,31 @@ def test_dvector_pwave():
                     assert np.allclose(+Δ(i0, j1), -Δ(j1, i0))
                     assert np.allclose(+Δ(i0, j2), -Δ(j2, i0))
                     assert np.allclose(+Δ(i0, j3), -Δ(j3, i0))
+
+
+def test_dvector_hermitian():
+    """Test that d-vector-constructed Hamiltonians are Hermitian."""
+    lattice = CubicLattice((10, 10, 1))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            H[i, i] = -0.1 * σ0
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+
+    for desc in [
+        "e_x * p_x",
+        "e_z * p_y",
+        "e_y * jp_z",
+        "e_z * (p_x + jp_y)",
+        "(e_x + je_y) * (p_y + jp_z)",
+    ]:
+        Δ_p = dvector(desc)
+        with system as (H, Δ, V):
+            for i, j in lattice.bonds():
+                Δ[i, j] = -0.1 * Δ_p(i, j)
+
+        H = system.matrix.todense()
+        assert np.allclose(H, H.T.conj())

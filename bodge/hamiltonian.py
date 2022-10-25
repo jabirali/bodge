@@ -118,30 +118,21 @@ class Hamiltonian:
         # Process hopping terms: H[i, j].
         for (i, j), val in self.hopp.items():
             # Find this matrix block.
-            k1 = self.index(i, j)
+            k = self.index(i, j)
 
-            # Update electron-electron and hole-hole parts.
-            self.data[k1, 0:2, 0:2] = +val
-            self.data[k1, 2:4, 2:4] = -val.conj()
-
-            # Inverse process for non-diagonal contributions.
-            if i != j:
-                k2 = self.index(j, i)
-                self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
+            # Update respecting electron-hole symmetry.
+            self.data[k, 0:2, 0:2] = +val
+            self.data[k, 2:4, 2:4] = -val.conj()
 
         # Process pairing terms: Δ[i, j].
         for (i, j), val in self.pair.items():
             # Find this matrix block.
             k1 = self.index(i, j)
+            k2 = self.index(j, i)
 
-            # Update electron-hole and hole-electron parts.
+            # Update respecting Hermitian symmetry.
             self.data[k1, 0:2, 2:4] = +val
-            self.data[k1, 2:4, 0:2] = +val.T.conj()
-
-            # Inverse process for non-diagonal contributions.
-            if i != j:
-                k2 = self.index(j, i)
-                self.data[[[k2]], ...] = np.swapaxes(self.data[[[k1]], ...], 2, 3).conj()
+            self.data[k2, 2:4, 0:2] = +val.T.conj()
 
         # Verify that the matrix is Hermitian.
         if np.max(self.matrix - self.matrix.getH()) > 1e-6:

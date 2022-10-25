@@ -28,51 +28,41 @@ T = 1e-6 * t
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 
-Δ_0 = 0.1 * t
-Δ_p = dvector("e_z * p_y")
+for desc in [
+    "e_x * p_x",
+    "e_x * p_y",
+    "e_x * (p_x + ip_y)",
+]:
+    Δ_0 = 0.1 * t
+    Δ_p = dvector(desc)
 
-with system as (H, Δ, V):
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            H[i, i] = -μ * σ0
+            # Δ[i, i] = -Δ_0 * jσ2
+
+        for i, j in lattice.bonds():
+            H[i, j] = -t * σ0
+            Δ[i, j] = -Δ_0 * Δ_p(i, j)
+
+    A = spectral(system, [0.0], 1e-5)[0]
+
+    D = np.zeros((Lx, Ly))
     for i in lattice.sites():
-        H[i, i] = -μ * σ0
+        for r in range(4):
+            n = 4 * lattice[i]
+            D[i[0], i[1]] += np.real(A[n + 0, n + 0] + A[n + 1, n + 1]) / (Lx * Ly)
 
-    for i, j in lattice.bonds():
-        H[i, j] = -t * σ0
-        Δ[i, j] = -Δ_0 * Δ_p(i, j)
+    print(desc)
+    plt.imshow(D.T, vmin=0, origin="lower")
+    plt.xticks([0, 16, 32, 48, 64])
+    plt.yticks([0, 16, 32, 48, 64])
+    plt.colorbar()
+    plt.show()
+    # bound.append(np.abs(eigvec[i]))
 
-# H = system.compile()
+    # print(eigvec)
+    # if np.allclose(ε_i, )
+    # boundstate = [eigvec[i] for i ]
 
-A = system.spectral([0.0])[0]
-
-# eigval, eigvec = eigsh(system.scale * H, 8, which="SM")
-# # print(eigvec.shape)
-# eigvec = eigvec.T.reshape((eigval.size, -1, 4))
-
-# # eigval, eigvec = system.diagonalize()
-
-# # bound = []
-# minim = np.min(np.abs(eigval))
-
-# D = np.zeros((Lx, Ly))
-# for n, ε_n in enumerate(eigval):
-#     if ε_n > 0 and np.allclose(ε_n, minim):
-#         for i in lattice.sites():
-#             # print(i, lattice[i])
-#             for r in range(4):
-#                 D[i[0], i[1]] += np.abs(eigvec[n, lattice[i], r]) ** 2
-# print(A)
-
-D = np.zeros((Lx, Ly))
-for i in lattice.sites():
-    D[i[0], i[1]] += np.real(A[0 + 4 * lattice[i], 0 + 4 * lattice[i]])
-    D[i[0], i[1]] += np.real(A[1 + 4 * lattice[i], 1 + 4 * lattice[i]])
-
-plt.imshow(D)
-plt.colorbar()
-plt.show()
-# bound.append(np.abs(eigvec[i]))
-
-# print(eigvec)
-# if np.allclose(ε_i, )
-# boundstate = [eigvec[i] for i ]
-
-# print(eigvals)
+    # print(eigvals)

@@ -25,7 +25,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
     return eigval, eigvec
 
 
-def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-2) -> list[Array]:
+def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3) -> list[Array]:
     """Calculate the exact spectral function of the system via direct inversion.
 
     Note that this method is quite inefficient since it uses dense matrices;

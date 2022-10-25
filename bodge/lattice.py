@@ -12,8 +12,6 @@ class Lattice:
     of graph theory, this class lets us traverse all the nodes and links of a
     simple graph. The actual graph traversal must be defined by subclassing
     `Lattice` and implementing all methods that raise `NotImplementedError`.
-    Note that the `.bonds` method should yield the links in a "sorted" way:
-    i.e. it should yield ((0,0,0), (0,0,1)) but not ((0,0,1), (0,0,0)).
 
     Note that you are free to implement optional arguments to these methods.
     For instance, it may be useful to iterate over one sublattice at a time
@@ -101,15 +99,18 @@ class CubicLattice(Lattice):
                 for y in range(self.shape[1]):
                     for z in range(self.shape[2]):
                         yield (x, y, z), (x + 1, y, z)
+                        yield (x + 1, y, z), (x, y, z)
         elif axis == 1:
             # Neighbors along y-axis.
             for x in range(self.shape[0]):
                 for y in range(self.shape[1] - 1):
                     for z in range(self.shape[2]):
                         yield (x, y, z), (x, y + 1, z)
+                        yield (x, y + 1, z), (x, y, z)
         elif axis == 2:
             # Neighbors along z-axis.
             for x in range(self.shape[0]):
                 for y in range(self.shape[1]):
                     for z in range(self.shape[2] - 1):
                         yield (x, y, z), (x, y, z + 1)
+                        yield (x, y, z + 1), (x, y, z)
