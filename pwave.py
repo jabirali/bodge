@@ -14,11 +14,11 @@ from tqdm import tqdm, trange
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 200
-Ly = 200
+Lx = 100
+Ly = 100
 
 t = 1
-μ = 0
+μ = -0.1
 
 Δ_0 = 0.1 * t
 
@@ -27,7 +27,7 @@ system = Hamiltonian(lattice)
 
 # d = dvector("(e_x + je_y) * p_x")
 # d = dvector("e_z * (p_x + jp_y)")
-d = dvector("e_z * p_x")
+d = dvector("e_z * (p_x + jp_y)")
 
 with system as (H, Δ, V):
     for i in lattice.sites():
@@ -36,18 +36,23 @@ with system as (H, Δ, V):
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
-        Δ[i, j] = -Δ_0 * d(i, j)
+        # Δ[i, j] = -Δ_0 * d(i, j) / 2
 
 sites = [
-    (0, Ly // 2, 0),
-    (Lx // 2, 0, 0),
+    # (0, Ly // 2, 0),
+    # (Lx // 2, 0, 0),
     (Lx // 2, Ly // 2, 0),
 ]
 
+energies = np.linspace(0, 50 * Δ_0, 1000)
 
 t = time()
 
-dos = ldos(system, sites, [0], 1e-2 * Δ_0)
-print(dos)
+dos = ldos(system, sites, energies, 0.3 * Δ_0)
+
+# print(dos.keys())
+plt.figure()
+plt.plot(energies, dos.values())
+plt.show()
 
 print("\n", time() - t, "s")

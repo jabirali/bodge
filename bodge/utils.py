@@ -17,18 +17,23 @@ def ldos(system, sites, energies, resolution):
     """
     dos = {}
 
-    H = system.scale * system.compile()
+    H = system.compile()
     I = system.identity.tocsr()
     η = resolution
 
     for ε in energies:
-        Rinv = (-1j * π) * ((ε + η * 1j) * I - H)
+        E = (ε + η * 1j) / system.scale
+        Rinv = E * I - H
 
         for i in sites:
             n = 4 * system.lattice[i]
-            e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
+            e_n = np.zeros((H.shape[1], 1))
+            e_n[n] = 1
+
+            # e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
+
             r_n = spsolve(Rinv, e_n)
-            dos[i, ε] = np.real(r_n[n])
+            dos[i, ε] = -np.imag(r_n[n]) / (π * system.scale)
 
     return dos
 
