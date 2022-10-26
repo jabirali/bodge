@@ -12,9 +12,10 @@ from scipy.sparse.linalg import eigsh, spsolve
 from tqdm import tqdm, trange
 
 from bodge import *
+from bodge.utils import ldos
 
-Lx = 100
-Ly = 100
+Lx = 200
+Ly = 200
 
 t = 1
 μ = 0
@@ -24,7 +25,9 @@ t = 1
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 
-d = dvector("e_x * (p_x + jp_y)")
+# d = dvector("(e_x + je_y) * p_x")
+# d = dvector("e_z * (p_x + jp_y)")
+d = dvector("e_z * p_x")
 
 with system as (H, Δ, V):
     for i in lattice.sites():
@@ -35,26 +38,16 @@ with system as (H, Δ, V):
         H[i, j] = -t * σ0
         Δ[i, j] = -Δ_0 * d(i, j)
 
-# D = np.zeros(20)
-# for ε in np.linalg()
-
-i0 = lattice[(0, Ly // 2, 0)]
-i1 = lattice[(Lx // 2, 0, 0)]
-i2 = lattice[(Lx // 2, Ly // 2, 0)]
-
-H = system.scale * system.compile()
-I = system.identity.tocsr()
-
-ε = 0.1 * Δ_0
-η = 1e-3 * Δ_0
-Hz = (-1j / π) * ((ε + 1j * η) * I - H)
+sites = [
+    (0, Ly // 2, 0),
+    (Lx // 2, 0, 0),
+    (Lx // 2, Ly // 2, 0),
+]
 
 
 t = time()
 
-for ii in [i0, i1, i2]:
-    e = coo_matrix(([1], ([4 * ii], [0])), shape=(H.shape[1], 1)).tocsr()
-    print(np.real(spsolve(Hz, e)[4 * ii]))
-
+dos = ldos(system, sites, [0], 1e-2 * Δ_0)
+print(dos)
 
 print("\n", time() - t, "s")

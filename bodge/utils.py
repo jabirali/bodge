@@ -1,8 +1,36 @@
 import scipy.linalg as sla
+from scipy.sparse.linalg import spsolve
 
 from .hamiltonian import *
 from .math import *
 from .typing import *
+
+
+def ldos(system, sites, energies, resolution):
+    """Calculate the local density of states via a resolvent operator approach.
+
+    We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
+    divided into vectors R(ε) = [r_1 ... r_N] and I = [e_1 ... e_N]. Diagonal
+    elements of the resolvent matrix correspond to the density of states. By
+    calculating one vector at a time via a sparse linear solver `spsolve`, the
+    local density of states can be efficiently calculated at specific points.
+    """
+    dos = {}
+
+    H = system.scale * system.compile()
+    I = system.identity.tocsr()
+    η = resolution
+
+    for ε in energies:
+        Rinv = (-1j * π) * ((ε + η * 1j) * I - H)
+
+        for i in sites:
+            n = 4 * system.lattice[i]
+            e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
+            r_n = spsolve(Rinv, e_n)
+            dos[i, ε] = np.real(r_n[n])
+
+    return dos
 
 
 def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
