@@ -3,7 +3,7 @@
 import csv
 from time import time
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import eigh, solve
@@ -14,8 +14,8 @@ from tqdm import tqdm, trange
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 100
-Ly = 100
+Lx = 300
+Ly = 300
 
 t = 1
 μ = -0.1
@@ -44,15 +44,16 @@ sites = [
     (Lx // 2, Ly // 2, 0),
 ]
 
-energies = np.linspace(0, 50 * Δ_0, 1000)
+energies = np.linspace(0, 2 * Δ_0, 20)
+# energies = [0, 0.001]
 
 t = time()
 
 dos = ldos(system, sites, energies, 0.3 * Δ_0)
 
 # print(dos.keys())
-plt.figure()
-plt.plot(energies, dos.values())
-plt.show()
+# plt.figure(
+# plt.plot(energies, dos.values())
+# plt.show()
 
 print("\n", time() - t, "s")

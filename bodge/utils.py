@@ -19,21 +19,39 @@ def ldos(system, sites, energies, resolution):
 
     H = system.compile()
     I = system.identity.tocsr()
-    η = resolution
+    ε = [energy / system.scale for energy in energies]
+    η = resolution / system.scale
 
-    for ε in energies:
-        E = (ε + η * 1j) / system.scale
-        Rinv = E * I - H
+    for n, ε_n in enumerate(ε):
+        A = (ε_n + η * 1j) * I - H
+
+        # M = A + 0.1j * I
+        # ilu = spilu(M)
+        # Mx = lambda x: ilu.solve(x)
+        # M = LinearOperator(A.shape, Mx)
 
         for i in sites:
             n = 4 * system.lattice[i]
-            e_n = np.zeros((H.shape[1], 1))
-            e_n[n] = 1
+            e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
 
-            # e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
+            # x_n = e_n.copy()
+            # e_n = np.zeros((H.shape[1], 1))
+            # e_n[n] = 1
 
-            r_n = spsolve(Rinv, e_n)
-            dos[i, ε] = -np.imag(r_n[n]) / (π * system.scale)
+            # print(A.shape)
+            # print(e_n.shape)
+
+            # x_n, err = cg(A, e_n.todense(), x_n, tol=1e-3)
+            # x_n, err = cg(A, e_n.todense(), tol=1e-6, M=M)
+            # x_n, err = gmres(A, e_n.todense(), tol=1e-2)
+            # x_n, err = qmr(A, e_n.todense(), tol=1e-2)
+            # x_n, err = gcrotmk(A, e_n.todense(), tol=1e-2)
+            # print(err)
+
+            x_n = spsolve(A, e_n)
+
+            dos[i, ε_n] = -np.imag(x_n[n]) / (π * system.scale)
+            print(dos[i, ε_n])
 
     return dos
 

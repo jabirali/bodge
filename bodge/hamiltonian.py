@@ -6,7 +6,6 @@ from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
 from .math import *
-from .stdio import *
 from .typing import *
 
 

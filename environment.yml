@@ -6,15 +6,14 @@ dependencies:
   - python>=3.10
   - beartype
   - black
-  - h5py
   - isort
   - matplotlib
   - numpy
   - pytest
-  - rich
   - scipy
   - seaborn
   - tqdm
   - pip
   - pip:
     - multiprocess
+	- scikit-umfpack
