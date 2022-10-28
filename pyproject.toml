@@ -19,9 +19,6 @@ dependencies = [
     "scikit-umfpack",
     "matplotlib",
     "tqdm",
-    "pytest",
-    "black",
-    "isort",
 ]
 
 [tool.black]

@@ -10,8 +10,8 @@ import numpy as np
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 30
-Ly = 30
+Lx = 100
+Ly = 100
 
 t = 1
 μ = -0.1
@@ -44,7 +44,7 @@ energies = np.linspace(0, 2 * Δ_0, 51)
 
 t = time()
 
-dos = ldos(system, sites, energies, 0.3 * Δ_0)
+dos = ldos(system, sites, energies, 0.1 * Δ_0)
 
 print("\n", time() - t, "s")
 
