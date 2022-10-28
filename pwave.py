@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 import csv
 from time import time
 
@@ -14,8 +15,8 @@ from tqdm import tqdm, trange
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 300
-Ly = 300
+Lx = 100
+Ly = 100
 
 t = 1
 μ = -0.1
