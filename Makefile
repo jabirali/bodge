@@ -31,7 +31,7 @@ help:
 
 install:
 	test -d venv || $(PYTHON) -m venv venv
-	. venv/bin/activate; pip install numpy; pip install --prefer-binary -e .
+	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary -e .
 
 test:
 	. venv/bin/activate; python -m pytest tests

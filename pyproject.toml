@@ -8,7 +8,7 @@ authors = [
     {name = "Jabir Ali Ouassou", email = "jabir.a.ouassou@ntnu.no"},
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dynamic = ["version", "description"]
 
 dependencies = [

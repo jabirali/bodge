@@ -1,5 +1,6 @@
 import scipy.linalg as sla
 from scipy.sparse.linalg import spsolve
+from tqdm import tqdm
 
 from .hamiltonian import *
 from .math import *
@@ -17,41 +18,25 @@ def ldos(system, sites, energies, resolution):
     """
     dos = {}
 
-    H = system.compile()
+    H = system.scale * system.compile()
     I = system.identity.tocsr()
-    ε = [energy / system.scale for energy in energies]
-    η = resolution / system.scale
+    η = resolution
 
-    for n, ε_n in enumerate(ε):
+    for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
         A = (ε_n + η * 1j) * I - H
-
-        # M = A + 0.1j * I
-        # ilu = spilu(M)
-        # Mx = lambda x: ilu.solve(x)
-        # M = LinearOperator(A.shape, Mx)
 
         for i in sites:
             n = 4 * system.lattice[i]
-            e_n = csr_matrix(([1], ([n], [0])), shape=(H.shape[1], 1))
+            n_up = n + 0
+            n_dn = n + 1
 
-            # x_n = e_n.copy()
-            # e_n = np.zeros((H.shape[1], 1))
-            # e_n[n] = 1
+            e_up = csr_matrix(([1], ([n_up], [0])), shape=(H.shape[1], 1))
+            e_dn = csr_matrix(([1], ([n_dn], [0])), shape=(H.shape[1], 1))
 
-            # print(A.shape)
-            # print(e_n.shape)
+            x_up = spsolve(A, e_up)[n_up]
+            x_dn = spsolve(A, e_dn)[n_dn]
 
-            # x_n, err = cg(A, e_n.todense(), x_n, tol=1e-3)
-            # x_n, err = cg(A, e_n.todense(), tol=1e-6, M=M)
-            # x_n, err = gmres(A, e_n.todense(), tol=1e-2)
-            # x_n, err = qmr(A, e_n.todense(), tol=1e-2)
-            # x_n, err = gcrotmk(A, e_n.todense(), tol=1e-2)
-            # print(err)
-
-            x_n = spsolve(A, e_n)
-
-            dos[i, ε_n] = -np.imag(x_n[n]) / (π * system.scale)
-            print(dos[i, ε_n])
+            dos[i, ε_n] = -np.imag(x_up + x_dn) / π
 
     return dos
 

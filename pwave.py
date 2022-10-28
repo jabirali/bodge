@@ -4,19 +4,14 @@
 import csv
 from time import time
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
-from numpy.linalg import norm
-from scipy.linalg import eigh, solve
-from scipy.sparse import coo_matrix, csr_matrix
-from scipy.sparse.linalg import eigsh, spsolve
-from tqdm import tqdm, trange
 
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 100
-Ly = 100
+Lx = 30
+Ly = 30
 
 t = 1
 μ = -0.1
@@ -45,16 +40,13 @@ sites = [
     (Lx // 2, Ly // 2, 0),
 ]
 
-energies = np.linspace(0, 2 * Δ_0, 20)
-# energies = [0, 0.001]
+energies = np.linspace(0, 2 * Δ_0, 51)
 
 t = time()
 
 dos = ldos(system, sites, energies, 0.3 * Δ_0)
 
-# print(dos.keys())
-# plt.figure(
-# plt.plot(energies, dos.values())
-# plt.show()
-
 print("\n", time() - t, "s")
+
+plt.plot(energies, dos.values())
+plt.show()
