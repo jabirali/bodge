@@ -1,4 +1,5 @@
 import scipy.linalg as sla
+from scipy.sparse import csc_matrix, hstack
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
@@ -18,8 +19,8 @@ def ldos(system, sites, energies, resolution):
     """
     dos = {}
 
-    H = system.scale * system.compile()
-    I = system.identity.tocsr()
+    H = system.scale * system.compile().tocsc()
+    I = system.identity.tocsc()
     η = resolution
 
     for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
@@ -30,11 +31,14 @@ def ldos(system, sites, energies, resolution):
             n_up = n + 0
             n_dn = n + 1
 
-            e_up = csr_matrix(([1], ([n_up], [0])), shape=(H.shape[1], 1))
-            e_dn = csr_matrix(([1], ([n_dn], [0])), shape=(H.shape[1], 1))
+            e_up = csc_matrix(([1], ([n_up], [0])), shape=(H.shape[1], 1))
+            e_dn = csc_matrix(([1], ([n_dn], [0])), shape=(H.shape[1], 1))
 
-            x_up = spsolve(A, e_up)[n_up]
-            x_dn = spsolve(A, e_dn)[n_dn]
+            B = hstack([e_up, e_dn])
+            X = spsolve(A, B)
+
+            x_up = X[n_up, 0]
+            x_dn = X[n_dn, 1]
 
             dos[i, ε_n] = -np.imag(x_up + x_dn) / π
 
