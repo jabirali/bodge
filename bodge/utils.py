@@ -17,29 +17,41 @@ def ldos(system, sites, energies, resolution):
     calculating one vector at a time via a sparse linear solver `spsolve`, the
     local density of states can be efficiently calculated at specific points.
     """
-    dos = {}
-
+    # Prepare the variables needed below.
     H = system.scale * system.compile().tocsc()
     I = system.identity.tocsc()
     η = resolution
 
+    # Map the relevant sites and spins to Hamiltonian indices.
+    ms = {}
+    for i in sites:
+        for σ in range(2):
+            ms[i, σ] = 4 * system.lattice[i] + σ
+
+    # Construct a reduced identity matrix with only these indices.
+    N = H.shape[1]
+    M = len(ms.values())
+
+    rows = np.array([*ms.values()])
+    cols = np.arange(M)
+    data = np.repeat(1, M)
+
+    B = csc_matrix((data, (rows, cols)), shape=(N, M))
+
+    # Calculate the density of states.
+    dos = {}
     for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
+        # Solve the linear equations for the resolvent.
         A = (ε_n + η * 1j) * I - H
+        X = spsolve(A, B)
 
-        for i in sites:
-            n = 4 * system.lattice[i]
-            n_up = n + 0
-            n_dn = n + 1
+        # Extract the few elements of interest.
+        x = X.multiply(B).sum(axis=0)
 
-            e_up = csc_matrix(([1], ([n_up], [0])), shape=(H.shape[1], 1))
-            e_dn = csc_matrix(([1], ([n_dn], [0])), shape=(H.shape[1], 1))
-
-            B = hstack([e_up, e_dn])
-            X = spsolve(A, B)
-
-            x_up = X[n_up, 0]
-            x_dn = X[n_dn, 1]
-
+        # Calculate the density of states.
+        for n, i in enumerate(sites):
+            x_up = x[0, 2 * n + 0] 
+            x_dn = x[0, 2 * n + 1]
             dos[i, ε_n] = -np.imag(x_up + x_dn) / π
 
     return dos
