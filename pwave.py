@@ -6,6 +6,7 @@ from time import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 from bodge import *
 from bodge.utils import ldos
@@ -42,19 +43,18 @@ sites = [
 
 # sites = [i for i in lattice.sites() if i[0] == 0]
 
-energies = np.linspace(0, 2 * Δ_0, 51)
+energies = np.linspace(-2 * Δ_0, +2 * Δ_0, 101)
 
 t = time()
-
-dos = ldos(system, sites, energies, 0.05 * Δ_0)
-
+df = ldos(system, sites, energies, 0.05 * Δ_0)
 print("\n", time() - t, "s")
 
-dos = {(i, e): d for (i, e), d in dos.items() if i == (0, Ly//2, 0)}
+# Plot the results.
+fig, ax = plt.subplots(figsize=(6, 6))
+grouped = df.groupby(["x", "y", "z"])
+for key, group in grouped:
+    group.plot(ax=ax, x="ε", y="dos", label=key)
 
-plt.plot(
-    np.hstack([-np.flip(energies), energies]),
-    np.hstack([np.flip([*dos.values()]), [*dos.values()]]),
-)
+plt.legend(title="Lattice coordinate")
 plt.ylim([0, None])
 plt.show()

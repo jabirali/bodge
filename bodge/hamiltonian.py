@@ -170,7 +170,7 @@ class Hamiltonian:
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
     @typecheck
-    def compile(self, format='csr', normalize=True) -> tuple[spmatrix,spmatrix]:
+    def compile(self, format="csr", normalize=True) -> tuple[spmatrix, spmatrix]:
         """Return an optimal numerical representation of the matrix."""
         # Get the Hamiltonian and identity.
         H = self.matrix
@@ -178,13 +178,13 @@ class Hamiltonian:
 
         # Transform the format as needed.
         match format:
-            case 'bsr':
+            case "bsr":
                 H = H.copy()
                 I = I.tobsr(H.blocksize)
-            case 'csr':
+            case "csr":
                 H = H.tocsr()
                 I = I.tocsr()
-            case 'csc':
+            case "csc":
                 H = H.tocsc()
                 I = I.tocsc()
             case _:

@@ -9,7 +9,7 @@ from .math import *
 from .typing import *
 
 
-def ldos(system, sites, energies, resolution):
+def ldos(system, sites, energies, resolution) -> pd.DataFrame:
     """Calculate the local density of states via a resolvent operator approach.
 
     We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
@@ -18,8 +18,9 @@ def ldos(system, sites, energies, resolution):
     calculating one vector at a time via a sparse linear solver `spsolve`, the
     local density of states can be efficiently calculated at specific points.
     """
-    # Prepare input variables.
-    H, I = system.compile(format='csc', normalize=False)
+    # Prepare input and output variables.
+    H, I = system.compile(format="csc", normalize=False)
+    results = []
 
     # Construct a reduced identity matrix with only these indices.
     N = H.shape[1]
@@ -32,7 +33,6 @@ def ldos(system, sites, energies, resolution):
     B = csc_matrix((data, (rows, cols)), shape=(N, M))
 
     # Calculate the density of states.
-    dos = {}
     η = resolution
     for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
@@ -42,13 +42,18 @@ def ldos(system, sites, energies, resolution):
         # Extract the few elements of interest.
         x = X.multiply(B).sum(axis=0)
 
-        # Calculate the density of states.
+        # Calculate and store the density of states.
         for n, i in enumerate(sites):
-            x_up = x[0, 2 * n + 0] 
+            x_up = x[0, 2 * n + 0]
             x_dn = x[0, 2 * n + 1]
-            dos[i, ε_n] = -np.imag(x_up + x_dn) / π
+            dos = -np.imag(x_up + x_dn) / π
 
-    return dos
+            results.append(
+                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε_n, "dos": [dos]})
+            )
+
+    # Merge the dataframes and return.
+    return pd.concat(results)
 
 
 def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
