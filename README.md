@@ -3,8 +3,7 @@ Bodge is a Python solver for large-scale tight-binding models. Although quite
 general models of this type are supported, we target the BOgoliubov-DeGEnnes
 equations for superconductivity, which is where the code name comes from.
 
-## Installation
-### General
+## Installation (General)
 To use the default Python version on your system, simply run:
 
 	make install
@@ -21,7 +20,7 @@ Afterwards, mention what Python version to use when installing Bodge:
 
 Run `make` without command-line arguments to see how to proceed further.
 
-### Intel
+## Installation (IntelPython)
 For the best performance on Intel-based computers, it is recommended to use
 the official [IntelPython distribution][1]. These use the Intel Math Kernel
 Library as its backend, which provides much faster linear algebra routines.
