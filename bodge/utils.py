@@ -9,7 +9,7 @@ from .math import *
 from .typing import *
 
 
-def ldos(system, sites, energies) -> pd.DataFrame:
+def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     """Calculate the local density of states via a resolvent operator approach.
 
     We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
@@ -30,7 +30,14 @@ def ldos(system, sites, energies) -> pd.DataFrame:
 
     # Adaptive energy resolution.
     εs = np.sort(energies)
-    ηs = np.gradient(εs)
+
+    if resolution is not None:
+        ηs = resolution * np.repeat(1, len(εs))
+    elif len(εs) > 1:
+        ηs = np.gradient(εs)
+    else:
+        raise ValueError("Resolution required for single-energy calculations.")
+
     ωs = εs + 1j * ηs
 
     # Construct a reduced identity matrix with only these indices.
@@ -161,10 +168,10 @@ def dvector(desc: str):
     # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = [(D'p) ⋅ σ] jσ2.
     # In practice, we do this by calculating Δ = D'σ jσ2, such
     # that we simply end up with the gap matrix Δ(p) = Δ ⋅ p.
-    Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2)
+    Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2) / 2
 
     # Function for evaluating Δ(p) on the lattice.
-    def Δ_p(i: Coord, j: Coord):
+    def Δ_p(i: Coord, j: Coord) -> Array:
         δ = np.subtract(j, i)
         return np.einsum("iab,i -> ab", Δ, δ)
 
