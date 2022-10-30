@@ -12,10 +12,10 @@ from bodge import *
 from bodge.utils import ldos
 
 Lx = 100
-Ly = 110
+Ly = 100
 
 t = 1
-μ = -1
+μ = 0.5
 
 Δ_0 = 0.1 * t
 
@@ -33,28 +33,34 @@ with system as (H, Δ, V):
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
-        Δ[i, j] = -Δ_0 * d(i, j) / 2
+        # Δ[i, j] = -Δ_0 * d(i, j) / 2
 
 sites = [
-    (0, Ly // 2, 0),
+    (0, 0, 0),
     (Lx // 2, Ly // 2, 0),
+    (0, Ly // 2, 0),
     (Lx // 2, 0, 0),
 ]
 
-# sites = [i for i in lattice.sites() if i[0] == 0]
-
-energies = np.linspace(0, +2 * Δ_0, 51)
+energies = np.linspace(0, 6 * t, 101)
 
 t = time()
-df = ldos(system, sites, energies, 0.03 * Δ_0)
+df = ldos(system, sites, energies)
 print("\n", time() - t, "s")
 
 # Plot the results.
-fig, ax = plt.subplots(figsize=(6, 6))
 grouped = df.groupby(["x", "y", "z"])
-for key, group in grouped:
-    group.plot(ax=ax, x="ε", y="dos", label=key)
+fig = plt.figure(figsize=(6, 6))
+for n, (key, group) in enumerate(grouped):
+    ax = fig.add_subplot(2, 2, n + 1)
+    group.plot(ax=ax, x="ε", y="dos", color="k", legend=False)
+    group.plot.area(ax=ax, x="ε", y="dos", color="k", alpha=0.3, legend=False)
+    ax.title.set_text(key)
+    ax.set_xlabel(r"Quasiparticle energy $ε/t$")
+    ax.set_ylabel(r"Density of states $D(ε)$")
+    ax.set_ylim([0, 3])
+    ax.set_xlim([-energies[-1], +energies[-1]])
 
-plt.legend(title="Lattice coordinate")
-plt.ylim([0, None])
+# plt.legend(title="Coordinate")
+plt.tight_layout()
 plt.show()

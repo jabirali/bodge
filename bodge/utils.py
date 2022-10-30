@@ -9,7 +9,7 @@ from .math import *
 from .typing import *
 
 
-def ldos(system, sites, energies, resolution) -> pd.DataFrame:
+def ldos(system, sites, energies) -> pd.DataFrame:
     """Calculate the local density of states via a resolvent operator approach.
 
     We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
@@ -28,6 +28,11 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
     H, I = system.compile(format="csc", normalize=False)
     results = []
 
+    # Adaptive energy resolution.
+    εs = np.sort(energies)
+    ηs = np.gradient(εs)
+    ωs = εs + 1j * ηs
+
     # Construct a reduced identity matrix with only these indices.
     N = H.shape[1]
     M = 4 * len(sites)
@@ -39,10 +44,9 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
     B = csc_matrix((data, (rows, cols)), shape=(N, M))
 
     # Calculate the density of states.
-    η = resolution
-    for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
+    for ω in tqdm(ωs, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
-        A = (ε_n + η * 1j) * I - H
+        A = ω * I - H
         X = spsolve(A, B)
 
         # Extract the few elements of interest.
@@ -58,11 +62,12 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
             e_dos = -np.imag(e_up + e_dn) / π
             h_dos = -np.imag(h_up + h_dn) / π
 
+            ε = np.real(ω)
             results.append(
-                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε_n, "dos": [e_dos]})
+                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε, "dos": [e_dos]})
             )
             results.append(
-                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": -ε_n, "dos": [h_dos]})
+                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": -ε, "dos": [h_dos]})
             )
 
     # Merge the dataframes and return.
