@@ -12,10 +12,10 @@ from bodge import *
 from bodge.utils import ldos
 
 Lx = 100
-Ly = 100
+Ly = 110
 
 t = 1
-μ = -0.1
+μ = -1
 
 Δ_0 = 0.1 * t
 
@@ -23,8 +23,8 @@ lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 
 # d = dvector("(e_x + je_y) * p_x")
-d = dvector("e_z * p_x")
-# d = dvector("e_z * (p_x + jp_y)")
+# d = dvector("e_z * p_x")
+d = dvector("e_z * (p_x + jp_y)")
 
 with system as (H, Δ, V):
     for i in lattice.sites():
@@ -37,16 +37,16 @@ with system as (H, Δ, V):
 
 sites = [
     (0, Ly // 2, 0),
-    (Lx // 2, 0, 0),
     (Lx // 2, Ly // 2, 0),
+    (Lx // 2, 0, 0),
 ]
 
 # sites = [i for i in lattice.sites() if i[0] == 0]
 
-energies = np.linspace(-2 * Δ_0, +2 * Δ_0, 101)
+energies = np.linspace(0, +2 * Δ_0, 51)
 
 t = time()
-df = ldos(system, sites, energies, 0.05 * Δ_0)
+df = ldos(system, sites, energies, 0.03 * Δ_0)
 print("\n", time() - t, "s")
 
 # Plot the results.

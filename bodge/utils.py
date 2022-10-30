@@ -17,6 +17,12 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
     elements of the resolvent matrix correspond to the density of states. By
     calculating one vector at a time via a sparse linear solver `spsolve`, the
     local density of states can be efficiently calculated at specific points.
+
+    Note that you need only provide a list of positive energies at which to
+    calculate the density of states, since electron-hole symmetry is used to
+    get the negative-energy solutions in an efficient manner.
+
+    TODO: Refactor the matrix construction into its own unit.
     """
     # Prepare input and output variables.
     H, I = system.compile(format="csc", normalize=False)
@@ -24,9 +30,9 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
 
     # Construct a reduced identity matrix with only these indices.
     N = H.shape[1]
-    M = 2 * len(sites)
+    M = 4 * len(sites)
 
-    rows = np.array([4 * system.lattice[i] + s for i in sites for s in range(2)])
+    rows = np.array([4 * system.lattice[i] + α for i in sites for α in range(4)])
     cols = np.arange(M)
     data = np.repeat(1, M)
 
@@ -44,16 +50,23 @@ def ldos(system, sites, energies, resolution) -> pd.DataFrame:
 
         # Calculate and store the density of states.
         for n, i in enumerate(sites):
-            x_up = x[0, 2 * n + 0]
-            x_dn = x[0, 2 * n + 1]
-            dos = -np.imag(x_up + x_dn) / π
+            e_up = x[0, 4 * n + 0]
+            e_dn = x[0, 4 * n + 1]
+            h_up = x[0, 4 * n + 2]
+            h_dn = x[0, 4 * n + 3]
+
+            e_dos = -np.imag(e_up + e_dn) / π
+            h_dos = -np.imag(h_up + h_dn) / π
 
             results.append(
-                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε_n, "dos": [dos]})
+                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε_n, "dos": [e_dos]})
+            )
+            results.append(
+                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": -ε_n, "dos": [h_dos]})
             )
 
     # Merge the dataframes and return.
-    return pd.concat(results)
+    return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
 
 
 def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
