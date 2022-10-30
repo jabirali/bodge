@@ -1,6 +1,7 @@
 # Makefile metadata.
 all: help
 .PHONY: help install test shell format clean .FORCE
+.PRECIOUS: %.py
 
 # Default values for flags.
 PYTHON = python3
