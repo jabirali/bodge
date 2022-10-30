@@ -1,3 +1,4 @@
+import pandas as pd
 import scipy.linalg as sla
 from scipy.sparse import csc_matrix, hstack
 from scipy.sparse.linalg import spsolve
@@ -17,22 +18,14 @@ def ldos(system, sites, energies, resolution):
     calculating one vector at a time via a sparse linear solver `spsolve`, the
     local density of states can be efficiently calculated at specific points.
     """
-    # Prepare the variables needed below.
-    H = system.scale * system.compile().tocsc()
-    I = system.identity.tocsc()
-    η = resolution
-
-    # Map the relevant sites and spins to Hamiltonian indices.
-    ms = {}
-    for i in sites:
-        for σ in range(2):
-            ms[i, σ] = 4 * system.lattice[i] + σ
+    # Prepare input variables.
+    H, I = system.compile(format='csc', normalize=False)
 
     # Construct a reduced identity matrix with only these indices.
     N = H.shape[1]
-    M = len(ms.values())
+    M = 2 * len(sites)
 
-    rows = np.array([*ms.values()])
+    rows = np.array([4 * system.lattice[i] + s for i in sites for s in range(2)])
     cols = np.arange(M)
     data = np.repeat(1, M)
 
@@ -40,6 +33,7 @@ def ldos(system, sites, energies, resolution):
 
     # Calculate the density of states.
     dos = {}
+    η = resolution
     for ε_n in tqdm(energies, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
         A = (ε_n + η * 1j) * I - H

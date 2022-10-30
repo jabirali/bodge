@@ -1,7 +1,7 @@
 import multiprocess as mp
 import numpy as np
 from scipy.linalg import eigh, inv
-from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity
+from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity, spmatrix
 from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
@@ -170,12 +170,34 @@ class Hamiltonian:
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
     @typecheck
-    def compile(self) -> csr_matrix:
+    def compile(self, format='csr', normalize=True) -> tuple[spmatrix,spmatrix]:
         """Return an optimal numerical representation of the matrix."""
-        H = sps.csr_matrix(self.matrix)
+        # Get the Hamiltonian and identity.
+        H = self.matrix
+        I = identity(H.shape[1], "int8")
+
+        # Transform the format as needed.
+        match format:
+            case 'bsr':
+                H = H.copy()
+                I = I.tobsr(H.blocksize)
+            case 'csr':
+                H = H.tocsr()
+                I = I.tocsr()
+            case 'csc':
+                H = H.tocsc()
+                I = I.tocsc()
+            case _:
+                raise RuntimeError("Unsupported matrix format")
+
+        # Get rid of uninitialized blocks.
         H.eliminate_zeros()
 
-        return H
+        # Ensure an appropriate scaling.
+        if not normalize:
+            H *= self.scale
+
+        return H, I
 
     def plot(self, grid: bool = False):
         """Visualize the sparsity structure of the generated matrix."""
