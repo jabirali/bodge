@@ -11,8 +11,8 @@ import seaborn as sns
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 100
-Ly = 100
+Lx = 200
+Ly = 200
 
 t = 1
 μ = 0.5
@@ -24,6 +24,7 @@ system = Hamiltonian(lattice)
 
 # d = dvector("(e_x + je_y) * p_x")
 # d = dvector("e_z * p_x")
+# d = dvector("e_z * p_y")
 d = dvector("e_z * (p_x + jp_y)")
 
 with system as (H, Δ, V):
@@ -33,7 +34,7 @@ with system as (H, Δ, V):
 
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
-        # Δ[i, j] = -Δ_0 * d(i, j) / 2
+        Δ[i, j] = -Δ_0 * d(i, j)
 
 sites = [
     (0, 0, 0),
@@ -42,7 +43,7 @@ sites = [
     (Lx // 2, 0, 0),
 ]
 
-energies = np.linspace(0, 6 * t, 101)
+energies = np.linspace(0, 2 * Δ_0, 51)
 
 t = time()
 df = ldos(system, sites, energies)
