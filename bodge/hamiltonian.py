@@ -139,27 +139,26 @@ class Hamiltonian:
     def __call__(self, format="csr") -> tuple[Matrix, Optional[Matrix]]:
         """Return an optimal numerical representation of the Hamiltonian."""
         # Transform the matrix as needed and eliminate zeros if possible.
-        match format:
-            case "bsr":
-                H = self.matrix.copy()
-                H.eliminate_zeros()
+        if format == "bsr":
+            H = self.matrix.copy()
+            H.eliminate_zeros()
 
-                I = identity(H.shape[1], "int8").tobsr(H.blocksize)
-            case "csr":
-                H = self.matrix.tocsr()
-                H.eliminate_zeros()
+            I = identity(H.shape[1], "int8").tobsr(H.blocksize)
+        elif format == "csr":
+            H = self.matrix.tocsr()
+            H.eliminate_zeros()
 
-                I = identity(H.shape[1], "int8").tocsr()
-            case "csc":
-                H = self.matrix.tocsc()
-                H.eliminate_zeros()
+            I = identity(H.shape[1], "int8").tocsr()
+        elif format == "csc":
+            H = self.matrix.tocsc()
+            H.eliminate_zeros()
 
-                I = identity(H.shape[1], "int8").tocsc()
-            case "dense":
-                H = self.matrix.todense()
-                I = None
-            case _:
-                raise RuntimeError("Unsupported matrix format")
+            I = identity(H.shape[1], "int8").tocsc()
+        elif format == "dense":
+            H = self.matrix.todense()
+            I = None
+        else:
+            raise RuntimeError("Unsupported matrix format")
 
         return H, I
 
