@@ -30,6 +30,8 @@ jσ = np.stack([jσ1, jσ2, jσ3])
 
 def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps.csr_matrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
+    # TODO: Remove optimizations now available via `Hamiltonian.compile`.
+
     # Use CSR matrices for numerical performance.
     X = sps.csr_matrix(X)
     S = sps.csr_matrix(S)

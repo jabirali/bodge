@@ -4,6 +4,8 @@ from .hamiltonian import *
 from .math import *
 from .typing import *
 
+from scipy.sparse.linalg import norm
+
 
 class FermiMatrix:
     """Representation of the Fermi operator of a physical system.
@@ -39,7 +41,11 @@ class FermiMatrix:
         H = self.hamiltonian.matrix
         S = self.hamiltonian.struct
         I = self.hamiltonian.identity
-        Ω = self.hamiltonian.scale
+
+        # Scale the matrix so all eigenvalues are in (-1, +1). We here use
+        # the theorem that the spectral radius is bounded by any matrix norm.        
+        Ω = norm(H, 1)
+        H /= Ω
 
         # Define the Fermi function.
         def fermi(x):

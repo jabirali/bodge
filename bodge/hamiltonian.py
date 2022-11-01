@@ -32,10 +32,6 @@ class Hamiltonian:
         # the lattice size are the local degrees of freedom at each lattice site.
         self.shape: Indices = (4 * lattice.size, 4 * lattice.size)
 
-        # Scale factor used to compress the Hamiltonian spectrum to (-1, +1).
-        # This must be set to an upper bound for the Hamiltonian spectral radius.
-        self.scale: float = 1.0
-
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The COO format is most efficient for constructing the
         # matrix, but the BSR format is more computationally efficient later.
@@ -96,9 +92,6 @@ class Hamiltonian:
         Note that the `__exit__` method is responsible for actually transferring
         all the elements of H and Δ to the correct locations in the Hamiltonian.
         """
-        # Restore the Hamiltonian energy scale.
-        self.data *= self.scale
-
         # Prepare storage for the context manager.
         self.hopp = {}
         self.pair = {}
@@ -113,8 +106,7 @@ class Hamiltonian:
 
         - Transferring elements from the context manager dicts to the sparse matrix;
         - Ensuring that particle-hole and nearest-neighbor symmetries are respected;
-        - Verifying that the constructed Hamiltonian is actually Hermitian;
-        - Scaling the Hamiltonian to have a spectrum bounded by (-1, +1).
+        - Verifying that the constructed Hamiltonian is actually Hermitian.
         """
         # Process hopping terms: H[i, j].
         for (i, j), val in self.hopp.items():
@@ -138,11 +130,6 @@ class Hamiltonian:
         # Verify that the matrix is Hermitian.
         if np.max(self.matrix - self.matrix.getH()) > 1e-6:
             raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
-
-        # Scale the matrix so all eigenvalues are in (-1, +1). We here use
-        # the theorem that the spectral radius is bounded by any matrix norm.
-        self.scale: float = norm(self.matrix, 1)
-        self.matrix /= self.scale
 
         # Reset accessors.
         del self.hopp
@@ -170,32 +157,30 @@ class Hamiltonian:
         return identity(self.shape[1], "int8").tobsr((4, 4))
 
     @typecheck
-    def compile(self, format="csr", normalize=True) -> tuple[spmatrix, spmatrix]:
-        """Return an optimal numerical representation of the matrix."""
-        # Get the Hamiltonian and identity.
-        H = self.matrix
-        I = identity(H.shape[1], "int8")
-
-        # Transform the format as needed.
+    def compile(self, format="csr") -> tuple[Matrix, Optional[Matrix]]:
+        """Return an optimal numerical representation of the Hamiltonian."""
+        # Transform the matrix as needed and eliminate zeros if possible.
         match format:
             case "bsr":
-                H = H.copy()
-                I = I.tobsr(H.blocksize)
+                H = self.matrix.copy()
+                H.eliminate_zeros()
+
+                I = identity(H.shape[1], "int8").tobsr(H.blocksize)
             case "csr":
-                H = H.tocsr()
-                I = I.tocsr()
+                H = self.matrix.tocsr()
+                H.eliminate_zeros()
+
+                I = identity(H.shape[1], "int8").tocsr()
             case "csc":
-                H = H.tocsc()
-                I = I.tocsc()
+                H = self.matrix.tocsc()
+                H.eliminate_zeros()
+
+                I = identity(H.shape[1], "int8").tocsc()
+            case "dense":
+                H = self.matrix.todense()
+                I = None
             case _:
                 raise RuntimeError("Unsupported matrix format")
-
-        # Get rid of uninitialized blocks.
-        H.eliminate_zeros()
-
-        # Ensure an appropriate scaling.
-        if not normalize:
-            H *= self.scale
 
         return H, I
 

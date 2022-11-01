@@ -21,8 +21,6 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     Note that you need only provide a list of positive energies at which to
     calculate the density of states, since electron-hole symmetry is used to
     get the negative-energy solutions in an efficient manner.
-
-    TODO: Refactor the matrix construction into its own unit.
     """
     # Prepare input and output variables.
     H, I = system.compile(format="csc", normalize=False)
@@ -90,7 +88,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
     is meant as a benchmark, not for actual large-scale calculations.
     """
     # Calculate the relevant eigenvalues and eigenvectors.
-    H = system.scale * system.matrix.todense()
+    H, I = system.compile(format="dense")
     eigval, eigvec = eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
 
     # Restructure the eigenvectors to have the format eigvec[n, i, α],
@@ -108,8 +106,7 @@ def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3)
     it is meant as a benchmark, not for actual large-scale calculations.
     """
     # Restore the Hamiltonian scale and switch to dense matrices.
-    H = system.scale * system.matrix.todense()
-    I = system.identity.todense()
+    H, I = system.compile(format="dense")
 
     # The resolution is controlled by the imaginary energy.
     η = resolution * 1j
@@ -135,7 +132,7 @@ def energy(system: Hamiltonian):
     TODO: Incorporate superconducting contributions of the type |Δ|^2/V.
     """
 
-    H = system.scale * system.matrix.todense()
+    H, I = system.compile(format="dense")
     ε = sla.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
     # TODO: Calculate the actual free energy from this.
