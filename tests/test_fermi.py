@@ -29,8 +29,6 @@ def test_fermi_exact():
     assert d.max() == +1
     assert len(np.unique(d)) == 2 * lattice.size - 1
 
-    assert 1==2
-
     # Perform the Fermi-Chebyshev expansion at a semi-random temperature.
     T = (1 + np.random.rand()) / 2
     fermi = FermiMatrix(system, 1024)
