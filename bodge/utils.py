@@ -23,7 +23,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     get the negative-energy solutions in an efficient manner.
     """
     # Prepare input and output variables.
-    H, I = system.compile(format="csc", normalize=False)
+    H, I = system(format="csc")
     results = []
 
     # Adaptive energy resolution.
@@ -88,7 +88,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
     is meant as a benchmark, not for actual large-scale calculations.
     """
     # Calculate the relevant eigenvalues and eigenvectors.
-    H, I = system.compile(format="dense")
+    H, I = system(format="dense")
     eigval, eigvec = eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
 
     # Restructure the eigenvectors to have the format eigvec[n, i, α],
@@ -106,7 +106,7 @@ def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3)
     it is meant as a benchmark, not for actual large-scale calculations.
     """
     # Restore the Hamiltonian scale and switch to dense matrices.
-    H, I = system.compile(format="dense")
+    H, I = system(format="dense")
 
     # The resolution is controlled by the imaginary energy.
     η = resolution * 1j
@@ -132,7 +132,7 @@ def energy(system: Hamiltonian):
     TODO: Incorporate superconducting contributions of the type |Δ|^2/V.
     """
 
-    H, I = system.compile(format="dense")
+    H, I = system(format="dense")
     ε = sla.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
     # TODO: Calculate the actual free energy from this.

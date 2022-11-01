@@ -17,7 +17,7 @@ Ly = 200
 t = 1
 μ = 0.5
 
-Δ_0 = 0.03 * t
+Δ_0 = 0.1 * t
 
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)

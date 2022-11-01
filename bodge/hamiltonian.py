@@ -136,28 +136,7 @@ class Hamiltonian:
         del self.pair
 
     @typecheck
-    def index(self, row: Coord, col: Coord) -> Index:
-        """Determine the sparse matrix index corresponding to block (row, col).
-
-        This can be used to access `self.data[index, :, :]` when direct
-        changes to the encapsulated block-sparse matrix are required.
-        """
-        indices, indptr = self.matrix.indices, self.matrix.indptr
-
-        i, j = self.lattice[row], self.lattice[col]
-        js = indices[indptr[i] : indptr[i + 1]]
-        k = indptr[i] + np.where(js == j)
-
-        return Index(k)
-
-    @property
-    @typecheck
-    def identity(self) -> bsr_matrix:
-        """Generate an identity matrix with similar dimensions as the Hamiltonian."""
-        return identity(self.shape[1], "int8").tobsr((4, 4))
-
-    @typecheck
-    def compile(self, format="csr") -> tuple[Matrix, Optional[Matrix]]:
+    def __call__(self, format="csr") -> tuple[Matrix, Optional[Matrix]]:
         """Return an optimal numerical representation of the Hamiltonian."""
         # Transform the matrix as needed and eliminate zeros if possible.
         match format:
@@ -183,6 +162,27 @@ class Hamiltonian:
                 raise RuntimeError("Unsupported matrix format")
 
         return H, I
+
+    @typecheck
+    def index(self, row: Coord, col: Coord) -> Index:
+        """Determine the sparse matrix index corresponding to block (row, col).
+
+        This can be used to access `self.data[index, :, :]` when direct
+        changes to the encapsulated block-sparse matrix are required.
+        """
+        indices, indptr = self.matrix.indices, self.matrix.indptr
+
+        i, j = self.lattice[row], self.lattice[col]
+        js = indices[indptr[i] : indptr[i + 1]]
+        k = indptr[i] + np.where(js == j)
+
+        return Index(k)
+
+    @property
+    @typecheck
+    def identity(self) -> bsr_matrix:
+        """Generate an identity matrix with similar dimensions as the Hamiltonian."""
+        return identity(self.shape[1], "int8").tobsr((4, 4))
 
     def plot(self, grid: bool = False):
         """Visualize the sparsity structure of the generated matrix."""
