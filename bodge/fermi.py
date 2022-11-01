@@ -4,6 +4,7 @@ from .hamiltonian import *
 from .math import *
 from .typing import *
 
+from scipy.sparse import identity
 from scipy.sparse.linalg import norm
 
 
@@ -28,8 +29,8 @@ class FermiMatrix:
 
         # Fermi matrix and its accessors.
         self.matrix: bsr_matrix
-        self.hopp: dict[Coords, Array]
-        self.pair: dict[Coords, Array]
+        self.hopp: dict[Coords, DenseArray]
+        self.pair: dict[Coords, DenseArray]
 
     def __call__(self, temperature: float):
         """Calculate the Fermi matrix at a given temperature."""
@@ -38,9 +39,7 @@ class FermiMatrix:
         self.pair = {}
 
         # Hamiltonian and related quantities.
-        H = self.hamiltonian.matrix
-        S = self.hamiltonian.struct
-        I = self.hamiltonian.identity
+        H, M, I = self.hamiltonian(format="bsr")
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.        
@@ -55,8 +54,8 @@ class FermiMatrix:
             return n == 0 or n % 2 == 1
 
         # Perform kernel polynomial expansion.
-        # TODO: Check adjustments for entropy, or whether to .multiply(S).
-        self.matrix = cheb(fermi, H, S, self.order, filter=odd).tobsr(H.blocksize)
+        # TODO: Check adjustments for entropy, or whether to .multiply(M).
+        self.matrix = cheb(fermi, H, M, self.order, filter=odd).tobsr(H.blocksize)
 
         # Simplify the access to the constructed matrix.
         for i, j in self.lattice:

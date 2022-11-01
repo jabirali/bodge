@@ -1,7 +1,7 @@
 import multiprocess as mp
 import numpy as np
 from scipy.linalg import eigh, inv
-from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity, spmatrix
+from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity, spmatrix, dia_matrix
 from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
@@ -59,8 +59,11 @@ class Hamiltonian:
         # Save an integer matrix that encodes the structure of the Hamiltonian,
         # i.e. any potentially present element in the matrix is indicated by 1.
         # This can be used to instantiate new matrices with the same structure.
-        self.struct: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
-        self.struct.data[...] = 1
+        self.mask: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
+        self.mask.data[...] = 1
+
+        # Save an identity matrix of the same dimension as the Hamiltonian.
+        self.identity: dia_matrix = identity(self.shape[0], "int8")
 
         # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
@@ -68,7 +71,7 @@ class Hamiltonian:
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: Array[np.complex128] = self.matrix.data
+        self.data: DenseArray[np.complex128] = self.matrix.data
 
         # Storage for any Hubbard-type potentials on the lattice.
         self.pot: dict[Coords, float] = {}
@@ -76,7 +79,7 @@ class Hamiltonian:
     @typecheck
     def __enter__(
         self,
-    ) -> tuple[dict[Coords, Array], dict[Coords, Array], dict[Coords, float]]:
+    ) -> tuple[dict[Coords, DenseArray], dict[Coords, DenseArray], dict[Coords, float]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
@@ -136,31 +139,37 @@ class Hamiltonian:
         del self.pair
 
     @typecheck
-    def __call__(self, format="csr") -> tuple[Matrix, Optional[Matrix]]:
+    def __call__(self, format="csr") -> Union[tuple[SparseArray, SparseArray, SparseArray], DenseArray]:
         """Return an optimal numerical representation of the Hamiltonian."""
-        # Transform the matrix as needed and eliminate zeros if possible.
+        # Get relevant stored fields.
+        H = self.matrix
+        M = self.mask
+        I = self.identity
+
+        # Transform as needed and eliminate zeros if possible.
         if format == "bsr":
-            H = self.matrix.copy()
+            H = H.copy()
             H.eliminate_zeros()
+            M = M.copy()
+            I = I.tobsr(H.blocksize)
 
-            I = identity(H.shape[1], "int8").tobsr(H.blocksize)
+            return H, M, I
         elif format == "csr":
-            H = self.matrix.tocsr()
+            H = H.tocsr()
             H.eliminate_zeros()
-
-            I = identity(H.shape[1], "int8").tocsr()
+            M = M.tocsr()
+            I = I.tocsr()
         elif format == "csc":
-            H = self.matrix.tocsc()
+            H = H.tocsc()
             H.eliminate_zeros()
-
-            I = identity(H.shape[1], "int8").tocsc()
+            M = M.tocsc()
+            I = I.tocsc()
         elif format == "dense":
-            H = self.matrix.todense()
-            I = None
+            return H.todense()
         else:
             raise RuntimeError("Unsupported matrix format")
 
-        return H, I
+        return H, M, I
 
     @typecheck
     def index(self, row: Coord, col: Coord) -> Index:
@@ -176,12 +185,6 @@ class Hamiltonian:
         k = indptr[i] + np.where(js == j)
 
         return Index(k)
-
-    @property
-    @typecheck
-    def identity(self) -> bsr_matrix:
-        """Generate an identity matrix with similar dimensions as the Hamiltonian."""
-        return identity(self.shape[1], "int8").tobsr((4, 4))
 
     def plot(self, grid: bool = False):
         """Visualize the sparsity structure of the generated matrix."""

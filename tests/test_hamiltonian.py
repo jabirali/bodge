@@ -40,9 +40,7 @@ def test_sparsity():
             Δ[i, j] = 2 * σ3 + 5 * σ2
 
     # Calculate a matrix product using internal matrices.
-    H = system.matrix
-    S = system.struct
-    I = system.identity
+    H, M, I = system(format="bsr")
     G = H @ I
 
     # Ensure that the Hamiltonian H has a 4x4 BSR representation.
@@ -54,5 +52,5 @@ def test_sparsity():
 
     # Ensure the structure matrix is consistent with Hamiltonian.
     H.data[...] = 1
-    assert S.blocksize == (4, 4)
-    assert np.allclose(H.todense(), S.todense())
+    assert M.blocksize == (4, 4)
+    assert np.allclose(H.todense(), M.todense())

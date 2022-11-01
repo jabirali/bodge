@@ -23,7 +23,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     get the negative-energy solutions in an efficient manner.
     """
     # Prepare input and output variables.
-    H, I = system(format="csc")
+    H, M, I = system(format="csc")
     results = []
 
     # Adaptive energy resolution.
@@ -79,7 +79,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
 
 
-def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
+def diagonalize(system: Hamiltonian) -> tuple[DenseArray, DenseArray]:
     """Calculate the exact eigenstates of the system via direct diagonalization.
 
     This calculates the eigenvalues and eigenvectors of the system. Due to
@@ -88,7 +88,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
     is meant as a benchmark, not for actual large-scale calculations.
     """
     # Calculate the relevant eigenvalues and eigenvectors.
-    H, I = system(format="dense")
+    H = system(format="dense")
     eigval, eigvec = eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
 
     # Restructure the eigenvectors to have the format eigvec[n, i, α],
@@ -99,7 +99,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Array, Array]:
     return eigval, eigvec
 
 
-def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3) -> list[Array]:
+def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3) -> list[DenseArray]:
     """Calculate the exact spectral function of the system via direct inversion.
 
     Note that this method is quite inefficient since it uses dense matrices;
@@ -168,7 +168,7 @@ def dvector(desc: str):
     Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2) / 2
 
     # Function for evaluating Δ(p) on the lattice.
-    def Δ_p(i: Coord, j: Coord) -> Array:
+    def Δ_p(i: Coord, j: Coord) -> DenseArray:
         δ = np.subtract(j, i)
         return np.einsum("iab,i -> ab", Δ, δ)
 

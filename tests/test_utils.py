@@ -20,7 +20,7 @@ def test_diagonalize():
             H[i, j] = -1 * σ0
 
     # Calculate the eigenvalues the manual way.
-    H, I = system(format="dense")
+    H = system(format="dense")
     E, X = eigh(H, subset_by_value=(0, np.inf))
     X = X.T
 

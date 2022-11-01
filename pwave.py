@@ -11,8 +11,8 @@ import seaborn as sns
 from bodge import *
 from bodge.utils import ldos
 
-Lx = 200
-Ly = 200
+Lx = 100
+Ly = 100
 
 t = 1
 μ = 0.5
