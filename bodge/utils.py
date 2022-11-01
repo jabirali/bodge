@@ -58,6 +58,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
         x = X.multiply(B).sum(axis=0)
 
         # Calculate and store the density of states.
+        # TODO: Reconstruct and trace 2x2 matrices.
         for n, i in enumerate(sites):
             e_up = x[0, 4 * n + 0]
             e_dn = x[0, 4 * n + 1]
@@ -108,7 +109,7 @@ def spectral(
     it is meant as a benchmark, not for actual large-scale calculations.
     """
     # Restore the Hamiltonian scale and switch to dense matrices.
-    H, I = system(format="dense")
+    H = system(format="dense")
 
     # The resolution is controlled by the imaginary energy.
     η = resolution * 1j
