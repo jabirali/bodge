@@ -43,13 +43,13 @@ install:
 	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary -e .
 
 test: venv/bin/pytest
-	. venv/bin/activate; pytest tests
+	. venv/bin/activate; pytest --cov=bodge tests
+
+format: venv/bin/black
+	. venv/bin/activate; isort .; black .
 
 shell: venv/bin/ipython
 	. venv/bin/activate; ipython
-
-format: venv/bin/isort venv/bin/black
-	. venv/bin/activate; isort .; black .
 
 clean:
 	rm -rf venv
@@ -58,16 +58,13 @@ clean:
 
 # Automatically install development dependencies as needed.
 venv/bin/pytest:
-	. venv/bin/activate; pip install pytest
+	. venv/bin/activate; pip install .[test]
 
 venv/bin/black:
-	. venv/bin/activate; pip install black
-
-venv/bin/isort:
-	. venv/bin/activate; pip install isort
+	. venv/bin/activate; pip install .[format]
 
 venv/bin/ipython:
-	. venv/bin/activate; pip install ipython
+	. venv/bin/activate; pip install .[shell]
 
 # Run Python scripts inside the virtual environment.
 %.py: .FORCE

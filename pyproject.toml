@@ -22,6 +22,22 @@ dependencies = [
     "tqdm",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+format = [
+    "isort",
+    "black",
+]
+
+shell = [
+    "ipython",
+]
+
+
 [tool.black]
 line-length = 99
 

@@ -1,6 +1,15 @@
+# Project
+venv
+*.csv
+
+# Python
+.coverage*
 __pycache__
-.*_cache
-.envrc
+
+# Editors
 *.sublime-*
 *.sw*
-venv
+
+# Operating system
+.DS_Store
+.envrc

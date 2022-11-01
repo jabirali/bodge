@@ -46,49 +46,49 @@ def test_diagonalize():
 def test_dvector_basic():
     """Brute-force test all d(p) = e_i p_j cases."""
     Δ = dvector("e_x * p_x")
-    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ1 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ1 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_x * p_y")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ1 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ1 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_x * p_z")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ1 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ1 @ jσ2 / 2)
 
     Δ = dvector("e_y * p_x")
-    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ2 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ2 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_y * p_y")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ2 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ2 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_y * p_z")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ2 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ2 @ jσ2 / 2)
 
     Δ = dvector("e_z * p_x")
-    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ3 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ3 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_z * p_y")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ3 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), σ3 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), 0)
 
     Δ = dvector("e_z * p_z")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), 0)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
-    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ3 @ jσ2)
+    assert np.allclose(Δ((0, 0, 0), (0, 0, 1)), σ3 @ jσ2 / 2)
 
 
 def test_dvector_pwave():
