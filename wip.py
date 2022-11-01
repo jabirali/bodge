@@ -21,7 +21,7 @@ for Δ_0 in [1.0, 0.7, 0.3, 0.1, 0.07, 0.03, 0.01]:
     lattice = CubicLattice((Lx, Ly, 1))
     system = Hamiltonian(lattice)
 
-    d = dvector("e_x * p_y - e_y * p_x")
+    d = pwave("e_x * p_y - e_y * p_x")
 
     with system as (H, Δ, V):
         for i in lattice.sites():

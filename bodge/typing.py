@@ -1,4 +1,5 @@
 from typing import Union
+
 from beartype import beartype as typecheck
 from beartype.typing import Any, Callable, Iterator, NamedTuple, Optional
 from numpy.typing import ArrayLike, DTypeLike

@@ -1,11 +1,10 @@
 import numpy as np
+from scipy.sparse import identity
+from scipy.sparse.linalg import norm
 
 from .hamiltonian import *
 from .math import *
 from .typing import *
-
-from scipy.sparse import identity
-from scipy.sparse.linalg import norm
 
 
 class FermiMatrix:
@@ -42,7 +41,7 @@ class FermiMatrix:
         H, M, I = self.hamiltonian(format="bsr")
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
-        # the theorem that the spectral radius is bounded by any matrix norm.        
+        # the theorem that the spectral radius is bounded by any matrix norm.
         Ω = norm(H, 1)
         H /= Ω
 

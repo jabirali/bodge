@@ -99,7 +99,9 @@ def diagonalize(system: Hamiltonian) -> tuple[DenseArray, DenseArray]:
     return eigval, eigvec
 
 
-def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3) -> list[DenseArray]:
+def spectral(
+    system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3
+) -> list[DenseArray]:
     """Calculate the exact spectral function of the system via direct inversion.
 
     Note that this method is quite inefficient since it uses dense matrices;
@@ -123,7 +125,7 @@ def spectral(system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3)
     return spectral
 
 
-def energy(system: Hamiltonian):
+def free_energy(system: Hamiltonian):
     """Calculate the free energy for a given physical system.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
@@ -132,14 +134,14 @@ def energy(system: Hamiltonian):
     TODO: Incorporate superconducting contributions of the type |Δ|^2/V.
     """
 
-    H, I = system(format="dense")
+    H = system(format="dense")
     ε = sla.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
     # TODO: Calculate the actual free energy from this.
     return np.array(sorted(ε_n for ε_n in ε if ε_n > 0))
 
 
-def dvector(desc: str):
+def pwave(desc: str):
     """Convert a d-vector expression into a p-wave gap function."""
     # Basis vectors for spin axes.
     e_x = np.array([[1], [0], [0]])

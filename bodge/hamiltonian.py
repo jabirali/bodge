@@ -1,7 +1,7 @@
 import multiprocess as mp
 import numpy as np
 from scipy.linalg import eigh, inv
-from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, identity, spmatrix, dia_matrix
+from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, dia_matrix, identity, spmatrix
 from scipy.sparse.linalg import eigsh, norm
 
 from .lattice import Lattice
@@ -139,7 +139,9 @@ class Hamiltonian:
         del self.pair
 
     @typecheck
-    def __call__(self, format="csr") -> Union[tuple[SparseArray, SparseArray, SparseArray], DenseArray]:
+    def __call__(
+        self, format="csr"
+    ) -> Union[tuple[SparseArray, SparseArray, SparseArray], DenseArray]:
         """Return an optimal numerical representation of the Hamiltonian."""
         # Get relevant stored fields.
         H = self.matrix

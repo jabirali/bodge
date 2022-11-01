@@ -26,7 +26,7 @@ system = Hamiltonian(lattice)
 # d = dvector("e_z * p_x")
 # d = dvector("e_z * p_y")
 # d = dvector("e_z * (p_x + jp_y)")
-d = dvector("e_x * p_y - e_y * p_x")
+d = pwave("e_x * p_y - e_y * p_x")
 
 with system as (H, Δ, V):
     for i in lattice.sites():
