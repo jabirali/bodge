@@ -21,6 +21,10 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     Note that you need only provide a list of positive energies at which to
     calculate the density of states, since electron-hole symmetry is used to
     get the negative-energy solutions in an efficient manner.
+
+    TODO:
+    - Factor out the Green function calculation as separate function that
+      accepts Hamiltonian indices as arguments. Can be used for e.g. currents.
     """
     # Prepare input and output variables.
     H, M, I = system(format="csc")
@@ -127,12 +131,13 @@ def spectral(
 
 
 def free_energy(system: Hamiltonian):
-    """Calculate the free energy for a given physical system.
+    """Calculate the Landau free energy from a given Hamiltonian matrix.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
-    and evaluating the entropy contributions ∑ log[f(ε_n)] to the free energy.
+    and subsequently evaluating the entropy contributions to the free energy.
 
-    TODO: Incorporate superconducting contributions of the type |Δ|^2/V.
+    TODO:
+    - Incorporate mean field contributions of the type E_0 ~ ∑ |Δ_i|^2/U_i.
     """
 
     H = system(format="dense")
