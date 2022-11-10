@@ -1,10 +1,9 @@
-import numpy as np
 from scipy.sparse import identity
 from scipy.sparse.linalg import norm
 
-from .hamiltonian import *
-from .math import *
-from .typing import *
+from .common import *
+from .hamiltonian import Hamiltonian
+from .math import cheb
 
 
 class FermiMatrix:

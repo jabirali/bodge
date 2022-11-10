@@ -1,31 +1,7 @@
 import warnings
 from math import ceil
 
-import multiprocess as mp
-import numpy as np
-import scipy.sparse as sps
-from tqdm import trange
-
-from .typing import *
-
-# Fundamental constants.
-π = np.pi
-
-# Pauli matrices used to represent spin.
-σ0 = np.array([[+1, 0], [0, +1]], dtype=np.complex128)
-σ1 = np.array([[0, +1], [+1, 0]], dtype=np.complex128)
-σ2 = np.array([[0, -1j], [+1j, 0]], dtype=np.complex128)
-σ3 = np.array([[+1, 0], [0, -1]], dtype=np.complex128)
-
-σ = np.stack([σ1, σ2, σ3])
-
-# Compact notation for imaginary versions.
-jσ0 = 1j * σ0
-jσ1 = 1j * σ1
-jσ2 = 1j * σ2
-jσ3 = 1j * σ3
-
-jσ = np.stack([jσ1, jσ2, jσ3])
+from .common import *
 
 
 def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps.csr_matrix:

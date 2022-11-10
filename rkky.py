@@ -19,6 +19,7 @@ S_0 = 2 * t
 lattice = CubicLattice((Lx, Ly, 1))
 system = Hamiltonian(lattice)
 
+
 def spin(desc: str):
     e_x = np.array([1, 0, 0])
     e_y = np.array([0, 1, 0])
@@ -28,13 +29,14 @@ def spin(desc: str):
 
     return np.einsum("s,sab -> ab", S, σ)
 
+
 with system as (H, Δ, V):
     for i in lattice.sites():
         Δ[i, i] = -Δ_0 * jσ2
 
-        if i[0] == (Lx-δ)//2 and i[1] == Ly//2:
+        if i[0] == (Lx - δ) // 2 and i[1] == Ly // 2:
             H[i, i] = -μ * σ0 - S_0 * spin("+e_z")
-        elif i[0] == (Lx+δ)//2 and i[1] == Ly//2:
+        elif i[0] == (Lx + δ) // 2 and i[1] == Ly // 2:
             H[i, i] = -μ * σ0 - S_0 * spin("-e_z")
         else:
             H[i, i] = -μ * σ0
@@ -42,7 +44,7 @@ with system as (H, Δ, V):
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
-sites = [i for i in lattice.sites() if i[1] == Ly//2]
+sites = [i for i in lattice.sites() if i[1] == Ly // 2]
 energies = np.linspace(0, 2 * Δ_0, 51)
 
 df = ldos(system, sites, energies)
