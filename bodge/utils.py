@@ -113,8 +113,8 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     # Calculate the spectral function via direct inversion.
     spectral = []
     for ω in energies:
-        Gᴿ = inv((ω + η) * I - H)
-        Gᴬ = inv((ω - η) * I - H)
+        Gᴿ = la.inv((ω + η) * I - H)
+        Gᴬ = la.inv((ω - η) * I - H)
         A = (Gᴿ - Gᴬ) / (-2j * π)
 
         spectral.append(A)

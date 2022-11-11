@@ -133,7 +133,15 @@ class Hamiltonian:
 
     @typecheck
     def __call__(self, format="csr") -> Union[tuple[SpMatrix, SpMatrix, SpMatrix], Matrix]:
-        """Return an optimal numerical representation of the Hamiltonian."""
+        """Return a specific matrix representation of the Hamiltonian.
+
+        If `format = "dense"`, then the Hamiltonian is returned as a dense
+        matrix (i.e. `np.array`). If `format = "bsr" | "csr" | "csc"`, then
+        three sparse matrices (i.e. `scipy.sparse.spmatrix`) are returned.
+        The first is the Hamiltonian itself. The second is a mask indicating
+        every term that *could* be present in a general Hamiltonian with
+        nearest-neighbor interactions. The last is an identity matrix.
+        """
         # Get relevant stored fields.
         H = self.matrix
         M = self.mask
