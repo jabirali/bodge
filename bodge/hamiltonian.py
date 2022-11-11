@@ -1,8 +1,3 @@
-import multiprocess as mp
-import numpy as np
-from scipy.linalg import eigh, inv
-from scipy.sparse.linalg import eigsh, norm
-
 from .common import *
 from .lattice import Lattice
 
@@ -52,24 +47,24 @@ class Hamiltonian:
                 cols[k] = i
                 k += 1
 
-        skeleton = coo_matrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
+        skeleton = CooMatrix((data, (rows, cols)), shape=self.shape).tobsr((4, 4))
 
         # Save an integer matrix that encodes the structure of the Hamiltonian,
         # i.e. any potentially present element in the matrix is indicated by 1.
         # This can be used to instantiate new matrices with the same structure.
-        self.mask: bsr_matrix = bsr_matrix(skeleton, dtype=np.int8)
+        self.mask: BsrMatrix = BsrMatrix(skeleton, dtype=np.int8)
         self.mask.data[...] = 1
 
         # Save an identity matrix of the same dimension as the Hamiltonian.
-        self.identity: dia_matrix = identity(self.shape[0], "int8")
+        self.identity: DiaMatrix = sp.identity(self.shape[0], "int8")
 
         # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
-        self.matrix: bsr_matrix = bsr_matrix(skeleton, dtype=np.complex128)
+        self.matrix: BsrMatrix = BsrMatrix(skeleton, dtype=np.complex128)
         self.matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: DenseArray[np.complex128] = self.matrix.data
+        self.data: Matrix = self.matrix.data
 
         # Storage for any Hubbard-type potentials on the lattice.
         self.pot: dict[Coords, float] = {}
@@ -77,7 +72,7 @@ class Hamiltonian:
     @typecheck
     def __enter__(
         self,
-    ) -> tuple[dict[Coords, DenseArray], dict[Coords, DenseArray], dict[Coords, float]]:
+    ) -> tuple[dict[Coords, Matrix], dict[Coords, Matrix], dict[Coords, float]]:
         """Implement a context manager interface for the class.
 
         This lets us write compact `with` blocks like the below, which is much
@@ -137,9 +132,7 @@ class Hamiltonian:
         del self.pair
 
     @typecheck
-    def __call__(
-        self, format="csr"
-    ) -> Union[tuple[SparseArray, SparseArray, SparseArray], DenseArray]:
+    def __call__(self, format="csr") -> Union[tuple[SpMatrix, SpMatrix, SpMatrix], Matrix]:
         """Return an optimal numerical representation of the Hamiltonian."""
         # Get relevant stored fields.
         H = self.matrix

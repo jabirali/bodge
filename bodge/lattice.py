@@ -28,7 +28,7 @@ class Lattice:
         self.shape: Coord = shape
 
         # Number of atoms in the lattice.
-        self.size: Index = np.prod(shape)
+        self.size: Index = int(np.prod(shape))
 
         # Dimensionality of the lattice.
         self.dim: int = sum([1 for x in self.shape if x > 1])

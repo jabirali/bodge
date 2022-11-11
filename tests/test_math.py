@@ -1,9 +1,8 @@
-import numpy as np
 import pytest
-import scipy.sparse as sps
 from scipy.linalg import det, eigh
 from scipy.stats import unitary_group
 
+from bodge.common import *
 from bodge.math import *
 
 
@@ -90,8 +89,8 @@ def test_chebyshev_sparse():
     I1 = np.identity(16)
     X1 = np.random.randn(16, 16)
 
-    I2 = sps.bsr_matrix(I1, blocksize=(4, 4))
-    X2 = sps.bsr_matrix(X1, blocksize=(4, 4))
+    I2 = BsrMatrix(I1, blocksize=(4, 4))
+    X2 = BsrMatrix(X1, blocksize=(4, 4))
 
     chebs_1 = cheb_poly(X1, I1, 10)
     chebs_2 = cheb_poly(X2, I2, 10)
@@ -148,6 +147,6 @@ def test_idblk():
     K = 6
 
     Is = [idblk(k, M, N) for k in range(K)]
-    I1 = sps.hstack([I_k for I_k in Is if I_k is not None])
-    I2 = sps.identity(N)
+    I1 = sp.hstack([I_k for I_k in Is if I_k is not None])
+    I2 = sp.identity(N)
     assert (I1.todense() == I2.todense()).all()

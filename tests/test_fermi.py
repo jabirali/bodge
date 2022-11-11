@@ -1,9 +1,7 @@
 from scipy.stats import unitary_group
 
-from bodge.fermi import FermiMatrix
-from bodge.hamiltonian import Hamiltonian
-from bodge.lattice import CubicLattice
-from bodge.math import *
+from bodge import *
+from bodge.common import *
 
 
 def test_fermi_exact():

@@ -1,7 +1,7 @@
-import numpy as np
 from scipy.linalg import eigh
 
 from bodge import *
+from bodge.common import *
 
 
 def test_diagonalize():

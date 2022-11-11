@@ -1,5 +1,6 @@
 from pytest import raises
 
+from bodge.common import *
 from bodge.lattice import *
 
 

@@ -1,14 +1,22 @@
 """Common imports and type definitions for the whole project."""
 
-# Type annotations that are checked at runtime.
+# Core numerical libraries.
+import math
+
+import multiprocess as mp
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import scipy.linalg as la
+import scipy.sparse as sp
+import scipy.sparse.linalg as sa
+
+# Enable runtime type checks.
 from beartype import beartype as typecheck
 from beartype.typing import Any, Callable, Iterator, Optional, Union
 
-# NumPy/SciPy array types.
-from numpy.typing import ArrayLike
-from numpy.typing import NDArray as DenseArray
-from scipy.sparse import spmatrix as SparseArray
-from scipy.sparse import bsr_matrix, coo_matrix, csr_matrix, dia_matrix, identity, spmatrix
+# Miscellaneous conveniences.
+from tqdm import tqdm, trange
 
 # Data types for working with Lattice coordinates.
 Index = int
@@ -16,14 +24,14 @@ Coord = tuple[int, int, int]
 Indices = tuple[Index, Index]
 Coords = tuple[Coord, Coord]
 
-# Data types for general matrices.
-Array = Union[SparseArray, DenseArray]
-
-
-# Numerical imports
-import multiprocess as mp
-import numpy as np
-import scipy.sparse as sps
+# Data types for working with various matrix formats.
+Matrix = npt.NDArray[np.complex128]
+SpMatrix = sp.spmatrix
+CooMatrix = sp.coo_matrix
+DiaMatrix = sp.dia_matrix
+BsrMatrix = sp.bsr_matrix
+CsrMatrix = sp.csr_matrix
+CscMatrix = sp.csc_matrix
 
 # Fundamental constants.
 π = np.pi
@@ -43,7 +51,3 @@ jσ2 = 1j * σ2
 jσ3 = 1j * σ3
 
 jσ = np.stack([jσ1, jσ2, jσ3])
-
-
-# Progress bars
-from tqdm import tqdm, trange

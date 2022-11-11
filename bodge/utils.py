@@ -1,10 +1,5 @@
-import pandas as pd
-import scipy.linalg as sla
-from scipy.sparse import csc_matrix, hstack
-from scipy.sparse.linalg import spsolve
-
 from .common import *
-from .hamiltonian import *
+from .hamiltonian import Hamiltonian
 from .math import *
 
 
@@ -49,13 +44,13 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     cols = np.arange(M)
     data = np.repeat(1, M)
 
-    B = csc_matrix((data, (rows, cols)), shape=(N, M))
+    B = CscMatrix((data, (rows, cols)), shape=(N, M))
 
     # Calculate the density of states.
     for ω in tqdm(ωs, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
         A = ω * I - H
-        X = spsolve(A, B)
+        X = sa.spsolve(A, B)
 
         # Extract the few elements of interest.
         x = X.multiply(B).sum(axis=0)
@@ -83,7 +78,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
 
 
-def diagonalize(system: Hamiltonian) -> tuple[DenseArray, DenseArray]:
+def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     """Calculate the exact eigenstates of the system via direct diagonalization.
 
     This calculates the eigenvalues and eigenvectors of the system. Due to
@@ -93,7 +88,7 @@ def diagonalize(system: Hamiltonian) -> tuple[DenseArray, DenseArray]:
     """
     # Calculate the relevant eigenvalues and eigenvectors.
     H = system(format="dense")
-    eigval, eigvec = eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
+    eigval, eigvec = la.eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
 
     # Restructure the eigenvectors to have the format eigvec[n, i, α],
     # where n corresponds to eigenvalue E[n], i is a position index, and
@@ -103,9 +98,7 @@ def diagonalize(system: Hamiltonian) -> tuple[DenseArray, DenseArray]:
     return eigval, eigvec
 
 
-def spectral(
-    system: Hamiltonian, energies: ArrayLike, resolution: float = 1e-3
-) -> list[DenseArray]:
+def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Matrix]:
     """Calculate the exact spectral function of the system via direct inversion.
 
     Note that this method is quite inefficient since it uses dense matrices;
@@ -140,7 +133,7 @@ def free_energy(system: Hamiltonian):
     """
 
     H = system(format="dense")
-    ε = sla.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
+    ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
     # TODO: Calculate the actual free energy from this.
     return np.array(sorted(ε_n for ε_n in ε if ε_n > 0))
@@ -175,7 +168,7 @@ def pwave(desc: str):
     Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2) / 2
 
     # Function for evaluating Δ(p) on the lattice.
-    def Δ_p(i: Coord, j: Coord) -> DenseArray:
+    def Δ_p(i: Coord, j: Coord) -> Matrix:
         δ = np.subtract(j, i)
         return np.einsum("iab,i -> ab", Δ, δ)
 

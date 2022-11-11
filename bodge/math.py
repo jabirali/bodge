@@ -1,16 +1,13 @@
-import warnings
-from math import ceil
-
 from .common import *
 
 
-def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps.csr_matrix:
+def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> CsrMatrix:
     """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
     # TODO: Remove optimizations now available via `Hamiltonian.compile`.
 
     # Use CSR matrices for numerical performance.
-    X = sps.csr_matrix(X)
-    S = sps.csr_matrix(S)
+    X = CsrMatrix(X)
+    S = CsrMatrix(S)
 
     # Discard intentionally left zero-blocks from the matrices.
     X.eliminate_zeros()
@@ -27,11 +24,11 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps
 
     # Determine optimal blocksize for parallel calculations. Too few blocks
     # wastes processor power, while too large blocks wastes memory and cache.
-    W_cpu = ceil(X.shape[1] / mp.cpu_count())  # 1 block/core.
-    W_mem = ceil(1024**2 / X.shape[0])  # 1 MB blocks.
+    W_cpu = math.ceil(X.shape[1] / mp.cpu_count())  # 1 block/core.
+    W_mem = math.ceil(1024**2 / X.shape[0])  # 1 MB blocks.
 
     W = min(W_cpu, W_mem)
-    K = ceil(X.shape[1] / W)
+    K = math.ceil(X.shape[1] / W)
 
     # Blockwise calculation of the Chebyshev expansion.
     def kernel(k):
@@ -58,7 +55,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> sps
         Fs = pool.map(kernel, ks, chunksize=1)
 
     # Merge the resulting blocks.
-    F: sps.csr_matrix = sps.hstack([F_k for F_k in Fs if F_k is not None])
+    F: CsrMatrix = sp.hstack([F_k for F_k in Fs if F_k is not None])
 
     return F
 
@@ -147,7 +144,7 @@ def idblk(block, blocksize, dim):
     # Create the corresponding block of the identity matrix.
     shape = (dim, blocksize)
     diag = np.repeat(np.int8(1), blocksize)
-    matrix = sps.dia_matrix((diag, [-offset]), shape, dtype=np.int8)
+    matrix = DiaMatrix((diag, [-offset]), shape, dtype=np.int8)
 
     # Return each identity block.
     return matrix.tocsr()

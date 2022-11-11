@@ -1,8 +1,6 @@
-from scipy.sparse import identity
-from scipy.sparse.linalg import norm
-
 from .common import *
 from .hamiltonian import Hamiltonian
+from .lattice import Lattice
 from .math import cheb
 
 
@@ -26,9 +24,9 @@ class FermiMatrix:
         self.order: int = order
 
         # Fermi matrix and its accessors.
-        self.matrix: bsr_matrix
-        self.hopp: dict[Coords, DenseArray]
-        self.pair: dict[Coords, DenseArray]
+        self.matrix: BsrMatrix
+        self.hopp: dict[Coords, Matrix]
+        self.pair: dict[Coords, Matrix]
 
     def __call__(self, temperature: float):
         """Calculate the Fermi matrix at a given temperature."""
@@ -41,7 +39,7 @@ class FermiMatrix:
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
-        Ω = norm(H, 1)
+        Ω = sa.norm(H, 1)
         H /= Ω
 
         # Define the Fermi function.
