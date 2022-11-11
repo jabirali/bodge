@@ -1,7 +1,37 @@
+from numpy.lib import diag
 from scipy.linalg import eigh
 
 from bodge import *
 from bodge.common import *
+
+
+def test_free_energy():
+    # Instantiate a simple S/N/F system.
+    lattice = CubicLattice((10, 7, 3))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ, _):
+        for i in lattice.sites():
+            if i[0] <= 3:
+                H[i, i] = -0.5 * σ0
+                Δ[i, i] = -1.0 * jσ2
+            if i[0] >= 7:
+                H[i, i] = +0.5 * σ0 + 1.5 * σ3
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+
+    # Verify the expression for free energy.
+    for T in [0.01, 0.1, 1.0]:
+        # Use the predefined function.
+        F1 = free_energy(system, T)
+
+        # Diagonalize and use standard expression.
+        ε, χ = diagonalize(system)
+        ε = np.hstack([-ε, +ε])
+        F2 = -(T / 2) * np.sum(np.log(1 + np.exp(-ε / T)))
+
+        assert np.allclose(F1, F2)
 
 
 def test_diagonalize():

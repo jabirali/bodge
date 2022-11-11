@@ -1,3 +1,5 @@
+from pytest import CallInfo
+
 from .common import *
 from .hamiltonian import Hamiltonian
 from .math import *
@@ -122,21 +124,39 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     return spectral
 
 
-def free_energy(system: Hamiltonian):
+def free_energy(system: Hamiltonian, temperature: float = 0.01):
     """Calculate the Landau free energy from a given Hamiltonian matrix.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
     and subsequently evaluating the entropy contributions to the free energy.
-
-    TODO:
-    - Incorporate mean field contributions of the type E_0 ~ ∑ |Δ_i|^2/U_i.
     """
-
+    T = temperature
     H = system(format="dense")
+
+    # Calculate the eigenvalues via a dense parallel algorithm.
     ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
-    # TODO: Calculate the actual free energy from this.
-    return np.array(sorted(ε_n for ε_n in ε if ε_n > 0))
+    # Extract the positive eigenvalues.
+    ε = ε[ε > 0]
+
+    # TODO: Mean field contributions.
+    E0 = 0.0
+
+    # Internal energy.
+    U = E0 - (1 / 2) * np.sum(ε)
+
+    # Entropy contribution.
+    if T == 0:
+        S = 0
+    elif T > 0:
+        S = np.sum(np.log(1 + np.exp(-ε / T)))
+    else:
+        raise ValueError("Expected non-negative temperature!")
+
+    # Free energy
+    F = U - T * S
+
+    return F
 
 
 def pwave(desc: str):
