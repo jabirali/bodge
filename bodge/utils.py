@@ -1,5 +1,3 @@
-from pytest import CallInfo
-
 from .common import *
 from .hamiltonian import Hamiltonian
 from .math import *
