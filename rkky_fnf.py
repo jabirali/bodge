@@ -7,18 +7,16 @@ from bodge.utils import ldos
 
 t = 1
 μ = 0.5
-δ = 10
 
-for Ln in range(20):
-    Lm = 5
+Lm = 2
+for δ in range(1, 101):
+    Lx = 2 * Lm + δ
+    Ly = 20
+    Lz = 20
 
-    Lx = Ln + 2 * Lm
-    Ly = 30
+    M = t/2
 
-
-    M = 2 * t
-
-    lattice = CubicLattice((Lx, Ly, 1))
+    lattice = CubicLattice((Lx, Ly, Lz))
     system = Hamiltonian(lattice)
 
 
@@ -34,13 +32,21 @@ for Ln in range(20):
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
 
-    F1 = free_energy(system)
+        # for i in lattice.sites():
+        #     if i[1] == 0:
+        #         H[i, (i[0], i[1], )]
+        # H[0, Lx-1] = -t * σ0
+        # H[Lx-1, 0] = -t * σ0
+        # H[0, Lx-1] = -t * σ0
+        # H[Lx-1, 0] = -t * σ0
+
+    F_fm = free_energy(system)
 
     with system as (H, Δ, V):
         for i in lattice.sites():
             if i[0] < Lm:
                 H[i, i] = -μ * σ0 - M * σ3
 
-    F2 = free_energy(system)
+    F_afm = free_energy(system)
 
-    print(Ln, F1 - F2)
+    print(f"{δ}, {(F_fm - F_afm)/(Ly*Lz)}")
