@@ -30,11 +30,7 @@ def test_sparsity():
     system = Hamiltonian(lattice)
 
     with system as (H, Δ, _):
-        for i in lattice.sites():
-            H[i, i] = 1 * σ3 + 2 * σ2
-            Δ[i, i] = 5 * σ0 - 3 * σ2
-
-        for i, j in lattice.bonds():
+        for i, j in lattice:
             H[i, j] = 3 * σ0 - 4 * σ2
             Δ[i, j] = 2 * σ3 + 5 * σ2
 
