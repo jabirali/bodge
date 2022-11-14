@@ -28,7 +28,10 @@ class Hamiltonian:
         # Initialize the most general 4N×4N Hamiltonian for this lattice as a
         # sparse matrix. The COO format is most efficient for constructing the
         # matrix, but the BSR format is more computationally efficient later.
-        size = sum(1 for _ in lattice.sites()) + sum(2 for _ in lattice.bonds())
+        sites = sum(1 for _ in lattice.sites())
+        bonds = sum(2 for _ in lattice.bonds())
+        edges = sum(2 for _ in lattice.edges())
+        size = sites + bonds + edges
 
         rows = np.zeros(size, dtype=np.int64)
         cols = np.zeros(size, dtype=np.int64)

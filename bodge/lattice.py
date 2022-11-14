@@ -135,9 +135,9 @@ class CubicLattice(Lattice):
         Lx, Ly, Lz = self.shape[0], self.shape[1], self.shape[2]
         if axis is None:
             # Edges along all axes.
-            yield from self.bonds(axis=2)
-            yield from self.bonds(axis=1)
-            yield from self.bonds(axis=0)
+            yield from self.edges(axis=2)
+            yield from self.edges(axis=1)
+            yield from self.edges(axis=0)
         elif axis == 0:
             # Edges at x=0 and x=Lx-1.
             for y in range(Ly):

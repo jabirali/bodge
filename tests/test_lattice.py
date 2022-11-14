@@ -40,6 +40,7 @@ def test_bonds():
         # Verify neighbors along the z-axis.
         assert x2 == x1 and y2 == y1 and (z2 == z1 + 1 or z2 == z1 - 1)
 
+
 def test_edges():
     lat = CubicLattice((2, 3, 5))
     for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=0):
@@ -51,4 +52,3 @@ def test_edges():
     for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=2):
         assert z1 == 0 or z2 == 0
         assert z1 == 4 or z2 == 4
-

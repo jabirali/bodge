@@ -9,16 +9,15 @@ from bodge.utils import ldos
 t = 1
 μ = 0.0
 
-for δ in range(1, 40):
-    Lx = 48
-    Ly = 12
-    Lz = 12
+for δ in range(1, 20):
+    Lx = δ + 4
+    Ly = 10
+    Lz = 10
 
-    M = t/2
+    M = t / 2
 
     lattice = CubicLattice((Lx, Ly, Lz))
     system = Hamiltonian(lattice)
-
 
     with system as (H, Δ, V):
         for i in lattice.sites():
@@ -30,6 +29,12 @@ for δ in range(1, 40):
                 H[i, i] = -μ * σ0
 
         for i, j in lattice.bonds():
+            H[i, j] = -t * σ0
+
+        for i, j in lattice.edges(axis=1):
+            H[i, j] = -t * σ0
+
+        for i, j in lattice.edges(axis=2):
             H[i, j] = -t * σ0
 
     F_fm = free_energy(system)
