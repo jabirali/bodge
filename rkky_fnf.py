@@ -9,8 +9,8 @@ from bodge.utils import ldos
 t = 1
 μ = 0.0
 
-for δ in range(1, 20):
-    Lx = δ + 4
+for δ in range(1, 21):
+    Lx = 20 + 2 * 2
     Ly = 10
     Lz = 10
 
@@ -28,7 +28,13 @@ for δ in range(1, 20):
             else:
                 H[i, i] = -μ * σ0
 
-        for i, j in lattice.bonds():
+        for i, j in lattice.bonds(axis=0):
+            H[i, j] = -0.75*t * σ0
+
+        for i, j in lattice.bonds(axis=1):
+            H[i, j] = -t * σ0
+
+        for i, j in lattice.bonds(axis=2):
             H[i, j] = -t * σ0
 
         for i, j in lattice.edges(axis=1):
