@@ -39,3 +39,16 @@ def test_bonds():
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=2):
         # Verify neighbors along the z-axis.
         assert x2 == x1 and y2 == y1 and (z2 == z1 + 1 or z2 == z1 - 1)
+
+def test_edges():
+    lat = CubicLattice((2, 3, 5))
+    for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=0):
+        assert x1 == 0 or x2 == 0
+        assert x1 == 1 or x2 == 1
+    for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=1):
+        assert y1 == 0 or y2 == 0
+        assert y1 == 2 or y2 == 2
+    for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=2):
+        assert z1 == 0 or z2 == 0
+        assert z1 == 4 or z2 == 4
+

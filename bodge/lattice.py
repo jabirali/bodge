@@ -61,7 +61,6 @@ class Lattice:
         """Iterate over all atomic bonds in the lattice."""
         raise NotImplementedError
 
-
 class CubicLattice(Lattice):
     """Concrete representation of a primitive cubic lattice."""
 
@@ -111,3 +110,34 @@ class CubicLattice(Lattice):
                     for z in range(self.shape[2] - 1):
                         yield (x, y, z), (x, y, z + 1)
                         yield (x, y, z + 1), (x, y, z)
+        else:
+            raise ValueError("No such axis")
+
+    def edges(self, axis: int):
+        """Iterate over pairs of atoms at opposite lattice edges.
+
+        This is useful if you need periodic boundary conditions. For example,
+        to specify periodic boundary conditions along the x-axis, iterate over
+        `.edges(axis=0)` and define hopping amplitudes between these atoms.
+        """
+        Lx, Ly, Lz = self.shape[0], self.shape[1], self.shape[2]
+        if axis == 0:
+            # Edges at x=0 and x=Lx-1.
+            for y in range(Ly):
+                for z in range(Lz):
+                    yield (0, y, z), (Lx-1, y, z)
+                    yield (Lx-1, y, z), (0, y, z)
+        elif axis == 1:
+            # Edges at y=0 and y=Ly-1.
+            for x in range(Lx):
+                for z in range(Lz):
+                    yield (x, 0, z), (x, Ly-1, z)
+                    yield (x, Ly-1, z), (x, 0, z)
+        elif axis == 2:
+            # Edges at z=0 and z=Lz-1.
+            for x in range(Lx):
+                for y in range(Ly):
+                    yield (x, y, 0), (x, y, Lz-1)
+                    yield (x, y, Lz-1), (x, y, 0)
+        else:
+            raise ValueError("No such axis")

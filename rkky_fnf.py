@@ -3,15 +3,16 @@
 import numpy as np
 
 from bodge import *
+from bodge.common import *
 from bodge.utils import ldos
 
 t = 1
-μ = 0.5
+μ = 0.0
 
-for δ in range(1, 101):
-    Lx = 24
-    Ly = 16
-    Lz = 16
+for δ in range(1, 40):
+    Lx = 48
+    Ly = 12
+    Lz = 12
 
     M = t/2
 
