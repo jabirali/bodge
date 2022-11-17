@@ -22,6 +22,7 @@ class FermiMatrix:
         self.hamiltonian: Hamiltonian = hamiltonian
         self.lattice: Lattice = hamiltonian.lattice
         self.order: int = order
+        self.scale: float = 1.0
 
         # Fermi matrix and its accessors.
         self.matrix: BsrMatrix
@@ -39,12 +40,12 @@ class FermiMatrix:
 
         # Scale the matrix so all eigenvalues are in (-1, +1). We here use
         # the theorem that the spectral radius is bounded by any matrix norm.
-        Ω = sa.norm(H, 1)
-        H /= Ω
+        self.scale = sa.norm(H, 1)
+        H /= self.scale
 
         # Define the Fermi function.
         def fermi(x):
-            return (1 - np.tanh((Ω * x) / (2 * temperature))) / 2
+            return (1 - np.tanh((self.scale * x) / (2 * temperature))) / 2
 
         def odd(n):
             return n == 0 or n % 2 == 1
@@ -85,7 +86,7 @@ class FermiMatrix:
         """Calculate the s-wave singlet order parameter."""
         # TODO: Stencil for p-wave, d-wave, etc.
         V = self.hamiltonian.pot
-        Ω = self.hamiltonian.scale
+        Ω = self.scale
         Δ = np.zeros(self.lattice.shape, dtype=np.complex128)
         for i in self.lattice.sites():
             if (i, i) in V:
@@ -96,21 +97,10 @@ class FermiMatrix:
 
     def current_elec(self, axis):
         """Calculate the electric current on the lattice."""
-        # TODO: Factors t_ij
-        Ω = self.hamiltonian.scale
+        # TODO: General complex hopping amplitudes t_ij.
+        Ω = self.scale
         J = np.zeros(self.lattice.shape, dtype=np.float64)
         for i, j in self.lattice.bonds(axis):
             J[i] = (Ω / 2) * np.imag(np.trace(self.hopp[i, j] - self.hopp[j, i]))
 
         return J
-
-    def entropy(self):
-        pass
-
-    def free_energy(self):
-        V = self.hamiltonian.pot
-
-        # for i in self.lattice.sites():
-        #     V_i = self.hamiltonian.pot
-        #     Δ_i =
-        pass

@@ -11,6 +11,7 @@ import seaborn as sns
 from bodge import *
 from bodge.utils import ldos
 
+# Construct a 100x100 lattice.
 Lx = 100
 Ly = 100
 
