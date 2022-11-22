@@ -11,29 +11,25 @@ from bodge.utils import ldos
 # Tight-binding parameters.
 t = 1
 μ = -t
-M = +t/2
+M = +3*t/2
 
 # Construct a 2D lattice.
-Lx = 100
-Ly = 100
+Lx = 64
+Ly = 64
 Lz = 1
 
 lattice = CubicLattice((Lx, Ly, Lz))
 
-# Prepare impurity coordinates.
-i10 = 20
-i11 = Ly // 2
-
-i20 = i10 + 1
-i21 = i11
-
 # Loop over superconducting order parameters.
 for Δ0 in [0.00, 0.01*t, 0.03*t, 0.10*t, 0.30*t, 1.0*t]:
-        print(f"Δ0 = {Δ0}")
-
         # Compare ferromagnetic and antiferromagnetic alignments
         # of the two magnetic layers for various separations δ.
-        for δ in range(1, Ly - 2*Le):
+        i10 = 20
+        i11 = Ly // 2
+        for δ in range(1, Lx - 2*i10 + 1):
+            i20 = i10 + δ
+            i21 = i11
+
             # Construct the ferromagnetic Hamiltonian.
             system = Hamiltonian(lattice)
             with system as (H, Δ, V):
@@ -46,8 +42,8 @@ for Δ0 in [0.00, 0.01*t, 0.03*t, 0.10*t, 0.30*t, 1.0*t]:
                     else:
                         H[i, i] = -μ * σ0
 
-                for i, j in lattice.bonds()
-                H[i, j] = -t * σ0
+                for i, j in lattice.bonds():
+                    H[i, j] = -t * σ0
 
             # Calculate the corresponding free energy.
             E_fm = free_energy(system)
@@ -62,4 +58,4 @@ for Δ0 in [0.00, 0.01*t, 0.03*t, 0.10*t, 0.30*t, 1.0*t]:
             E_afm = free_energy(system)
 
             # Print the results in CSV format.
-            print(f"{δ}, {E_fm - E_afm}")
+            print(f"{Δ0}, {δ}, {E_fm - E_afm}")
