@@ -1,7 +1,7 @@
+from .chebyshev import cheb
 from .common import *
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
-from .chebyshev import cheb
 
 
 class FermiMatrix:

@@ -6,10 +6,10 @@ This is useful to e.g. determine the YSR bound states that might exist
 in such materials, which is likely related to RKKY oscillations.
 """
 
-import pandas as pd
-import numpy as np
-from scipy.signal import find_peaks
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.signal import find_peaks
 
 from bodge import *
 from bodge.utils import ldos, pwave

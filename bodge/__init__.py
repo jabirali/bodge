@@ -1,9 +1,9 @@
 """Sparse solver for large-scale tight-binding systems."""
 
+from .chebyshev import *
 from .common import *
 from .fermi import *
 from .hamiltonian import *
-from .chebyshev import *
 from .lattice import *
 from .utils import *
 

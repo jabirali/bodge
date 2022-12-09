@@ -3,6 +3,7 @@
 """Calculation of critical temperature for s-wave superconductors."""
 
 import numpy as np
+
 from bodge import *
 
 # ------------------------------------------------------------
