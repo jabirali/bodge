@@ -1,5 +1,3 @@
-from scipy.stats import unitary_group
-
 from bodge import *
 from bodge.common import *
 

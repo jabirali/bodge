@@ -10,7 +10,7 @@ from bodge.common import *
 # Tight-binding parameters.
 t = 1
 μ = -t
-M = +3*t/2
+M = +3 * t / 2
 
 # Construct a 2D lattice.
 Lx = 64
@@ -20,7 +20,7 @@ Lz = 1
 lattice = CubicLattice((Lx, Ly, Lz))
 
 # Loop over superconducting order parameters.
-for Δ0 in [0.03*t]:
+for Δ0 in [0.03 * t]:
     # for d in ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x + jp_y)"]:
     for d in ["e_x * p_x", "e_y * p_x", "e_x * p_y", "e_y * p_y"]:
         D = pwave(d)
@@ -29,7 +29,7 @@ for Δ0 in [0.03*t]:
         # of the two magnetic layers for various separations δ.
         i10 = 20
         i11 = Ly // 2
-        for δ in range(1, Lx - 2*i10 + 1):
+        for δ in range(1, Lx - 2 * i10 + 1):
             i20 = i10 + δ
             i21 = i11
 

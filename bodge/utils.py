@@ -1,6 +1,6 @@
 from .common import *
 from .hamiltonian import Hamiltonian
-from .math import *
+from .chebyshev import *
 
 
 def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
@@ -106,6 +106,7 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     """
     # Restore the Hamiltonian scale and switch to dense matrices.
     H = system(format="dense")
+    I = np.identity(H.shape[0])
 
     # The resolution is controlled by the imaginary energy.
     η = resolution * 1j

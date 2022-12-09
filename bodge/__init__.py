@@ -3,8 +3,8 @@
 from .common import *
 from .fermi import *
 from .hamiltonian import *
+from .chebyshev import *
 from .lattice import *
-from .math import *
 from .utils import *
 
 __author__ = "Jabir Ali Ouassou"

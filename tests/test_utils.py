@@ -1,4 +1,3 @@
-from numpy.lib import diag
 from scipy.linalg import eigh
 
 from bodge import *
