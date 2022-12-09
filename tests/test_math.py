@@ -1,9 +1,8 @@
 import pytest
-from scipy.linalg import det, eigh
 from scipy.stats import unitary_group
 
 from bodge.common import *
-from bodge.math import *
+from bodge.chebyshev import *
 
 
 def test_pauli():
