@@ -11,7 +11,7 @@ from bodge.utils import ldos
 # Tight-binding parameters.
 t = 1
 μ = -3
-M = t/2
+M = t / 2
 
 # Construct a 2D lattice.
 Lx = 100
