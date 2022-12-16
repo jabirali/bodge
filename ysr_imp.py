@@ -6,6 +6,7 @@ This is useful to e.g. determine the YSR bound states that might exist
 in such materials, which is likely related to RKKY oscillations.
 """
 
+#%% Imports
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from scipy.signal import find_peaks
 from bodge import *
 from bodge.utils import ldos, pwave
 
-# Construct a 2D lattice.
+#%% Construct a 2D lattice.
 Lx = 80
 Ly = 80
 Lz = 1
@@ -64,7 +65,7 @@ for s in ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x +
 
                     plt.figure()
                     # plt.plot(df0.ε / Δ0, df0.dos, 'k')
-                    plt.plot(df0.ε / Δ0, df0.dos, "k", df1.ε / Δ0, df1.dos, "r")
+                    plt.plot(df0.ε / Δ0, df0.dos, df1.ε / Δ0, df1.dos)
                     plt.xlabel(r"Energy $\epsilon/\Delta$")
                     plt.ylabel(r"LDOS $N(\epsilon, x)$")
                     plt.title(rf"Distance $\delta = {δ}$ along $x$-axis from impurity")
@@ -78,3 +79,5 @@ for s in ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x +
 
                     # print(dos)
                     # print(Δ0, J0, μ, δ, ε[n_ysr], dos[n_ysr])
+
+# %%
