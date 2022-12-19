@@ -15,8 +15,8 @@ from bodge import *
 from bodge.utils import ldos, pwave
 
 # Construct a 2D lattice.
-Lx = 321
-Ly = 321
+Lx = 64
+Ly = 64
 Lz = 1
 
 lattice = CubicLattice((Lx, Ly, 1))
