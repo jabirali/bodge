@@ -17,6 +17,10 @@ L_Z = 1
 
 lattice = CubicLattice((L_X,L_Y,L_Z))
 
+# Function to handle diagonal slicing of junctions.
+def diax(i, n):
+    return i[0] + (i[1] - L_Y//2) * n
+
 # Parameters corresponding to the lattice model.
 t = 1.0
 h = 0.15 * t
@@ -25,7 +29,7 @@ h = 0.15 * t
 T = 0.01*t
 
 # Parameters used for exploration.
-φs = np.linspace(0.0, 2.0, 100)
+φs = np.linspace(0.0, 2.0 * π, 100)
 Js = np.zeros_like(φs)
 
 # Iterate over phase differences.
@@ -41,20 +45,20 @@ for n, δφ in enumerate( tqdm( φs ) ):
             H[i, i] = -μ * σ0
 
             # Left superconductor.
-            if i[0] + (i[1] - L_Y//2) < L_SC:
+            if diax(i, 1) < L_SC:
                 Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
 
             # Right superconductor.
-            elif i[0] + (i[1] - L_Y//2) >= L_X - L_SC:
+            elif diax(i, 1) >= L_X - L_SC:
                 Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
         
         # Hopping along x-axis.
         # TODO: Check hopping b.c.
         for i, j in lattice.bonds(axis=0):
             # Inside altermagnet.
-            if i[0] + (i[1] - L_Y//2) >= (L_SC + L_NM) and i[0] + (i[1] - L_Y//2) < L_X - (L_SC + L_NM):
+            if diax(i, 1) >= (L_SC + L_NM) and diax(i, 1) < L_X - (L_SC + L_NM):
                 H[i, j] = -t * σ0 - h * σ3
-            elif j[0] + (j[1] - L_Y//2) >= (L_SC + L_NM) and j[0] + (j[1] - L_Y//2) < L_X - (L_SC + L_NM):
+            elif diax(j, 1) >= (L_SC + L_NM) and diax(j, 1) < L_X - (L_SC + L_NM):
                 H[i, j] = -t * σ0 - h * σ3
             
             # Outside altermagnet.
@@ -64,9 +68,9 @@ for n, δφ in enumerate( tqdm( φs ) ):
         # Hopping along y-axis.
         for i, j in lattice.bonds(axis=1):
             # Inside altermagnet.
-            if i[0] + (i[1] - L_Y//2) >= (L_SC + L_NM) and i[0] + (i[1] - L_Y//2) < L_X - (L_SC + L_NM):
+            if diax(i, 1) >= (L_SC + L_NM) and diax(i, 1) < L_X - (L_SC + L_NM):
                 H[i, j] = -t * σ0 + h * σ3
-            elif j[0] + (j[1] - L_Y//2) >= (L_SC + L_NM) and j[0] + (j[1] - L_Y//2) < L_X - (L_SC + L_NM):
+            elif diax(j, 1) >= (L_SC + L_NM) and diax(j, 1) < L_X - (L_SC + L_NM):
                 H[i, j] = -t * σ0 + h * σ3
             
             # Outside altermagnet.
