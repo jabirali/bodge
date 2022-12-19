@@ -55,9 +55,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> Csr
         Fs = pool.map(kernel, ks, chunksize=1)
 
     # Merge the resulting blocks.
-    F: CsrMatrix = sp.hstack([F_k for F_k in Fs if F_k is not None])
-
-    return F
+    return sp.hstack([F_k for F_k in Fs if F_k is not None])
 
 
 def cheb_poly(X, I, N: int):

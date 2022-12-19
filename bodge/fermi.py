@@ -1,7 +1,7 @@
+from .chebyshev import cheb
 from .common import *
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
-from .math import cheb
 
 
 class FermiMatrix:
@@ -96,8 +96,10 @@ class FermiMatrix:
         return Δ
 
     def current_elec(self, axis):
-        """Calculate the electric current on the lattice."""
-        # TODO: General complex hopping amplitudes t_ij.
+        """Calculate the electric current on the lattice.
+        
+        TODO: Complex hopping amplitudes t_ij if gauge fields exist.
+        """
         Ω = self.scale
         J = np.zeros(self.lattice.shape, dtype=np.float64)
         for i, j in self.lattice.bonds(axis):
