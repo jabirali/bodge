@@ -111,7 +111,7 @@ def visualize():
 
 # %% Simple lattice test.
 L_NM = 3
-L_AM = 9
+L_AM = 32
 
 DIAG = False
 
@@ -131,5 +131,96 @@ L_X = 2 * L_SC + 2 * L_NM + L_AM
 lattice = create_lattice()
 visualize()
 
+# %% Current calculations.
+def current(system, N=1000, T=1e-3):
+    F = FermiMatrix(system, N)(T)
+    Jx = F.current_elec(axis=0)
+    Jy = F.current_elec(axis=1)
 
+    J = 0.0
+    for i in lattice.sites():
+        if OBS(i):
+            if DIAG:
+                # Current in 45º direction.
+                J += (Jx[i] - Jy[i])/np.sqrt(2)
+            else:
+                # Current in 0º direction.
+                J += Jx[i]
+
+    return J
+
+# %% Check current convergence for S/F/S junctions.
+t = 1.0
+Δ0 = 0.1 * t
+μ = -0.5 * t
+δφ = π/2
+
+m = Δ0/2
+
+system = Hamiltonian(lattice)
+with system as (H, Δ, V):
+    for i in lattice.sites():
+        if inside(i):
+            if AM(i):
+                H[i, i] = -μ * σ0 - m * σ3
+            else:
+                H[i, i] = -μ * σ0
+
+            if SC1(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+            if SC2(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+    for i, j in lattice.bonds():
+        if inside(i) and inside(j):
+            H[i, j] = -t * σ0
+        
+Ns = []
+Js = []
+for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2800, 3200, 3600, 4000]):
+    Ns.append(N)
+    Js.append(current(system, N))
+    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+
+plt.plot(Ns, Js)
+plt.xlabel(r"Chebyshev order $N$")
+plt.ylabel(r"Supercurrent $J(π/2)/t$")
+
+# %% Similar test for smaller gaps.
+t = 1.0
+Δ0 = 0.01 * t
+μ = -0.5 * t
+δφ = π/2
+
+Tc = (Δ0 / 1.764)
+T = 0.1 * Tc
+
+m = Δ0/2
+
+system = Hamiltonian(lattice)
+with system as (H, Δ, V):
+    for i in lattice.sites():
+        if inside(i):
+            if AM(i):
+                H[i, i] = -μ * σ0 - m * σ3
+            else:
+                H[i, i] = -μ * σ0
+
+            if SC1(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+            if SC2(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+    for i, j in lattice.bonds():
+        if inside(i) and inside(j):
+            H[i, j] = -t * σ0
+        
+Ns = []
+Js = []
+for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2800, 3200, 3600, 4000]):
+    Ns.append(N)
+    Js.append(current(system, N, T))
+    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+
+plt.plot(Ns, Js)
+plt.xlabel(r"Chebyshev order $N$")
+plt.ylabel(r"Supercurrent $J(π/2)/t$")
 # %%
