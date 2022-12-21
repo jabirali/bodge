@@ -194,8 +194,8 @@ t = 1.0
 Tc = (Δ0 / 1.764)
 T = 0.1 * Tc
 
-# m = Δ0/2
-m = 0
+m = Δ0/2
+# m = 0
 
 system = Hamiltonian(lattice)
 with system as (H, Δ, V):
@@ -216,7 +216,7 @@ with system as (H, Δ, V):
         
 Ns = []
 Js = []
-for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2800, 3200, 3600, 4000]):
+for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2500, 2600, 2800, 3000, 3200, 3600, 4000, 8000]):
     Ns.append(N)
     Js.append(current(system, N, T))
     print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
@@ -224,4 +224,105 @@ for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2800, 3200, 3600, 4000]):
 plt.plot(Ns, Js)
 plt.xlabel(r"Chebyshev order $N$")
 plt.ylabel(r"Supercurrent $J(π/2)/t$")
+
+# %% Let's now test altermagnets.
+t = 1.0
+Δ0 = 0.03 * t
+μ = -0.5 * t
+δφ = π/2
+
+Tc = (Δ0 / 1.764)
+T = 0.1 * Tc
+
+m = Δ0/2
+
+system = Hamiltonian(lattice)
+with system as (H, Δ, V):
+    for i in lattice.sites():
+        if inside(i):
+            H[i, i] = -μ * σ0
+
+            if SC1(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+            if SC2(i):
+                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+    for i, j in lattice.bonds(axis=0):
+        if inside(i) and inside(j):
+            if AM(i) and AM(j):
+                H[i, j] = -t * σ0 - m * σ3
+            else:
+                H[i, j] = -t * σ0
+    for i, j in lattice.bonds(axis=1):
+        if inside(i) and inside(j):
+            if AM(i) and AM(j):
+                H[i, j] = -t * σ0 + m * σ3
+            else:
+                H[i, j] = -t * σ0
+        
+Ns = []
+Js = []
+for N in tqdm([200, 400, 800, 1600, 2400, 2500]):
+    Ns.append(N)
+    Js.append(current(system, N, T))
+    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+
+plt.plot(Ns, Js)
+plt.xlabel(r"Chebyshev order $N$")
+plt.ylabel(r"Supercurrent $J(π/2)/t$")
+         
+
+# %% Variations in Ly.
+t = 1.0
+Δ0 = 0.03 * t
+μ = -0.5 * t
+δφ = π/2
+
+Tc = (Δ0 / 1.764)
+T = 0.1 * Tc
+
+m = Δ0/2
+
+DIAG = True
+L_SC = 8
+L_X = 2 * L_SC + 2 * L_NM + L_AM
+N = 2500
+
+Ls = []
+Js = []
+for L_Y in trange(2, 64):
+    lattice = create_lattice()
+    visualize()
+
+    system = Hamiltonian(lattice)
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            if inside(i):
+                H[i, i] = -μ * σ0
+
+                if SC1(i):
+                    Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+                if SC2(i):
+                    Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+        for i, j in lattice.bonds(axis=0):
+            if inside(i) and inside(j):
+                if AM(i) and AM(j):
+                    H[i, j] = -t * σ0 - m * σ3
+                else:
+                    H[i, j] = -t * σ0
+        for i, j in lattice.bonds(axis=1):
+            if inside(i) and inside(j):
+                if AM(i) and AM(j):
+                    H[i, j] = -t * σ0 + m * σ3
+                else:
+                    H[i, j] = -t * σ0
+
+    Ls.append(L_Y)
+    Js.append(current(system, N, T) / L_Y)
+
+    print(f"J(Ly = {L_Y})/(L_Y * t) = {Js[-1]}")
+
+plt.plot(Ls, Js)
+plt.xlabel(r"Junction width $L_y/a$")
+plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
+            
 # %%
