@@ -187,14 +187,15 @@ plt.ylabel(r"Supercurrent $J(π/2)/t$")
 
 # %% Similar test for smaller gaps.
 t = 1.0
-Δ0 = 0.01 * t
+Δ0 = 0.03 * t
 μ = -0.5 * t
 δφ = π/2
 
 Tc = (Δ0 / 1.764)
 T = 0.1 * Tc
 
-m = Δ0/2
+# m = Δ0/2
+m = 0
 
 system = Hamiltonian(lattice)
 with system as (H, Δ, V):
