@@ -3,7 +3,6 @@ from .common import *
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
 
-
 class FermiMatrix:
     """Representation of the Fermi operator of a physical system.
 
