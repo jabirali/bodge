@@ -325,4 +325,56 @@ plt.plot(Ls, Js)
 plt.xlabel(r"Junction width $L_y/a$")
 plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
             
+# %% Try again for non-diagonal lattices.
+t = 1.0
+Δ0 = 0.03 * t
+μ = -0.5 * t
+δφ = π/2
+
+Tc = (Δ0 / 1.764)
+T = 0.1 * Tc
+
+m = Δ0/2
+
+DIAG = False
+L_SC = 8
+L_X = 2 * L_SC + 2 * L_NM + L_AM
+N = 2500
+
+Ls = []
+Js = []
+for L_Y in trange(6, 42):
+    lattice = create_lattice()
+    visualize()
+
+    system = Hamiltonian(lattice)
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            if inside(i):
+                H[i, i] = -μ * σ0
+
+                if SC1(i):
+                    Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+                if SC2(i):
+                    Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+        for i, j in lattice.bonds(axis=0):
+            if inside(i) and inside(j):
+                if AM(i) and AM(j):
+                    H[i, j] = -t * σ0 - m * σ3
+                else:
+                    H[i, j] = -t * σ0
+        for i, j in lattice.bonds(axis=1):
+            if inside(i) and inside(j):
+                if AM(i) and AM(j):
+                    H[i, j] = -t * σ0 + m * σ3
+                else:
+                    H[i, j] = -t * σ0
+    Ls.append(L_Y)
+    Js.append(current(system, N, T) / L_Y)
+
+    print(f"J(Ly = {L_Y})/(L_Y * t) = {Js[-1]}")
+
+plt.plot(Ls, Js)
+plt.xlabel(r"Junction width $L_y/a$")
+plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
 # %%
