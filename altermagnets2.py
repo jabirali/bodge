@@ -327,7 +327,7 @@ plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
             
 # %% Try again for non-diagonal lattices.
 t = 1.0
-Δ0 = 0.03 * t
+Δ0 = 0.05 * t
 μ = -0.5 * t
 δφ = π/2
 
@@ -337,13 +337,14 @@ T = 0.1 * Tc
 m = Δ0/2
 
 DIAG = False
-L_SC = 8
+L_SC = 20
+L_AM = 20
 L_X = 2 * L_SC + 2 * L_NM + L_AM
 N = 2500
 
 Ls = []
 Js = []
-for L_Y in trange(6, 42):
+for L_Y in trange(1, 51):
     lattice = create_lattice()
     visualize()
 
@@ -370,11 +371,15 @@ for L_Y in trange(6, 42):
                 else:
                     H[i, j] = -t * σ0
     Ls.append(L_Y)
-    Js.append(current(system, N, T) / L_Y)
+    J = current(system, N, T)
+    if len(Js) == 0:
+        Js.append(J)
+    else:
+        Js.append(J - Js[-1])
 
-    print(f"J(Ly = {L_Y})/(L_Y * t) = {Js[-1]}")
+    print(f"ΔJ(Ly = {L_Y}) = {Js[-1]}")
 
 plt.plot(Ls, Js)
 plt.xlabel(r"Junction width $L_y/a$")
-plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
+plt.ylabel(r"Change in supercurrent $ΔJ(π/2)/t$")
 # %%
