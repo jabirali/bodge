@@ -69,25 +69,19 @@ def current(system, N=4000, T=0.0):
     Jx = F.current_elec(axis=0)
     Jy = F.current_elec(axis=1)
 
-    J1 = 0.0
-    J2 = 0.0
+    J1x = 0.0
+    J2x = 0.0
+    J1y = 0.0
+    J2y = 0.0
     for i in lattice.sites():
         if OBS1(i):
-            if DIAG:
-                # Current in 45º direction.
-                J1 += (Jx[i] - Jy[i])/np.sqrt(2)
-            else:
-                # Current in 0º direction.
-                J1 += Jx[i]
+            J1x += Jx[i]
+            J1y += Jy[i]
         if OBS2(i):
-            if DIAG:
-                # Current in 45º direction.
-                J2 += (Jx[i] - Jy[i])/np.sqrt(2)
-            else:
-                # Current in 0º direction.
-                J2 += Jx[i]
+            J2x += Jx[i]
+            J2y += Jy[i]
 
-    return J1, J2
+    return J1x, J1y, J2x, J2y
 
 def visualize():
     if args.visualize:
@@ -196,7 +190,7 @@ for δφ in tqdm(φs, desc="phase"):
                 else:
                     H[i, j] = -t * σ0
 
-    J1, J2 = current(system, T=T)
-    print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1},{J2}")
+    J1x, J1y, J2x, J2y = current(system, T=T)
+    print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")
 
 # %%
