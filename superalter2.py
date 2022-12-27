@@ -5,6 +5,7 @@
 # %% Common imports.
 import numpy as np
 from argparse import ArgumentParser
+from tqdm import tqdm
 
 from bodge import *
 
@@ -63,7 +64,7 @@ def AM(i):
     """Altermagnetic interlayer."""
     return not SC1(i) and not SC2(i) and not NM1(i) and not NM2(i)
 
-def current(system, N=2500, T=0.0):
+def current(system, N=4000, T=0.0):
     F = FermiMatrix(system, N)(T)
     Jx = F.current_elec(axis=0)
     Jy = F.current_elec(axis=1)
@@ -171,7 +172,7 @@ visualize()
 
 # %% Current calculation.
 φs = np.linspace(0.0, 1.0, 51)
-for δφ in φs:
+for δφ in tqdm(φs, desc="phase"):
     system = Hamiltonian(lattice)
     with system as (H, Δ, V):
         for i in lattice.sites():

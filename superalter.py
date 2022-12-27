@@ -71,6 +71,26 @@ def current(system, N=2500, T=0.0):
 
     return J
 
+def visualize():
+    import matplotlib.pyplot as plt
+    
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    ax.set_axis_off()
+    marker="."
+
+    for i in lattice.sites():
+        if OBS(i):
+            ax.scatter(x=i[0], y=i[1], color='#ff0000', marker=marker)
+        elif SC1(i) or SC2(i):
+            ax.scatter(x=i[0], y=i[1], color='#ff7f00', marker=marker)
+        elif NM1(i) or NM2(i):
+            ax.scatter(x=i[0], y=i[1], color='k', marker=marker)
+        elif AM(i):
+            ax.scatter(x=i[0], y=i[1], color='#984ea3', marker=marker)
+        else:
+            ax.scatter(x=i[0], y=i[1], color='#eeeeee', marker=marker)
+    plt.show()
 
 # ------------------------------------------------------------
 # PART II: Prepare lattice and parameters.

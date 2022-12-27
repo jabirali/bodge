@@ -105,12 +105,12 @@ visualize()
 
 # %% Tight-binding parameters.
 t = 1.0
-Δ0 = 0.1 * t
+Δ0 = 0.2 * t
 μ = -0.5 * t
 m = 1.5 * Δ0
 
 Tc = (Δ0 / 1.764)
-T = 0.1 * Tc
+T = 0.05 * Tc
 
 # %% Perform the calculations
 δφ = 0.5

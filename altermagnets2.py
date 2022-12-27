@@ -73,9 +73,13 @@ def NM2(i):
     """Right normal spacer."""
     return x(i) >= L_X - L_SC - L_NM and not SC2(i)
 
-def OBS(i):
+def OBS1(i):
     """Current observation region."""
-    return x(i) == L_SC + L_NM//2
+    return x(i) == L_SC + 1
+
+def OBS2(i):
+    """Current observation region."""
+    return x(i) == L_X - L_SC - 2
 
 def AM(i):
     """Altermagnetic interlayer."""
@@ -99,7 +103,7 @@ def visualize():
     for i in lattice.sites():
         if not inside(i):
             ax.scatter(x=i[0], y=i[1], color='#eeeeee', marker=marker)
-        elif OBS(i):
+        elif OBS1(i) or OBS2(i):
             ax.scatter(x=i[0], y=i[1], color='#ff0000', marker=marker)
         elif SC1(i) or SC2(i):
             ax.scatter(x=i[0], y=i[1], color='#ff7f00', marker=marker)
@@ -116,7 +120,7 @@ L_AM = 32
 DIAG = False
 
 L_SC = 11
-L_Y = 11
+L_Y = 21
 L_X = 2 * L_SC + 2 * L_NM + L_AM
 
 lattice = create_lattice()
@@ -137,17 +141,25 @@ def current(system, N=1000, T=1e-3):
     Jx = F.current_elec(axis=0)
     Jy = F.current_elec(axis=1)
 
-    J = 0.0
+    J1 = 0.0
+    J2 = 0.0
     for i in lattice.sites():
-        if OBS(i):
+        if OBS1(i):
             if DIAG:
                 # Current in 45º direction.
-                J += (Jx[i] - Jy[i])/np.sqrt(2)
+                J1 += (Jx[i] - Jy[i])/np.sqrt(2)
             else:
                 # Current in 0º direction.
-                J += Jx[i]
+                J1 += Jx[i]
+        if OBS2(i):
+            if DIAG:
+                # Current in 45º direction.
+                J2 += (Jx[i] - Jy[i])/np.sqrt(2)
+            else:
+                # Current in 0º direction.
+                J2 += Jx[i]
 
-    return J
+    return J1, J2
 
 # %% Check current convergence for S/F/S junctions.
 t = 1.0
@@ -155,6 +167,9 @@ t = 1.0
 μ = -0.5 * t
 δφ = π/2
 
+Tc = (Δ0 / 1.764)
+T = 0.1 * Tc
+
 m = Δ0/2
 
 system = Hamiltonian(lattice)
@@ -175,211 +190,217 @@ with system as (H, Δ, V):
             H[i, j] = -t * σ0
         
 Ns = []
-Js = []
+Js1 = []
+Js2 = []
 for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2800, 3200, 3600, 4000]):
     Ns.append(N)
-    Js.append(current(system, N))
-    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+    J1, J2 = current(system, N, T)
+    Js1.append(J1)
+    Js2.append(J2)
+    print(f"J1(N = {Ns[-1]})/t = {Js1[-1]}")
+    print(f"J2(N = {Ns[-1]})/t = {Js2[-1]}")
 
-plt.plot(Ns, Js)
+plt.plot(Ns, Js1, Ns, Js2)
 plt.xlabel(r"Chebyshev order $N$")
 plt.ylabel(r"Supercurrent $J(π/2)/t$")
 
-# %% Similar test for smaller gaps.
-t = 1.0
-Δ0 = 0.03 * t
-μ = -0.5 * t
-δφ = π/2
+# # %% Similar test for smaller gaps.
+# t = 1.0
+# Δ0 = 0.03 * t
+# μ = -0.5 * t
+# δφ = π/2
 
-Tc = (Δ0 / 1.764)
-T = 0.1 * Tc
+# Tc = (Δ0 / 1.764)
+# T = 0.1 * Tc
 
-m = Δ0/2
-# m = 0
+# m = 3 * Δ0/2
+# # m = 0
 
-system = Hamiltonian(lattice)
-with system as (H, Δ, V):
-    for i in lattice.sites():
-        if inside(i):
-            if AM(i):
-                H[i, i] = -μ * σ0 - m * σ3
-            else:
-                H[i, i] = -μ * σ0
+# system = Hamiltonian(lattice)
+# with system as (H, Δ, V):
+#     for i in lattice.sites():
+#         if inside(i):
+#             if AM(i):
+#                 H[i, i] = -μ * σ0 - m * σ3
+#             else:
+#                 H[i, i] = -μ * σ0
 
-            if SC1(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
-            if SC2(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
-    for i, j in lattice.bonds():
-        if inside(i) and inside(j):
-            H[i, j] = -t * σ0
+#             if SC1(i):
+#                 Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+#             if SC2(i):
+#                 Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+#     for i, j in lattice.bonds():
+#         if inside(i) and inside(j):
+#             H[i, j] = -t * σ0
         
-Ns = []
-Js = []
-for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2500, 2600, 2800, 3000, 3200, 3600, 4000, 8000]):
-    Ns.append(N)
-    Js.append(current(system, N, T))
-    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+# Ns = []
+# Js1 = []
+# for N in tqdm([200, 400, 800, 1600, 2000, 2400, 2500, 2600, 2800, 3000, 3200, 3600, 4000, 8000]):
+#     Ns.append(N)
+#     Js1.append(current(system, N, T))
+#     print(f"J(N = {Ns[-1]})/t = {Js1[-1]}")
 
-plt.plot(Ns, Js)
-plt.xlabel(r"Chebyshev order $N$")
-plt.ylabel(r"Supercurrent $J(π/2)/t$")
+# plt.plot(Ns, Js1)
+# plt.xlabel(r"Chebyshev order $N$")
+# plt.ylabel(r"Supercurrent $J(π/2)/t$")
 
-# %% Let's now test altermagnets.
-t = 1.0
-Δ0 = 0.03 * t
-μ = -0.5 * t
-δφ = π/2
+# # %% Let's now test altermagnets.
+# t = 1.0
+# Δ0 = 0.03 * t
+# μ = -0.5 * t
+# δφ = π/2
 
-Tc = (Δ0 / 1.764)
-T = 0.1 * Tc
+# Tc = (Δ0 / 1.764)
+# T = 0.1 * Tc
 
-m = Δ0/2
+# m = Δ0/2
 
-system = Hamiltonian(lattice)
-with system as (H, Δ, V):
-    for i in lattice.sites():
-        if inside(i):
-            H[i, i] = -μ * σ0
+# system = Hamiltonian(lattice)
+# with system as (H, Δ, V):
+#     for i in lattice.sites():
+#         if inside(i):
+#             H[i, i] = -μ * σ0
 
-            if SC1(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
-            if SC2(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
-    for i, j in lattice.bonds(axis=0):
-        if inside(i) and inside(j):
-            if AM(i) and AM(j):
-                H[i, j] = -t * σ0 - m * σ3
-            else:
-                H[i, j] = -t * σ0
-    for i, j in lattice.bonds(axis=1):
-        if inside(i) and inside(j):
-            if AM(i) and AM(j):
-                H[i, j] = -t * σ0 + m * σ3
-            else:
-                H[i, j] = -t * σ0
+#             if SC1(i):
+#                 Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+#             if SC2(i):
+#                 Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+#     for i, j in lattice.bonds(axis=0):
+#         if inside(i) and inside(j):
+#             if AM(i) and AM(j):
+#                 H[i, j] = -t * σ0 - m * σ3
+#             else:
+#                 H[i, j] = -t * σ0
+#     for i, j in lattice.bonds(axis=1):
+#         if inside(i) and inside(j):
+#             if AM(i) and AM(j):
+#                 H[i, j] = -t * σ0 + m * σ3
+#             else:
+#                 H[i, j] = -t * σ0
         
-Ns = []
-Js = []
-for N in tqdm([200, 400, 800, 1600, 2400, 2500]):
-    Ns.append(N)
-    Js.append(current(system, N, T))
-    print(f"J(N = {Ns[-1]})/t = {Js[-1]}")
+# Ns = []
+# Js1 = []
+# for N in tqdm([200, 400, 800, 1600, 2400, 2500]):
+#     Ns.append(N)
+#     Js1.append(current(system, N, T))
+#     print(f"J(N = {Ns[-1]})/t = {Js1[-1]}")
 
-plt.plot(Ns, Js)
-plt.xlabel(r"Chebyshev order $N$")
-plt.ylabel(r"Supercurrent $J(π/2)/t$")
+# plt.plot(Ns, Js1)
+# plt.xlabel(r"Chebyshev order $N$")
+# plt.ylabel(r"Supercurrent $J(π/2)/t$")
          
 
-# %% Variations in Ly.
-t = 1.0
-Δ0 = 0.03 * t
-μ = -0.5 * t
-δφ = π/2
+# # %% Variations in Ly.
+# t = 1.0
+# Δ0 = 0.03 * t
+# μ = -0.5 * t
+# δφ = π/2
 
-Tc = (Δ0 / 1.764)
-T = 0.1 * Tc
+# Tc = (Δ0 / 1.764)
+# T = 0.1 * Tc
 
-m = Δ0/2
+# m = Δ0/2
 
-DIAG = True
-L_SC = 8
-L_X = 2 * L_SC + 2 * L_NM + L_AM
-N = 2500
+# DIAG = True
+# L_SC = 8
+# L_X = 2 * L_SC + 2 * L_NM + L_AM
+# N = 2500
 
-Ls = []
-Js = []
-for L_Y in trange(2, 64):
-    lattice = create_lattice()
-    visualize()
+# Ls = []
+# Js1 = []
+# for L_Y in trange(2, 64):
+#     lattice = create_lattice()
+#     visualize()
 
-    system = Hamiltonian(lattice)
-    with system as (H, Δ, V):
-        for i in lattice.sites():
-            if inside(i):
-                H[i, i] = -μ * σ0
+#     system = Hamiltonian(lattice)
+#     with system as (H, Δ, V):
+#         for i in lattice.sites():
+#             if inside(i):
+#                 H[i, i] = -μ * σ0
 
-                if SC1(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
-                if SC2(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
-        for i, j in lattice.bonds(axis=0):
-            if inside(i) and inside(j):
-                if AM(i) and AM(j):
-                    H[i, j] = -t * σ0 - m * σ3
-                else:
-                    H[i, j] = -t * σ0
-        for i, j in lattice.bonds(axis=1):
-            if inside(i) and inside(j):
-                if AM(i) and AM(j):
-                    H[i, j] = -t * σ0 + m * σ3
-                else:
-                    H[i, j] = -t * σ0
+#                 if SC1(i):
+#                     Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+#                 if SC2(i):
+#                     Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+#         for i, j in lattice.bonds(axis=0):
+#             if inside(i) and inside(j):
+#                 if AM(i) and AM(j):
+#                     H[i, j] = -t * σ0 - m * σ3
+#                 else:
+#                     H[i, j] = -t * σ0
+#         for i, j in lattice.bonds(axis=1):
+#             if inside(i) and inside(j):
+#                 if AM(i) and AM(j):
+#                     H[i, j] = -t * σ0 + m * σ3
+#                 else:
+#                     H[i, j] = -t * σ0
 
-    Ls.append(L_Y)
-    Js.append(current(system, N, T) / L_Y)
+#     Ls.append(L_Y)
+#     Js1.append(current(system, N, T) / L_Y)
 
-    print(f"J(Ly = {L_Y})/(L_Y * t) = {Js[-1]}")
+#     print(f"J(Ly = {L_Y})/(L_Y * t) = {Js1[-1]}")
 
-plt.plot(Ls, Js)
-plt.xlabel(r"Junction width $L_y/a$")
-plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
+# plt.plot(Ls, Js1)
+# plt.xlabel(r"Junction width $L_y/a$")
+# plt.ylabel(r"Supercurrent $J(π/2)/L_y t$")
             
-# %% Try again for non-diagonal lattices.
-t = 1.0
-Δ0 = 0.05 * t
-μ = -0.5 * t
-δφ = π/2
+# # %% Try again for non-diagonal lattices.
+# t = 1.0
+# Δ0 = 0.05 * t
+# μ = -0.5 * t
+# δφ = π/2
 
-Tc = (Δ0 / 1.764)
-T = 0.1 * Tc
+# Tc = (Δ0 / 1.764)
+# T = 0.1 * Tc
 
-m = Δ0/2
+# m = Δ0/2
 
-DIAG = False
-L_SC = 20
-L_AM = 20
-L_X = 2 * L_SC + 2 * L_NM + L_AM
-N = 2500
+# DIAG = False
+# L_SC = 20
+# L_AM = 20
+# L_X = 2 * L_SC + 2 * L_NM + L_AM
+# N = 2500
 
-Ls = []
-Js = []
-for L_Y in trange(1, 51):
-    lattice = create_lattice()
-    visualize()
+# Ls = []
+# Js1 = []
+# for L_Y in trange(1, 51):
+#     lattice = create_lattice()
+#     visualize()
 
-    system = Hamiltonian(lattice)
-    with system as (H, Δ, V):
-        for i in lattice.sites():
-            if inside(i):
-                H[i, i] = -μ * σ0
+#     system = Hamiltonian(lattice)
+#     with system as (H, Δ, V):
+#         for i in lattice.sites():
+#             if inside(i):
+#                 H[i, i] = -μ * σ0
 
-                if SC1(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
-                if SC2(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
-        for i, j in lattice.bonds(axis=0):
-            if inside(i) and inside(j):
-                if AM(i) and AM(j):
-                    H[i, j] = -t * σ0 - m * σ3
-                else:
-                    H[i, j] = -t * σ0
-        for i, j in lattice.bonds(axis=1):
-            if inside(i) and inside(j):
-                if AM(i) and AM(j):
-                    H[i, j] = -t * σ0 + m * σ3
-                else:
-                    H[i, j] = -t * σ0
-    Ls.append(L_Y)
-    J = current(system, N, T)
-    if len(Js) == 0:
-        Js.append(J)
-    else:
-        Js.append(J - Js[-1])
+#                 if SC1(i):
+#                     Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * δφ)
+#                 if SC2(i):
+#                     Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+#         for i, j in lattice.bonds(axis=0):
+#             if inside(i) and inside(j):
+#                 if AM(i) and AM(j):
+#                     H[i, j] = -t * σ0 - m * σ3
+#                 else:
+#                     H[i, j] = -t * σ0
+#         for i, j in lattice.bonds(axis=1):
+#             if inside(i) and inside(j):
+#                 if AM(i) and AM(j):
+#                     H[i, j] = -t * σ0 + m * σ3
+#                 else:
+#                     H[i, j] = -t * σ0
+#     Ls.append(L_Y)
+#     J = current(system, N, T)
+#     if len(Js1) == 0:
+#         Js1.append(J)
+#     else:
+#         Js1.append(J - Js1[-1])
 
-    print(f"ΔJ(Ly = {L_Y}) = {Js[-1]}")
+#     print(f"ΔJ(Ly = {L_Y}) = {Js1[-1]}")
 
-plt.plot(Ls, Js)
-plt.xlabel(r"Junction width $L_y/a$")
-plt.ylabel(r"Change in supercurrent $ΔJ(π/2)/t$")
+# plt.plot(Ls, Js1)
+# plt.xlabel(r"Junction width $L_y/a$")
+# plt.ylabel(r"Change in supercurrent $ΔJ(π/2)/t$")
+# # %%
+
 # %%
