@@ -15,8 +15,10 @@ df = pd.read_csv('test2.csv')
 df
 
 # %% 
-df1 = df[(df.m == 0.05) & (df.diag == False)]
+df1 = df[(df.m == 0.15) & (df.diag == False)]
+# df1 = df[(df.m == 0.05) & (df.diag == True)]
 df1['J'] = (df1.J1x + df1.J2x)/2
+# df1['J'] = (df1.J1x - df1.J1y)/np.sqrt(2)
 df1['δ'] = np.abs(df1.J1x - df1.J2x) + np.abs(df1.J1y) + np.abs(df1.J2y)
 
 # for L_AM in df1.L_AM.unique():
@@ -33,24 +35,41 @@ def sinish(φ, *args):
     
     return J
 
+Ls = []
+Ps = []
+Cs = []
 for L_AM, dfL in df1.groupby('L_AM'):
-    φ = dfL.φ
-    J = dfL.J
-    ps, _ = curve_fit(sinish, φ, J, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # Extract the current-phase relation.
+    φs = dfL.φ
+    js = dfL.J
 
-    def fit(φs):
-        Js = []
-        for φ in φs:
-            Js.append(sinish(φ, *ps))
-        return np.array(Js)
+    # Perform the curve fitting action.
+    ps = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ps, _ = curve_fit(sinish, φs, js, ps)
+    fs = np.array([sinish(φ, *ps) for φ in φs])
 
-    # Check the fit error.
-    print("error:", np.std(fit(φ) - J) / np.max(np.abs(J)))
+    # Check the curve fitting error.
+    print("error:", np.std(fs - js) / np.max(np.abs(js)))
+
+    # Extract the relevant metrics.
     print("first harmonic:", ps[0])
+    Ls.append(L_AM)
+    Ps.append(ps[0])
+    Cs.append(np.max(np.abs(js)))
 
-    # print(ps)
-    plt.plot(φ, J, 'k.', φ, fit(φ))
+    # Visualize the current fit.
+    plt.plot(φs, js, 'k.', φs, fs, 'r-')
     plt.show()
+
+plt.plot(Ls, [P/Cs[0] for P in Ps])
+plt.xlim([0, None])
+# plt.ylim([-0.1, 0.1])
+plt.grid()
+plt.show()
+
+plt.plot(Ls, Cs)
+plt.yscale('log')
+plt.show()
     # plt.show()
     # sns.lineplot(data=dfL, x='φ', y='J')
 # sns.heatmap(data=df1, center=0)
