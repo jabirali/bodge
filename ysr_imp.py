@@ -15,9 +15,9 @@ from scipy.signal import find_peaks
 from bodge import *
 from bodge.utils import ldos, pwave
 
-#%% Construct a 2D lattice.
-Lx = 80
-Ly = 80
+# Construct a 2D lattice.
+Lx = 64
+Ly = 64
 Lz = 1
 
 lattice = CubicLattice((Lx, Ly, 1))

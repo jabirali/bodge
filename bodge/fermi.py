@@ -3,7 +3,6 @@ from .common import *
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
 
-
 class FermiMatrix:
     """Representation of the Fermi operator of a physical system.
 
@@ -103,6 +102,9 @@ class FermiMatrix:
         Ω = self.scale
         J = np.zeros(self.lattice.shape, dtype=np.float64)
         for i, j in self.lattice.bonds(axis):
-            J[i] = (Ω / 2) * np.imag(np.trace(self.hopp[i, j] - self.hopp[j, i]))
+            try:
+                J[i] += (Ω / 2) * (j[axis] - i[axis]) * np.imag(np.trace(self.hopp[i, j] - self.hopp[j, i]))
+            except KeyError:
+                pass
 
         return J
