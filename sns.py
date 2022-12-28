@@ -26,6 +26,8 @@ with system as (H, Δ, V):
             Δ[i, i] = -Δ0 * jσ2 * np.exp((-1j/2) * δφ)
         elif i[0] >= L_X - 10:
             Δ[i, i] = -Δ0 * jσ2 * np.exp((+1j/2) * δφ)
+        else:
+            H[i, i] = - (t/2) * σ3
     for i, j in lattice.bonds():
         H[i, j] = -t * σ0
 
