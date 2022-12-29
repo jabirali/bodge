@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-from tqdm import tqdm, trange
 import matplotlib.pyplot as plt
+from tqdm import tqdm, trange
 
 from bodge import *
 from bodge.utils import ldos, pwave
-
 
 J0 = 3.0
 Δ0 = 0.2
@@ -13,12 +12,13 @@ J0 = 3.0
 
 RKKY = {}
 
+
 def calc_rkky(d):
     D = pwave(d)
 
     i10 = 20
     i11 = Ly // 2
-    for δ in trange(1, Lx - 2*i10 + 1):
+    for δ in trange(1, Lx - 2 * i10 + 1):
         i20 = i10 + δ
         i21 = i11
 
@@ -27,9 +27,9 @@ def calc_rkky(d):
         with system as (H, Δ, V):
             for i in lattice.sites():
                 if i[0] == i10 and i[1] == i11:
-                    H[i, i] = -μ * σ0 + (J0/2) * σ3
+                    H[i, i] = -μ * σ0 + (J0 / 2) * σ3
                 elif i[0] == i20 and i[1] == i21:
-                    H[i, i] = -μ * σ0 + (J0/2) * σ3
+                    H[i, i] = -μ * σ0 + (J0 / 2) * σ3
                 else:
                     H[i, i] = -μ * σ0
 
@@ -44,7 +44,7 @@ def calc_rkky(d):
         with system as (H, Δ, V):
             for i in lattice.sites():
                 if i[0] == i20 and i[1] == i21:
-                    H[i, i] = -μ * σ0 - (J0/2) * σ3
+                    H[i, i] = -μ * σ0 - (J0 / 2) * σ3
 
         # Calculate the corresponding free energy.
         E_afm = free_energy(system)
@@ -60,5 +60,6 @@ def calc_rkky(d):
 
     print(RKKY)
 
+
 for d in ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)"]:
-calc_rkky(d)
+    calc_rkky(d)

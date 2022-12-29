@@ -2,9 +2,10 @@
 
 """Josephson junctions with altermagnetic interlayers."""
 
+from argparse import ArgumentParser
+
 # %% Common imports.
 import numpy as np
-from argparse import ArgumentParser
 
 from bodge import *
 
@@ -14,41 +15,51 @@ def X(i):
     """Junction coordinate along the junction axis."""
     return i[0]
 
+
 def Y(i):
     """Junction coordinate in the transverse direction."""
     return i[1]
+
 
 def INS(i):
     """Check if a coordinate is inside the junction."""
     return X(i) < W or Y(i) < W
 
+
 def SC1(i):
     """First superconductor."""
     return Y(i) >= W + L_A1 + L_NM
-  
+
+
 def SC2(i):
     """Second superconductor."""
     return X(i) >= W + L_A2 + L_NM
+
 
 def NM1(i):
     """First normal spacer."""
     return Y(i) >= W + L_A1 and not SC1(i)
 
+
 def NM2(i):
     """Second normal spacer."""
     return X(i) >= W + L_A2 and not SC2(i)
+
 
 def OBS1(i):
     """Current observation region."""
     return Y(i) == W + L_A1 + 1
 
+
 def OBS2(i):
     """Current observation region."""
     return X(i) == W + L_A2 + 1
 
+
 def AM(i):
     """Altermagnetic interlayer."""
     return not SC1(i) and not SC2(i) and not NM1(i) and not NM2(i)
+
 
 def current(system, N=2500, T=0.0):
     F = FermiMatrix(system, N)(T)
@@ -65,27 +76,29 @@ def current(system, N=2500, T=0.0):
 
     return J1, J2
 
+
 def visualize():
     import matplotlib.pyplot as plt
-    
+
     fig, ax = plt.subplots()
-    ax.set_aspect('equal')
+    ax.set_aspect("equal")
     ax.set_axis_off()
-    marker="."
+    marker = "."
 
     for i in lattice.sites():
         if INS(i):
             if OBS1(i) or OBS2(i):
-                ax.scatter(x=i[0], y=i[1], color='#ff0000', marker=marker)
+                ax.scatter(x=i[0], y=i[1], color="#ff0000", marker=marker)
             elif SC1(i) or SC2(i):
-                ax.scatter(x=i[0], y=i[1], color='#ff7f00', marker=marker)
+                ax.scatter(x=i[0], y=i[1], color="#ff7f00", marker=marker)
             elif NM1(i) or NM2(i):
-                ax.scatter(x=i[0], y=i[1], color='k', marker=marker)
+                ax.scatter(x=i[0], y=i[1], color="k", marker=marker)
             elif AM(i):
-                ax.scatter(x=i[0], y=i[1], color='#984ea3', marker=marker)
+                ax.scatter(x=i[0], y=i[1], color="#984ea3", marker=marker)
             else:
-                ax.scatter(x=i[0], y=i[1], color='#eeeeee', marker=marker)
+                ax.scatter(x=i[0], y=i[1], color="#eeeeee", marker=marker)
     plt.show()
+
 
 # %% Prepare lattice.
 W = 20
@@ -109,7 +122,7 @@ t = 1.0
 μ = -0.5 * t
 m = 1.5 * Δ0
 
-Tc = (Δ0 / 1.764)
+Tc = Δ0 / 1.764
 T = 0.05 * Tc
 
 # %% Perform the calculations
@@ -122,9 +135,9 @@ with system as (H, Δ, V):
             H[i, i] = -μ * σ0
 
             if SC1(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j/2) * π * δφ)
+                Δ[i, i] = Δ0 * jσ2 * np.exp((-1j / 2) * π * δφ)
             if SC2(i):
-                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j/2) * π * δφ)
+                Δ[i, i] = Δ0 * jσ2 * np.exp((+1j / 2) * π * δφ)
     for i, j in lattice.bonds(axis=0):
         if INS(i) and INS(j):
             if AM(i) and AM(j):

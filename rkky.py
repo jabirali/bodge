@@ -83,10 +83,11 @@ def hamiltonian(lattice, order, s1, s2, δ):
 
         return system
 
+
 # Perform the actual simulations.
 with open("rkky.csv", "w") as f:
     f.write("order,δ,s1,s2,energy\n")
-    for δ in range(1, Lx - 20*2):
+    for δ in range(1, Lx - 20 * 2):
         for order in dvecs:
             for s1 in spins:
                 for s2 in spins:
