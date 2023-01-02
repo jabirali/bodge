@@ -13,9 +13,9 @@ from bodge import *
 
 # %% Load dataset.
 df = pd.read_csv("test2.csv")
-df = df[df.m == 0.05]
+df = df[df.m == 0.90]
 
-DIAG = False
+DIAG = True
 df = df[df.diag == DIAG]
 
 df

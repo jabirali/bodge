@@ -6,6 +6,8 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.patches import Rectangle
 
 from scipy.optimize import curve_fit
 
@@ -74,10 +76,59 @@ data = pd.concat(dfs)
 display(data)
 
 # %% Visualize the data.
-for (m, df) in data.groupby("m"):
-    fig, ax = plt.subplots()
-    sns.lineplot(data=df, x="L", y="A", hue="d", ax=ax)
-    # plt.xlim([0, 40])
-    # plt.ylim([-0.1,0.1])
-    plt.show()
+revtex()
+l1, l2 = plt.plot([1,2,3], [4,5,6], [1,2,3], [4,5,6])
 
+fig, axs = plt.subplots(1, 3, figsize=(2 * 3.375, (2.1 / 3) * 3.375), sharey=True)
+for (m, df), ax in zip(data.groupby("m"), axs):
+    ylim = [-0.1, 1.0]
+    if m == 0.05:
+        xlim = [0, 40]
+        xcut = [12, 40]
+        ycut = [-0.03, 0.06]
+
+        ax.set_title(r"\textbf{(a)} Field strength $m = 0.5\Delta$")
+    elif m == 0.15:
+        xlim = [0, 40]
+        xcut = [5, 40]
+        ycut = [-0.08, 0.12]
+
+        ax.set_title(r"\textbf{(b)} Field strength $m = 1.5\Delta$")
+    else:
+        xlim = [0, 16]
+        xcut = [1.5, 16]
+        ycut = [-0.02, 0.02]
+
+        ax.set_title(r"\textbf{(c)} Field strength $m = 0.9t$")
+        ax.set_xticks([0, 4, 8, 12, 16])
+
+    ax.add_patch(Rectangle((xcut[0], ycut[0]), xcut[1] - xcut[0], ycut[1] - ycut[0], edgecolor='#00000020', facecolor='#00000010'))
+    ax.axhline([0], color="#777777")
+    ax.tick_params(axis="y", left="on", right="on")
+
+    sns.lineplot(data=df, x="L", y="A", hue="d", ax=ax, legend=False)
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_ylabel(r"First harmonic $J_1(L_{\text{AM}})/J_1(0)$")
+    ax.set_xlabel(r"Altermagnet length $L_{\text{AM}}/a$")
+    ax.set_aspect((xlim[1] - xlim[0]) / (ylim[1] - ylim[0]))
+
+    ins = inset_axes(ax, "60%", "60%" ,loc="upper right", borderpad=0.5)
+    ins.axhline([0], color="#777777")
+
+    sns.lineplot(data=df, x="L", y="A", hue="d", ax=ins, legend=False)
+
+    ins.set_ylim(ycut)
+    ins.set_xlim(xcut)
+    ins.set_ylabel("")
+    ins.set_xlabel("")
+    ins.set_yticks([])
+    ins.set_xticks([])
+
+plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.515,1.04), columnspacing=7.1)
+plt.savefig("proc2.pdf", format="pdf")
+plt.show()
+
+
+# %%
