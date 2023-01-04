@@ -12,7 +12,7 @@ from scipy.optimize import curve_fit
 from bodge import *
 
 # %% Load dataset.
-df = pd.read_csv("test2.csv")
+df = pd.read_csv("test4.csv")
 df = df[df.m == 0.90]
 
 DIAG = True

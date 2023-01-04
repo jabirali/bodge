@@ -61,8 +61,9 @@ def fits(df):
 
 # Curve fit and construct new dataframe.
 dfs = []
-for ((L, m, diag), df) in data_rot.groupby(by=["L", "m", "diag"]):
+for ((m, diag, L), df) in data_rot.groupby(by=["m", "diag", "L"]):
     dfs.append([m, diag, L, fits(df)])
+    print(dfs[-1])
 data_fit = pd.DataFrame(dfs, columns=["m", "d", "L", "A"])
 
 # Normalize each series by A(L=0).
@@ -79,7 +80,7 @@ display(data)
 revtex()
 l1, l2 = plt.plot([1,2,3], [4,5,6], [1,2,3], [4,5,6])
 
-fig, axs = plt.subplots(1, 3, figsize=(2 * 3.375, (2.1 / 3) * 3.375), sharey=True)
+fig, axs = plt.subplots(1, 3, figsize=(2 * 3.375, (2.2 / 3) * 3.375), sharey=True)
 for (m, df), ax in zip(data.groupby("m"), axs):
     ylim = [-0.1, 1.0]
     if m == 0.05:
@@ -102,7 +103,7 @@ for (m, df), ax in zip(data.groupby("m"), axs):
         ax.set_title(r"\textbf{(c)} Field strength $m = 0.9t$")
         ax.set_xticks([0, 4, 8, 12, 16])
 
-    ax.add_patch(Rectangle((xcut[0], ycut[0]), xcut[1] - xcut[0], ycut[1] - ycut[0], edgecolor='#00000020', facecolor='#00000010'))
+    ax.add_patch(Rectangle((xcut[0], ycut[0]), xcut[1] - xcut[0], ycut[1] - ycut[0], edgecolor='#ffd70040', facecolor='#ffd70040'))
     ax.axhline([0], color="#777777")
     ax.tick_params(axis="y", left="on", right="on")
 
@@ -110,12 +111,13 @@ for (m, df), ax in zip(data.groupby("m"), axs):
 
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
-    ax.set_ylabel(r"First harmonic $J_1(L_{\text{AM}})/J_1(0)$")
-    ax.set_xlabel(r"Altermagnet length $L_{\text{AM}}/a$")
+    ax.set_ylabel(r"First harmonic $I_1(L)/I_1(0)$")
+    ax.set_xlabel(r"Altermagnet length $L/a$")
     ax.set_aspect((xlim[1] - xlim[0]) / (ylim[1] - ylim[0]))
 
     ins = inset_axes(ax, "60%", "60%" ,loc="upper right", borderpad=0.5)
     ins.axhline([0], color="#777777")
+    ins.add_patch(Rectangle((xcut[0], ycut[0]), xcut[1] - xcut[0], ycut[1] - ycut[0], facecolor='#ffd70040'))
 
     sns.lineplot(data=df, x="L", y="A", hue="d", ax=ins, legend=False)
 
@@ -126,9 +128,43 @@ for (m, df), ax in zip(data.groupby("m"), axs):
     ins.set_yticks([])
     ins.set_xticks([])
 
-plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.515,1.04), columnspacing=7.1)
+plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.515,1.00), columnspacing=7.1)
 plt.savefig("proc2.pdf", format="pdf")
 plt.show()
 
 
+# %% Extract critical current.
+def crit(df):
+    return np.max(np.abs(df.J))
+
+# Calculate critical current.
+dfs = []
+for ((m, diag, L), df) in data_rot.groupby(by=["m", "diag", "L"]):
+    dfs.append([m, diag, L, crit(df)])
+    # print(dfs[-1])
+data_crit = pd.DataFrame(dfs, columns=["m", "d", "L", "Ic"])
+
+# Normalize each series by Ic(L=0).
+dfs = []
+for (_, df) in data_crit.groupby(by=["m", "d"]):
+    df.Ic = np.array(df.Ic) / np.array(df[df.L == 0].Ic)
+    dfs.append(df)
+
+data_crit = pd.concat(dfs)
+
+display(data_crit)
+
+# %% Visualize critical current.
+fig, ax = plt.subplots(figsize=(3.375, 0.66666 * 3.375))
+df = data_crit[data_crit.m == 0.05]
+sns.lineplot(data=df, x='L', y='Ic', hue='d', ax=ax)
+ax.set_ylim([1e-3, 1])
+ax.set_xlim([0, 40])
+ax.set_yscale('log')
+ax.set_xlabel(r'Altermagnet length $L$')
+ax.set_ylabel(r'Critical current $I_c(L)/I_c(0)$')
+ax.legend([l1, l2], ['Straight junction', 'Diagonal junction'])
+
+plt.tight_layout()
+plt.savefig("proc3.pdf", format="pdf")
 # %%

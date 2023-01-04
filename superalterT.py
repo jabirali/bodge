@@ -137,6 +137,7 @@ parser.add_argument("-v", "--visualize", default=False, action="store_true")
 parser.add_argument("-d", "--diagonal", default=False, action="store_true")
 parser.add_argument("-l", "--length", type=int, required=True)
 parser.add_argument("-m", "--field", type=float, required=True)
+parser.add_argument("-t", "--temp", type=float, required=True)
 
 if interactive() is None:
     # Run as a script.
@@ -144,7 +145,7 @@ if interactive() is None:
 else:
     # Run interactively.
     # args = parser.parse_args(args=["-v", "-m 3", "-l 3"])
-    args = parser.parse_args(args=["-d", "-v", "-m 3", "-l 3"])
+    args = parser.parse_args(args=["-d", "-v", "-m 3", "-l 3", "-T 0.05"])
 
 print(args)
 
@@ -170,7 +171,9 @@ t = 1.0
 m = Δ0 * args.field
 
 Tc = Δ0 / 1.764
-T = 0.05 * Tc
+T = Tc * args.temp
+
+Δt = Δ0 * np.tanh(1.74 * np.sqrt(Tc/T - 1))
 
 # Lattice construction.
 if DIAG:
@@ -189,9 +192,9 @@ for δφ in tqdm(φs, desc="phase"):
                 H[i, i] = -μ * σ0
 
                 if SC1(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((-1j / 2) * π * δφ)
+                    Δ[i, i] = Δt * jσ2 * np.exp((-1j / 2) * π * δφ)
                 if SC2(i):
-                    Δ[i, i] = Δ0 * jσ2 * np.exp((+1j / 2) * π * δφ)
+                    Δ[i, i] = Δt * jσ2 * np.exp((+1j / 2) * π * δφ)
         for i, j in lattice.bonds(axis=0):
             if IN(i) and IN(j):
                 if AM(i) and AM(j):
@@ -205,7 +208,7 @@ for δφ in tqdm(φs, desc="phase"):
                 else:
                     H[i, j] = -t * σ0
 
-    # J1x, J1y, J2x, J2y = current(system, T=T)
-    # print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")
+    J1x, J1y, J2x, J2y = current(system, T=T)
+    print(f":: {T/Tc},{DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")
 
 # %%
