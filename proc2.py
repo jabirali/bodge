@@ -69,6 +69,7 @@ data_fit = pd.DataFrame(dfs, columns=["m", "d", "L", "A"])
 # Normalize each series by A(L=0).
 dfs = []
 for (_, df) in data_fit.groupby(by=["m", "d"]):
+    print("A", _, float(df[df.L == 0].A))
     df.A = np.array(df.A) / np.array(df[df.L == 0].A)
     dfs.append(df)
 
@@ -147,6 +148,7 @@ data_crit = pd.DataFrame(dfs, columns=["m", "d", "L", "Ic"])
 # Normalize each series by Ic(L=0).
 dfs = []
 for (_, df) in data_crit.groupby(by=["m", "d"]):
+    print("Ic0", _, float(df[df.L == 0].Ic))
     df.Ic = np.array(df.Ic) / np.array(df[df.L == 0].Ic)
     dfs.append(df)
 

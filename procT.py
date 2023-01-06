@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 from bodge import *
 
 # %% Load raw dataset.
-data_raw = pd.read_csv('testT.csv')
+data_raw = pd.read_csv('altermagnet_temp.csv')
 display(data_raw)
 
 # %% Geometric transformations.
@@ -34,50 +34,58 @@ for ((m, diag), df) in data_raw.groupby(by=["temp", "diag"]):
 data_rot = pd.concat(dfs)
 display(data_rot)
 
-# # %% Fit current-phase relations to a sine series.
-# def sins(φ, *args):
-#     """Sine series with coefficients in *args."""
-#     J = 0.0
-#     for n, A_n in enumerate(args, 1):
-#         J += A_n * np.sin(n * π * φ)
+# %% Fit current-phase relations to a sine series.
+def sins(φ, *args):
+    """Sine series with coefficients in *args."""
+    J = 0.0
+    for n, A_n in enumerate(args, 1):
+        J += A_n * np.sin(n * π * φ)
 
-#     return J
+    return J
 
-# def fits(df):
-#     """Fit dataframe to a sine series."""
-#     # Current-phase relation.
-#     φs = np.array(df.φ)
-#     js = np.array(df.J)
+def fits(df):
+    """Fit dataframe to a sine series."""
+    # Current-phase relation.
+    φs = np.array(df.φ)
+    js = np.array(df.J)
 
-#     # Perform curve fitting.
-#     ps = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-#     ps, _ = curve_fit(sins, φs, js, ps)
+    # Perform curve fitting.
+    ps = [1, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
+    ps, _ = curve_fit(sins, φs, js, ps)
+    print(ps)
 
-#     # Plot for comparison.
-#     # plt.plot(φs, js, 'r.', φs, [sins(φ, ps[0]) for φ in φs], 'b-')
-#     # plt.show()
+    # Plot for comparison.
+    plt.plot(φs, js, 'r.', φs, [sins(φ, *ps) for φ in φs], 'b-')
+    plt.show()
 
-#     # Focus on 1st harmonic.
-#     return ps[0]
+    # Focus on 1st harmonic.
+    return ps[0]
 
-# # Curve fit and construct new dataframe.
+# Curve fit and construct new dataframe.
+dfs = []
+for ((diag, T), df) in data_rot.groupby(by=["diag", "temp"]):
+    dfs.append([diag, T, fits(df)])
+    print(dfs[-1])
+data_fit = pd.DataFrame(dfs, columns=["d", "T", "A"])
+
+data = data_fit
+
+# Normalize each series by A(L=0).
 # dfs = []
-# for ((diag, T), df) in data_rot.groupby(by=["diag", "temp"]):
-#     dfs.append([diag, T, fits(df)])
-#     print(dfs[-1])
-# data_fit = pd.DataFrame(dfs, columns=["d", "T", "A"])
+# for (_, df) in data_fit.groupby(by=["m", "d"]):
+#     df.A = np.array(df.A) / np.array(df[df.L == 0].A)
+#     dfs.append(df)
 
-# data = data_fit
+# data = pd.concat(dfs)
 
-# # Normalize each series by A(L=0).
-# # dfs = []
-# # for (_, df) in data_fit.groupby(by=["m", "d"]):
-# #     df.A = np.array(df.A) / np.array(df[df.L == 0].A)
-# #     dfs.append(df)
+display(data)
 
-# # data = pd.concat(dfs)
+data = data_fit[data_fit["d"] == False]
+data.A = data.A / 0.161289 
+sns.lineplot(data=data, x='T', y='A', hue='d')
 
-# display(data)
+# TODO: Normalize I1(T) / Ic(T) for each curve.
+
 
 # %% Visualize the data.
 # revtex()
@@ -132,7 +140,7 @@ display(data_rot)
 #     ins.set_xticks([])
 
 # plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.515,1.00), columnspacing=7.1)
-# plt.savefig("proc2.pdf", format="pdf")
+# # plt.savefig("proc2.pdf", format="pdf")
 # plt.show()
 
 
@@ -147,29 +155,71 @@ for ((diag, temp), df) in data_rot.groupby(by=["diag", "temp"]):
     # print(dfs[-1])
 data_crit = pd.DataFrame(dfs, columns=["d", "T", "Ic"])
 
-# Normalize each series by Ic(T=0).
-# dfs = []
-# for (_, df) in data_crit.groupby(by=["T", "d"]):
-#     df.Ic = np.array(df.Ic) / np.array(df[df.L == 0].Ic)
-#     dfs.append(df)
-
-# data_crit = pd.concat(dfs)
-
 display(data_crit)
+
+# %% Normalize each series by Ic(T=0).
+dfs = []
+for (diag, df) in data_crit.groupby(by=["d"]):
+    print(diag, df[df['T'] == 0.01].Ic)
+    df.Ic = np.array(df.Ic) / np.array(df[df['T'] == 0.01].Ic)
+    dfs.append(df)
+
+data_crit2 = pd.concat(dfs)
+
+display(data_crit2)
 
 # %% Visualize critical current.
 revtex()
+l1, l2 = plt.plot([1,2,3], [4,5,6], [1,2,3], [4,5,6])
+
 fig, ax = plt.subplots(figsize=(3.375, 0.66666 * 3.375))
-df = data_crit
-sns.lineplot(data=df, x='T', y='Ic', hue='d', ax=ax)
-ax.set_ylim([1e-6, 1])
+sns.lineplot(data=data_crit2, x='T', y='Ic', hue='d', ax=ax)
+ax.set_ylim([1e-3, 1e-0])
+# ax.set_ylim([3e-4, 3e-1])
 ax.set_xlim([0, 1])
 ax.set_yscale('log')
 ax.set_xlabel(r'Temperature $T/T_c$')
 ax.set_ylabel(r'Critical current $I_c(T)/I_c(0)$')
-# ax.legend([l1, l2], ['Straight junction', 'Diagonal junction'])
+ax.legend([l1, l2], ['Straight junction', 'Diagonal junction'])
 
 plt.tight_layout()
-# plt.savefig("procT.pdf", format="pdf")
+plt.savefig("procT.pdf", format="pdf")
 plt.show()
 # %%
+
+
+df1 = data_crit
+df2 = data_fit
+
+dfs = []
+for ((d, T), df) in df1.groupby(["d", "T"]):
+    Ic = np.array(df.Ic)[0]
+    I1 = np.array(df2[(df2['d'] == d) & (df2['T'] == T)].A)[0]
+    Ir = I1 / Ic
+    if Ic > 1e-10:
+        dfs.append([d, T, Ic, I1, Ir])
+    else:
+        dfs.append([d, T, 0.0, 0.0, 1.0])
+
+data_merge = pd.DataFrame(dfs, columns=["d", "T", "Ic", "I1", "Ir"])
+display(data_merge)
+
+sns.lineplot(data=data_merge, x='T', y='Ir', hue='d')
+plt.ylabel('First harmonic fraction $I_1(T)/I_c(T)$')
+plt.xlabel('Temperature $T/T_c$')
+plt.xlim([0, 1])
+plt.ylim([-0.05, 1.2])
+plt.legend([])
+
+data_merge2 = data_merge[data_merge.d == False]
+Ic0 = float(data_merge2[(data_merge2.d == False) & (data_merge2['T'] == 0.01)].Ic)
+data_merge2.I1 = np.array(data_merge2.I1) / Ic0
+plt.figure()
+ax = plt.gca()
+ax.axhline([0], color="#777777")
+sns.lineplot(data=data_merge2, x='T', y='I1', ax=ax)
+
+
+# sns.lineplot(data=data_merge, x='T', y='I1', hue='d')
+# plt.ylim([-0.0025, 0.005])
+# plt.xlim([0.0, 1.0])
