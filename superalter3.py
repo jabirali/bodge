@@ -64,12 +64,12 @@ def NM2(i):
 
 def OBS1(i):
     """Current observation region."""
-    return x(i) == L_SC + 1
+    return NM1(i) and y(i) == L_Y // 2
 
 
 def OBS2(i):
     """Current observation region."""
-    return x(i) == L_X - L_SC - 2
+    return NM2(i) and y(i) == L_Y // 2
 
 
 def AM(i):
