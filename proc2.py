@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 from bodge import *
 
 # %% Load raw dataset.
-data_raw = pd.read_csv('altermagnet.csv')
+data_raw = pd.read_csv('altermagnetH.csv')
 
 # %% Geometric transformations.
 dfs = []
@@ -53,8 +53,8 @@ def fits(df):
     ps, _ = curve_fit(sins, φs, js, ps)
 
     # Plot for comparison.
-    # plt.plot(φs, js, 'r.', φs, [sins(φ, ps[0]) for φ in φs], 'b-')
-    # plt.show()
+    plt.plot(φs, js, 'r.', φs, [sins(φ, ps[0]) for φ in φs], 'b-')
+    plt.show()
 
     # Focus on 1st harmonic.
     return ps[0]
@@ -81,7 +81,7 @@ display(data)
 revtex()
 l1, l2 = plt.plot([1,2,3], [4,5,6], [1,2,3], [4,5,6])
 
-fig, axs = plt.subplots(1, 3, figsize=(2 * 3.375, (2.2 / 3) * 3.375), sharey=True)
+fig, axs = plt.subplots(1, 4, figsize=(2 * 3.375, (2.5 / 4) * 3.375), sharey=True)
 for (m, df), ax in zip(data.groupby("m"), axs):
     ylim = [-0.1, 1.0]
     if m == 0.05:
@@ -89,20 +89,27 @@ for (m, df), ax in zip(data.groupby("m"), axs):
         xcut = [12, 40]
         ycut = [-0.03, 0.06]
 
-        ax.set_title(r"\textbf{(a)} Field strength $m = 0.5\Delta$")
+        ax.set_title(r"\textbf{(a)} $m = 0.5\Delta$")
     elif m == 0.15:
         xlim = [0, 40]
         xcut = [5, 40]
         ycut = [-0.08, 0.12]
 
-        ax.set_title(r"\textbf{(b)} Field strength $m = 1.5\Delta$")
+        ax.set_title(r"\textbf{(b)} $m = 1.5\Delta$")
+    elif m == 0.50:
+        xlim = [0, 30]
+        xcut = [1.5, 30]
+
+        ax.set_title(r"\textbf{(c)} $m = 0.5t$")
     else:
-        xlim = [0, 16]
-        xcut = [1.5, 16]
+        xlim = [0, 15]
+        xcut = [1.5, 15]
         ycut = [-0.02, 0.02]
 
-        ax.set_title(r"\textbf{(c)} Field strength $m = 0.9t$")
-        ax.set_xticks([0, 4, 8, 12, 16])
+        ax.set_title(r"\textbf{(d)} $m = 0.9t$")
+        # ax.set_xticks([0, 4, 8, 12, 16])
+    ycut = [-0.08, 0.12]
+    xcut = xlim
 
     ax.add_patch(Rectangle((xcut[0], ycut[0]), xcut[1] - xcut[0], ycut[1] - ycut[0], edgecolor='#ffd70040', facecolor='#ffd70040'))
     ax.axhline([0], color="#777777")
@@ -129,7 +136,7 @@ for (m, df), ax in zip(data.groupby("m"), axs):
     ins.set_yticks([])
     ins.set_xticks([])
 
-plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.515,1.00), columnspacing=7.1)
+plt.figlegend([l1, l2], ["Straight junction", "Diagonal junction"], loc = 'upper center', ncol=2, labelspacing=2., bbox_to_anchor=(0.510,1.00), columnspacing=13.5)
 plt.savefig("proc2.pdf", format="pdf")
 plt.show()
 

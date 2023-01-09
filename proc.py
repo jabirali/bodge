@@ -72,7 +72,7 @@ for L_AM, dfL in df.groupby("L_AM"):
 
     # Extract the relevant metrics.
     print("1st harmonic:", ps[0], L_AM)
-    print("all harmonics:", [p/ps[0] for p in ps])
+    print("all harmonics:", [p / ps[0] for p in ps])
     Ls.append(L_AM)
     Ps.append(ps[0])
     Cs.append(np.max(np.abs(js)))

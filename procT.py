@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 from bodge import *
 
 # %% Load raw dataset.
-data_raw = pd.read_csv('altermagnet_temp.csv')
+data_raw = pd.read_csv('test_T12.csv')
 display(data_raw)
 
 # %% Geometric transformations.
@@ -174,7 +174,7 @@ l1, l2 = plt.plot([1,2,3], [4,5,6], [1,2,3], [4,5,6])
 
 fig, ax = plt.subplots(figsize=(3.375, 0.66666 * 3.375))
 sns.lineplot(data=data_crit2, x='T', y='Ic', hue='d', ax=ax)
-ax.set_ylim([1e-3, 1e-0])
+ax.set_ylim([1e-4, 1e-0])
 # ax.set_ylim([3e-4, 3e-1])
 ax.set_xlim([0, 1])
 ax.set_yscale('log')
@@ -208,7 +208,7 @@ sns.lineplot(data=data_merge, x='T', y='Ir', hue='d')
 plt.ylabel('First harmonic fraction $I_1(T)/I_c(T)$')
 plt.xlabel('Temperature $T/T_c$')
 plt.xlim([0, 1])
-plt.ylim([-0.05, 1.2])
+plt.ylim([-1.05, 1.05])
 plt.legend([])
 
 data_merge2 = data_merge[data_merge.d == False]
@@ -223,3 +223,4 @@ sns.lineplot(data=data_merge2, x='T', y='I1', ax=ax)
 # sns.lineplot(data=data_merge, x='T', y='I1', hue='d')
 # plt.ylim([-0.0025, 0.005])
 # plt.xlim([0.0, 1.0])
+# %%

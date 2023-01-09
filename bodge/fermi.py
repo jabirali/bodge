@@ -99,6 +99,8 @@ class FermiMatrix:
         """Calculate the electric current on the lattice.
 
         TODO: Complex hopping amplitudes t_ij if gauge fields exist.
+        TODO: Consider going back to bond currents over site currents,
+        since those ones behave a bit less weird at vacuum interfaces.
         """
         Ω = self.scale
         J = np.zeros(self.lattice.shape, dtype=np.float64)
