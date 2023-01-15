@@ -49,7 +49,7 @@ format: venv/bin/black
 	. venv/bin/activate; isort .; black .
 
 shell: venv/bin/ipython
-	. venv/bin/activate; ipython
+	. venv/bin/activate; ipython --no-autoindent
 
 clean:
 	rm -rf venv
