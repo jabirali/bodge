@@ -101,7 +101,10 @@ def visualize():
     if args.visualize:
         import matplotlib.pyplot as plt
 
-        fig, ax = plt.subplots()
+        win = "Bodge"
+        fig = plt.figure(num=win, clear=True)
+
+        fig, ax = plt.subplots(num=win)
         ax.set_aspect("equal")
         ax.set_axis_off()
         marker = "."
@@ -128,6 +131,8 @@ def visualize():
         print("Superconducting atoms:", NS)
         print("Normal-metal atoms:", NN)
         print("Altermagnetic atoms:", NA)
+
+        plt.ion()
         plt.show()
 
 
