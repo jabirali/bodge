@@ -1,97 +1,91 @@
 #!/usr/bin/env python
 
-"""Calculate the generalized RKKY interactions on a superconductor.
-
-The model system is two magentic impurities deposited on a superconductor. We
-here wish to compare the responses of various p-wave superconductors with both
-s-wave superconductors and normal metals. Moreover, we are here interested in
-analyzing both the conventional contributions to the RKKY interaction, and
-whether some DMI-like terms might arise e.g. in non-unitary situations.
-"""
+from icecream import ic
+from typer import run
 
 from bodge import *
-from bodge.utils import pwave
 
-# Define relevant physical parameters.
-Lx, Ly, Lz = 64, 64, 1
 
-t = 1.0
-Δ0 = 0.2
-J0 = 3.0
-μ = -3.0
+def main(
+    sep: int,
+    s1: str,
+    s2: str,
+    offset: int = 20,
+    length: int = 64,
+    width: int = 64,
+    potential: float = -3.0,
+    coupling: float = 3.0,
+    supergap: float = 0.2,
+    filename: str = "rkky.csv",
+):
+    """RKKY interaction between two impurities on a superconductor."""
+    # Square lattice.
+    lattice = CubicLattice((length, width, 1))
+    ic(lattice.shape)
 
-# Instantiate an appropriate square lattice.
-lattice = CubicLattice((Lx, Ly, 1))
+    # Impurity sites.
+    x1 = offset
+    y1 = width // 2
+    z1 = 0
 
-# Mapping of spin notation to σ matrices.
-spins = {
-    "+x": +σ1,
-    "+y": +σ2,
-    "+z": +σ3,
-    "-x": -σ1,
-    "-y": -σ2,
-    "-z": -σ3,
-}
+    x2 = x1 + sep
+    y2 = y1
+    z2 = z1
 
-# Mapping of d-vector notation to Δ matrices.
-dvecs = {
-    "N": None,
-    "S": jσ2,
-    "X": pwave("e_z * p_x"),
-    "Y": pwave("e_z * p_y"),
-    "CH": pwave("e_z * (p_x + jp_y)"),
-    "NU1": pwave("(e_x + je_y) * (p_x + jp_y) / 2"),
-    "NU2": pwave("(e_x * p_x + je_y * p_y) / 2"),
-}
+    if x2 <= x1 or x2 >= length - offset:
+        raise RuntimeError("Offset requirements violated.")
 
-# Function for generating an RKKY Hamiltonian.
-def hamiltonian(lattice, order, s1, s2, δ):
+    i1 = (x1, y1, z1)
+    i2 = (x2, y2, z2)
+
+    ic(i1)
+    ic(i2)
+
+    # Impurity spins.
+    spins = {
+        "+x": +σ1,
+        "+y": +σ2,
+        "+z": +σ3,
+        "-x": -σ1,
+        "-y": -σ2,
+        "-z": -σ3,
+    }
+
+    S1 = spins[s1]
+    S2 = spins[s2]
+
+    ic(S1)
+    ic(S2)
+
+    # Construct the Hamiltonian.
+    t = 1.0
+    μ = potential
+    J0 = coupling
+    Δ0 = supergap
+    Tc = Δ0 / 1.764
+
     system = Hamiltonian(lattice)
     with system as (H, Δ, _):
-        # Prepare the usual hopping terms.
-        for i, j in lattice.bonds():
-            H[i, j] = -t * σ0
-
-        # Place two impurities at given locations.
-        S1 = spins[s1]
-        x1 = 20 - 1
-        y1 = Ly // 2
-
-        S2 = spins[s2]
-        x2 = x1 + δ + 1
-        y2 = y1
-
         for i in lattice.sites():
-            if i[0] == x1 and i[1] == y1:
+            Δ[i, i] = -Δ0 * jσ2
+            if i == i1:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S1
-            elif i[0] == x2 and i[1] == y2:
+            elif i == i2:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S2
             else:
                 H[i, i] = -μ * σ0
 
-        # Prepare the superconducting contributions.
-        D = dvecs[order]
-        if D is not None:
-            if not callable(D):
-                # s-wave superconductivity.
-                for i in lattice.sites():
-                    Δ[i, i] = -Δ0 * D
-            else:
-                # p-wave superconductivity.
-                for i, j in lattice.bonds():
-                    Δ[i, j] = -Δ0 * D(i, j)
+        for i, j in lattice.bonds():
+            H[i, j] = -t * σ0
 
-        return system
+    # Calculate the free energy.
+    E = free_energy(system, 0.01 * Tc)
+
+    # Save the results.
+    with open(filename, "a+") as f:
+        f.write(f"{s1}, {s2}, {sep}, {E}\n")
 
 
-# Perform the actual simulations.
-with open("rkky.csv", "w") as f:
-    f.write("order,δ,s1,s2,energy\n")
-    for δ in range(1, Lx - 20 * 2):
-        for order in dvecs:
-            for s1 in spins:
-                for s2 in spins:
-                    system = hamiltonian(lattice, order, s1, s2, δ)
-                    energy = free_energy(system)
-                    f.write(f"{order},{δ},{s1},{s2},{energy}\n")
-                    f.flush()
+# Run main() when run as a script.
+if __name__ == "__main__":
+    run(main)

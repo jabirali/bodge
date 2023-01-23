@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 
 """RKKY interactions between two magnetic impurities on superconductor."""
-from click import argument, command, option
+
+from click import command, option
 from icecream import ic
 
 from bodge import *
 
 
 @command()
-@option("--lattice-length", "Lx", default=81, type=int)
-@option("--lattice-width", "Ly", default=81, type=int)
-@option("--chemical-potential", "μ0", default=-3.0, type=float)
-@option("--superconding-gap", "Δ0", default=0.2, type=float)
-@option("--impurity-coupling", "J0", default=3.0, type=float)
-@option("--spin-left", "s1", default="+z", type=str)
-@option("--spin-right", "s2", default="+z", type=str)
-@option("--external-distance", "d1", default=20, type=int)
-@option("--internal-distance", "d2", default=20, type=int)
-def rkky(Lx, Ly, μ0, Δ0, J0, s1, s2, d1, d2):
+@option("--Lx", "Lx", default=81, type=int)
+@option("--Ly", "Ly", default=81, type=int)
+@option("--μ0", "μ0", default=-3.0, type=float)
+@option("--Δ0", "Δ0", default=0.2, type=float)
+@option("--J0", "J0", default=3.0, type=float)
+@option("--s1", "s1", default="+z", type=str)
+@option("--s2", "s2", default="+z", type=str)
+@option("--d1", "d1", default=20, type=int)
+@option("--d2", "d2", default=20, type=int)
+def main(Lx, Ly, μ0, Δ0, J0, s1, s2, d1, d2):
     # Square lattice.
     lattice = CubicLattice((Lx, Ly, 1))
     ic(lattice.shape)
@@ -77,11 +78,11 @@ def rkky(Lx, Ly, μ0, Δ0, J0, s1, s2, d1, d2):
     # Calculate the free energy.
     F = free_energy(system, 0.01 * Tc)
 
-    # Return the results.
-    return (s1, s2, d2, F)
-
-
-if __name__ == "__main__":
-    results = rkky()
+    # Save the results.
     with open("rkky.csv", "a+") as f:
-        f.write(",".join(results))
+        f.write(f"{s1}, {s2}, {d2}, {F}\n")
+
+
+# Run `main` as a script.
+if __name__ == "__main__":
+    main()
