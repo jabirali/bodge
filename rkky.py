@@ -87,4 +87,6 @@ def main(
 
 
 if __name__ == "__main__":
+    ic()
     run(main)
+    ic()
