@@ -15,7 +15,7 @@ def main(
     width: int = 80,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.1,
+    supergap: float = 0.03,
     filename: str = "rkky.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
@@ -88,4 +88,6 @@ def main(
 
 
 if __name__ == "__main__":
+    ic()
     run(main)
+    ic()

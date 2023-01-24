@@ -20,6 +20,8 @@ dependencies = [
     "matplotlib",
     "seaborn",
     "tqdm",
+    "icecream",
+    "typer"
 ]
 
 [project.optional-dependencies]
