@@ -11,14 +11,15 @@ def main(
     s1: str,
     s2: str,
     offset: int = 20,
-    length: int = 64,
-    width: int = 64,
+    length: int = 80,
+    width: int = 80,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.2,
+    supergap: float = 0.1,
     filename: str = "rkky.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
+
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
     ic(lattice.shape)
@@ -86,6 +87,5 @@ def main(
         f.write(f"{s1}, {s2}, {sep}, {E}\n")
 
 
-# Run main() when run as a script.
 if __name__ == "__main__":
     run(main)

@@ -37,7 +37,6 @@ shell = [
     "ipython",
 ]
 
-
 [tool.black]
 line-length = 99
 
