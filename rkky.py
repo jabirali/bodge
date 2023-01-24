@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
+from bodge import *
 from icecream import ic
 from typer import run
-
-from bodge import *
 
 
 def main(
@@ -15,10 +14,11 @@ def main(
     width: int = 64,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.2,
+    supergap: float = 0.03,
     filename: str = "rkky.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
+
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
     ic(lattice.shape)
@@ -86,6 +86,5 @@ def main(
         f.write(f"{s1}, {s2}, {sep}, {E}\n")
 
 
-# Run main() when run as a script.
 if __name__ == "__main__":
     run(main)
