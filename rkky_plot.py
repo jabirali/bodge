@@ -18,8 +18,8 @@ def main(filename: str):
     raw = raw.sort_values(by=["sep", "s1", "s2"])
     ic(raw)
 
-    # μs = []
-    # ηs = []
+    xs = []
+    ys = []
     for δ, df in raw.groupby("sep"):
 
         def free(s1, s2):
@@ -142,23 +142,17 @@ def main(filename: str):
 
         η = np.array([[η_xx, η_xy, η_xz], [η_yx, η_yy, η_yz], [η_zx, η_zy, η_zz]])
 
-        ic(δ)
-        ic(μ1)
-        ic(μ2)
-        ic(η)
-        # μ = df[]
-        # print(δ)
-        # print(df)
-        # print(free("x+", "x+"))
+        ic(δ, μ1, μ2, η)
 
-        # E_fm = float(df[(df.s1 == "z+") & (df.s2 == "z+") & (df.sep == sep)].E)
-        # E_afm = float(df[(df.s1 == "z+") & (df.s2 == "z-") & (df.sep == sep)].E)
+        xs.append(δ)
+        ys.append((η_xx + η_yy + η_zz) / 3)
 
-        # x.append(sep)
-        # y.append(E_fm - E_afm)
-
-    # plt.plot(x, y, ".")
-    # plt.show()
+    plt.plot(xs, ys, "-")
+    plt.xlabel(r"Separation $δ/a$")
+    plt.ylabel(r"RKKY interaction $J_{eff}$")
+    plt.grid()
+    plt.ylim([-0.015, 0.015])
+    plt.show()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from typing import Optional
+
 from icecream import ic
 from typer import run
 
@@ -10,6 +12,7 @@ def main(
     sep: int,
     s1: str,
     s2: str,
+    dvector: Optional[str] = None,
     offset: int = 20,
     length: int = 80,
     width: int = 80,
@@ -58,6 +61,14 @@ def main(
     ic(S1)
     ic(S2)
 
+    # Superconductivity.
+    ic(dvector)
+    if dvector is None:
+        D = None
+    else:
+        D = pwave(dvector)
+    ic(D)
+
     # Construct the Hamiltonian.
     t = 1.0
     μ = potential
@@ -68,7 +79,8 @@ def main(
     system = Hamiltonian(lattice)
     with system as (H, Δ, _):
         for i in lattice.sites():
-            Δ[i, i] = -Δ0 * jσ2
+            if D is None:
+                Δ[i, i] = -Δ0 * jσ2
             if i == i1:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S1
             elif i == i2:
@@ -78,13 +90,15 @@ def main(
 
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
+            if D is not None:
+                Δ[i, j] = -Δ0 * D(i, j)
 
     # Calculate the free energy.
     E = free_energy(system, 0.01 * Tc)
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{s1}, {s2}, {sep}, {E}\n")
+        f.write(f"{dvector}, {s1}, {s2}, {sep}, {E}\n")
 
 
 if __name__ == "__main__":
