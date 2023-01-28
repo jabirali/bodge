@@ -64,10 +64,22 @@ def main(
     # Superconductivity.
     ic(dvector)
     if dvector is None:
-        D = None
+        # s-wave only.
+        σ_s = jσ2
+        σ_p = None
+
+        ic(σ_s)
+        ic(σ_p)
     else:
-        D = pwave(dvector)
-    ic(D)
+        # p-wave only.
+        σ_s = None
+        σ_p = pwave(dvector)
+
+        ic(σ_s)
+        ic(σ_p((2, 2, 0), (3, 2, 0)))
+        ic(σ_p((2, 2, 0), (1, 2, 0)))
+        ic(σ_p((2, 2, 0), (2, 3, 0)))
+        ic(σ_p((2, 2, 0), (2, 1, 0)))
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -79,8 +91,8 @@ def main(
     system = Hamiltonian(lattice)
     with system as (H, Δ, _):
         for i in lattice.sites():
-            if D is None:
-                Δ[i, i] = -Δ0 * jσ2
+            if σ_s is not None:
+                Δ[i, i] = -Δ0 * σ_s
             if i == i1:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S1
             elif i == i2:
@@ -90,8 +102,8 @@ def main(
 
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
-            if D is not None:
-                Δ[i, j] = -Δ0 * D(i, j)
+            if σ_p is not None:
+                Δ[i, j] = -Δ0 * σ_p(i, j)
 
     # Calculate the free energy.
     E = free_energy(system, 0.01 * Tc)
