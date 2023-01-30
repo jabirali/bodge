@@ -8,6 +8,7 @@ from icecream import ic
 from typer import run
 
 np.set_printoptions(formatter={"float": "{: 0.12f}".format})
+sns.set_style("darkgrid")
 
 
 def free_energy(df: pd.DataFrame, s1: int, s2: int):
@@ -151,18 +152,26 @@ def main(filename: str):
         ax[0, i].set_xlabel(r"Distance $δ/a$")
         ax[0, i].set_ylabel("")
         ax[0, i].set_title(rf"$μ_{axis}/t$")
+        ax[0, i].set_ylim([-1e-8, 1e-8])
+        ax[0, i].ticklabel_format(scilimits=(-1, 3))
 
     for i, axis in enumerate(["x", "y", "z"]):
         plot(df, ax[1, i], f"J{axis}")
         ax[1, i].set_xlabel(r"Distance $δ/a$")
         ax[1, i].set_ylabel("")
         ax[1, i].set_title(rf"$J_{axis}/t$")
+        ax[1, i].set_ylim([-0.001, 0.001])
+        ax[1, i].ticklabel_format(scilimits=(-1, 3))
 
     for i, axis in enumerate(["x", "y", "z"]):
         plot(df, ax[2, i], f"D{axis}")
         ax[2, i].set_xlabel(r"Distance $δ/a$")
         ax[2, i].set_ylabel("")
         ax[2, i].set_title(rf"$D_{axis}/t$")
+        ax[2, i].set_ylim([-1e-8, 1e-8])
+        ax[2, i].ticklabel_format(scilimits=(-1, 3))
+
+    ax[0, 0].set_xlim([0, 40])
 
     plt.show()
 
