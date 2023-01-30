@@ -22,7 +22,12 @@ def main(filename: str):
     raw = raw.sort_values(by=["sep", "s1", "s2", "dvec"])
     ic(raw)
 
-    fig, ax = plt.subplots()
+    _, ax1 = plt.subplots()
+    plt.xlabel(r"Separation $δ/a$")
+    plt.ylabel(r"RKKY interaction $J_{eff}$")
+    plt.grid()
+
+    _, ax2 = plt.subplots()
     plt.xlabel(r"Separation $δ/a$")
     plt.ylabel(r"RKKY interaction $J_{eff}$")
     plt.grid()
@@ -30,19 +35,24 @@ def main(filename: str):
     for d, df1 in raw.groupby(["dvec"]):
         xs = []
         ys = []
+        ls = []
         for δ, df2 in df1.groupby(["sep"]):
             try:
                 E_FM = float(df2[(df2["s1"] == "z+") & (df2["s2"] == "z+")].E)
                 E_AFM = float(df2[(df2["s1"] == "z+") & (df2["s2"] == "z-")].E)
-                J = E_AFM - E_FM
+                J = E_FM - E_AFM
 
                 xs.append(δ)
                 ys.append(J)
+                ls.append(np.abs(J))
             except:
                 pass
 
-        ax.plot(xs, ys, label=d)
+        ax1.plot(xs, ys, label=d)
+        ax2.plot(xs, ls, label=d)
+        ax2.set_yscale("log")
 
+    plt.tight_layout()
     plt.legend()
     plt.show()
 
