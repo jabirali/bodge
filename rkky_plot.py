@@ -122,18 +122,9 @@ def effective_energy(df: pd.DataFrame):
     return pd.DataFrame(results)
 
 
-def plot(df: pd.DataFrame, var: str):
+def plot(df: pd.DataFrame, ax, var: str, legend=False):
     """Plot a particular effective energy coupling as function of separation."""
-    _, ax = plt.subplots()
-    sns.lineplot(
-        data=df,
-        ax=ax,
-        x="δ",
-        y=var,
-        hue="d",
-    )
-    ax.legend(title="d-vector")
-    return ax
+    sns.lineplot(data=df, ax=ax, x="δ", y=var, hue="d", legend=legend)
 
 
 def main(filename: str):
@@ -149,24 +140,29 @@ def main(filename: str):
     ic(df)
 
     # Visualize the results.
-    ax = plot(df, "ε0")
+    _, ax = plt.subplots()
+    plot(df, ax, "ε0", legend=True)
     ax.set_xlabel(r"Distance $δ/a$")
     ax.set_ylabel(rf"Spin-independent energy $E_0/t$")
 
-    for axis in ["x", "y", "z"]:
-        ax = plot(df, f"μ{axis}")
-        ax.set_xlabel(r"Distance $δ/a$")
-        ax.set_ylabel(rf"Magnetic moment $μ_{axis}/t$")
+    _, ax = plt.subplots(3, 3, sharey="row", sharex="all")
+    for i, axis in enumerate(["x", "y", "z"]):
+        plot(df, ax[0, i], f"μ{axis}", legend=i == 1)
+        ax[0, i].set_xlabel(r"Distance $δ/a$")
+        ax[0, i].set_ylabel("")
+        ax[0, i].set_title(rf"$μ_{axis}/t$")
 
-    for axis in ["x", "y", "z"]:
-        ax = plot(df, f"J{axis}")
-        ax.set_xlabel(r"Distance $δ/a$")
-        ax.set_ylabel(rf"Heisenberg-like coupling $J_{axis}/t$")
+    for i, axis in enumerate(["x", "y", "z"]):
+        plot(df, ax[1, i], f"J{axis}")
+        ax[1, i].set_xlabel(r"Distance $δ/a$")
+        ax[1, i].set_ylabel("")
+        ax[1, i].set_title(rf"$J_{axis}/t$")
 
-    for axis in ["x", "y", "z"]:
-        ax = plot(df, f"D{axis}")
-        ax.set_xlabel(r"Distance $δ/a$")
-        ax.set_ylabel(rf"DMI-like coupling $D_{axis}/t$")
+    for i, axis in enumerate(["x", "y", "z"]):
+        plot(df, ax[2, i], f"D{axis}")
+        ax[2, i].set_xlabel(r"Distance $δ/a$")
+        ax[2, i].set_ylabel("")
+        ax[2, i].set_title(rf"$D_{axis}/t$")
 
     plt.show()
 
