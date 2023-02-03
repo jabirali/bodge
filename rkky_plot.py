@@ -44,6 +44,7 @@ def effective_energy(df: pd.DataFrame):
     """
     results = []
     for (d, δ), df_ in df.groupby(["dvec", "sep"]):
+        ic(d)
         ic(δ)
 
         # Calculate spin-independent free energy (rank 0).
@@ -57,6 +58,7 @@ def effective_energy(df: pd.DataFrame):
         # Calculate the preferred orientation of each spin (rank 1).
         μ1 = np.zeros(3)
         μ2 = np.zeros(3)
+        μ = np.zeros(3)
 
         for i1, s1 in enumerate([1, 2, 3]):
             for s2 in [+1, +2, +3, -1, -2, -3]:
@@ -66,9 +68,13 @@ def effective_energy(df: pd.DataFrame):
             for s1 in [+1, +2, +3, -1, -2, -3]:
                 μ2[i2] += free_energy(df_, s1, +s2) / 12
                 μ2[i2] -= free_energy(df_, s1, -s2) / 12
+        for i, s in enumerate([1, 2, 3]):
+            μ[i] += free_energy(df_, +s, +s) / 4
+            μ[i] -= free_energy(df_, -s, -s) / 4
 
         ic(μ1)
         ic(μ2)
+        ic(μ)
 
         # Calculate the interactions between the two spins (rank 2).
         η = np.zeros((3, 3))
@@ -79,11 +85,7 @@ def effective_energy(df: pd.DataFrame):
                 η[i1, i2] -= free_energy(df_, -s1, +s2) / 4
                 η[i1, i2] += free_energy(df_, -s1, -s2) / 4
 
-        ic(η)
-
-        # Calculate averaged orientational preference.
-        μ = (μ1 + μ2) / 2
-        ic(μ)
+        # ic(η)
 
         # Calculate the Heisenberg-like interaction.
         J = np.zeros(3)
@@ -146,13 +148,24 @@ def main(filename: str):
     ax.set_xlabel(r"Distance $δ/a$")
     ax.set_ylabel(rf"Spin-independent energy $E_0/t$")
 
+    _, ax = plt.subplots(1, len(df.d.unique()), sharey="row", sharex="all")
+    for i, (d, df_) in enumerate(df.groupby("d")):
+        ax[i].plot(df_.δ, df_.Jx, label="Jx")
+        ax[i].plot(df_.δ, df_.Jy, label="Jy")
+        ax[i].plot(df_.δ, df_.Jz, label="Jz")
+        ax[i].set_ylabel("")
+        ax[i].set_ylim([-0.001, 0.001])
+        ax[i].set_xlabel(r"Distance $δ/a$")
+        ax[i].set_title(d)
+        plt.legend()
+
     _, ax = plt.subplots(3, 3, sharey="row", sharex="all")
     for i, axis in enumerate(["x", "y", "z"]):
         plot(df, ax[0, i], f"μ{axis}", legend=i == 1)
         ax[0, i].set_xlabel(r"Distance $δ/a$")
         ax[0, i].set_ylabel("")
         ax[0, i].set_title(rf"$μ_{axis}/t$")
-        ax[0, i].set_ylim([-1e-8, 1e-8])
+        # ax[0, i].set_ylim([-0.00000001, 0.00000001])
         ax[0, i].ticklabel_format(scilimits=(-1, 3))
 
     for i, axis in enumerate(["x", "y", "z"]):
@@ -168,7 +181,7 @@ def main(filename: str):
         ax[2, i].set_xlabel(r"Distance $δ/a$")
         ax[2, i].set_ylabel("")
         ax[2, i].set_title(rf"$D_{axis}/t$")
-        ax[2, i].set_ylim([-1e-8, 1e-8])
+        # ax[2, i].set_ylim([-0.00001, 0.00001])
         ax[2, i].ticklabel_format(scilimits=(-1, 3))
 
     ax[0, 0].set_xlim([0, 40])
