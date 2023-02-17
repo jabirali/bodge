@@ -17,6 +17,7 @@ __all__ = [
     "pwave",
     "free_energy",
     "spectral",
+    "deform",
     "π",
     "σ",
     "σ0",

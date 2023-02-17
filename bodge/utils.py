@@ -1,6 +1,36 @@
 from .chebyshev import *
 from .common import *
 from .hamiltonian import Hamiltonian
+from .lattice import Lattice
+
+
+def deform(system: Hamiltonian, method="ssd"):
+    """Interface to Hamiltonian deformation techniques."""
+    if method == "ssd":
+        return lambda i, j: ssd(system.lattice, i, j)
+    else:
+        raise RuntimeError("Method not implemented")
+
+
+def ssd(lattice: Lattice, i: Coord, j: Coord):
+    """Profile used for a sine-squared deformation on a cubic lattice."""
+    # Determine the origin and maximum radius for the system. Since we use
+    # corner-centered coordinates, these two values are actually the same.
+    # Note however the offset to get a maximum coordinate from a shape.
+    R = np.array([(N - 1) for N in lattice.shape]) / 2
+
+    # Determine the distance vectors of the provided coordinates
+    # i = (i_x, i_y, i_z), j = (j_x, j_y, j_z) from the origin.
+    r_i = np.array(i) - R
+    r_j = np.array(j) - R
+    r = (r_i + r_j) / 2
+
+    # We now consider only the magnitude of the distances.
+    R = la.norm(R)
+    r = la.norm(r)
+
+    # Calculate the sine-squared deformation.
+    return (1 / 2) * (1 + np.cos(π * r / (R + 1 / 2)))
 
 
 def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:

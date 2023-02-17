@@ -1,7 +1,34 @@
-from scipy.linalg import eigh
-
 from bodge import *
 from bodge.common import *
+from scipy.linalg import eigh
+
+
+def test_ssd():
+    """Test the mathematical properties of the SSD profile."""
+    lattice = CubicLattice((31, 137, 1))
+    system = Hamiltonian(lattice)
+    ssd = deform(system, method="ssd")
+
+    # The profile goes to zero at corners.
+    i = (0, 0, 0)
+    assert np.allclose(ssd(i, i), 0, atol=0.001)
+
+    # The profile goes to one at origin.
+    i = (15, 68, 0)
+    assert np.allclose(ssd(i, i), 1, atol=0.001)
+
+    # Test the symmetry of the solution.
+    # Useful to catch off-by-one errors.
+    i = (0, 0, 0)
+    j = (30, 136, 0)
+    assert ssd(i, i) == ssd(j, j)
+
+    # Test that coordinate averaging works.
+    # The result here should be exact.
+    i = (1, 21, 0)
+    j = (11, 1, 0)
+    k = (6, 11, 0)
+    assert ssd(i, j) == ssd(k, k)
 
 
 def test_free_energy():
