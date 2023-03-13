@@ -2,21 +2,20 @@
 
 from typing import Optional
 
-from bodge import *
 from icecream import ic
 from typer import run
+
+from bodge import *
 
 
 def main(
     s: str,
     x: int,
     y: int,
-    dvector: Optional[str] = None,
-    length: int = 80,
-    width: int = 80,
+    length: int = 64,
+    width: int = 64,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.00,
     filename: str = "impurity.csv",
 ):
     """Free energy for a single impurity."""
@@ -49,39 +48,15 @@ def main(
 
     ic(S0)
 
-    # Superconductivity.
-    ic(dvector)
-    if dvector is None:
-        # s-wave only.
-        σ_s = jσ2
-        σ_p = None
-
-        ic(σ_s)
-        ic(σ_p)
-    else:
-        # p-wave only.
-        σ_s = None
-        σ_p = pwave(dvector)
-
-        ic(σ_s)
-        ic(σ_p((2, 2, 0), (3, 2, 0)))
-        ic(σ_p((2, 2, 0), (1, 2, 0)))
-        ic(σ_p((2, 2, 0), (2, 3, 0)))
-        ic(σ_p((2, 2, 0), (2, 1, 0)))
-
     # Construct the Hamiltonian.
     t = 1.0
     μ = potential
     J0 = coupling
-    Δ0 = supergap
-    Tc = Δ0 / 1.764
 
     system = Hamiltonian(lattice)
 
     with system as (H, Δ, _):
         for i in lattice.sites():
-            if σ_s is not None:
-                Δ[i, i] = -Δ0 * σ_s
             if i == i0:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S0
             else:
@@ -89,15 +64,13 @@ def main(
 
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
-            if σ_p is not None:
-                Δ[i, j] = -Δ0 * σ_p(i, j)
 
     # Calculate the free energy.
-    E = free_energy(system, 0.01 * Tc)
+    E = free_energy(system, 0.001)
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{dvector}, {x}, {y}, {s}, {E}\n")
+        f.write(f"{width}, {length}, {x}, {y}, {s}, {E}\n")
 
 
 if __name__ == "__main__":
