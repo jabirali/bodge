@@ -13,12 +13,11 @@ def main(
     s1: str,
     s2: str,
     dvector: Optional[str] = None,
-    offset: int = 20,
-    length: int = 80,
-    width: int = 80,
+    length: int = 280,
+    width: int = 40,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.03,
+    supergap: float = 0.10,
     filename: str = "rkky.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
@@ -28,7 +27,7 @@ def main(
     ic(lattice.shape)
 
     # Impurity sites.
-    x1 = offset
+    x1 = length // 2
     y1 = width // 2
     z1 = 0
 
@@ -86,7 +85,6 @@ def main(
     μ = potential
     J0 = coupling
     Δ0 = supergap
-    Tc = Δ0 / 1.764
 
     system = Hamiltonian(lattice)
     with system as (H, Δ, _):
@@ -106,7 +104,7 @@ def main(
                 Δ[i, j] = -Δ0 * σ_p(i, j)
 
     # Calculate the free energy.
-    E = free_energy(system, 0.01 * Tc)
+    E = free_energy(system, 0.001 * t)
 
     # Save the results.
     with open(filename, "a+") as f:
