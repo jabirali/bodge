@@ -4,6 +4,7 @@ from typing import Optional
 
 from icecream import ic
 from typer import run
+from time import time
 
 from bodge import *
 
@@ -66,11 +67,13 @@ def main(
             H[i, j] = -t * σ0
 
     # Calculate the free energy.
+    dt = time()
     E = free_energy(system, 0.001)
+    dt = time() - dt
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{width}, {length}, {x}, {y}, {s}, {E}\n")
+        f.write(f"{width}, {length}, {x}, {y}, {s}, {E}, {dt}\n")
 
 
 if __name__ == "__main__":
