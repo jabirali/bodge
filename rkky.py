@@ -35,7 +35,7 @@ def main(
     y2 = y1
     z2 = z1
 
-    if x2 <= x1 or x2 >= length - offset:
+    if x2 <= x1 or x2 >= length:
         raise RuntimeError("Offset requirements violated.")
 
     i1 = (x1, y1, z1)
