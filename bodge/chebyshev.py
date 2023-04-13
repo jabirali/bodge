@@ -2,8 +2,15 @@ from .common import *
 
 
 def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> CsrMatrix:
-    """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM)."""
+    """Parallelized Chebyshev expansion using Kernel Polynomial Method (KPM).
+
+    The optional argument `filter` can be set to a function (int -> bool) that
+    specifies which For example, `filter=lambda n: n%2==0` would include only
+    even Chebyshev polynomials, which reduces computation time by a factor 2x
+    if you know that the function you're expanding is an even function.
+    """
     # TODO: Remove optimizations now available via `Hamiltonian.compile`.
+    #       Or should we? If we spin off Chebyshev, this might be useful.
 
     # Use CSR matrices for numerical performance.
     X = CsrMatrix(X)
@@ -97,10 +104,6 @@ def cheb_coeff(F: Callable, N: int):
 
     We define the coefficients f_n such that F(X) = ∑ f_n T_n(X) for any X,
     where the sum goes over 0 ≤ n < N and T_n(X) is found by `cheb_poly`.
-
-    The optional argument `filter` can be set to a function that
-    The optional arguments `odd` and `even` can be used to skip calculation
-    of Chebyshev coefficients that are a priori known to be exactly zero.
     """
     # Calculate the ϕ_k such that x_k = cos(ϕ_k) are Chebyshev nodes.
     n = np.arange(N)
