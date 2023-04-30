@@ -2,13 +2,12 @@
 
 """Josephson junctions with altermagnetic interlayers."""
 
-# %% Common imports.
 from argparse import ArgumentParser
 
+# %% Common imports.
 import numpy as np
-from tqdm import tqdm
-
 from bodge import *
+from tqdm import tqdm
 
 
 # %% Check for interactivity.
@@ -77,7 +76,7 @@ def AM(i):
     return not SC1(i) and not SC2(i) and not NM1(i) and not NM2(i)
 
 
-def current(system, N=1000, T=0.0):
+def current(system, N=4000, T=0.0):
     F = FermiMatrix(system, N)(T)
     Jx = F.current_elec(axis=0)
     Jy = F.current_elec(axis=1)
@@ -101,7 +100,10 @@ def visualize():
     if args.visualize:
         import matplotlib.pyplot as plt
 
-        fig, ax = plt.subplots()
+        win = "Bodge"
+        fig = plt.figure(num=win, clear=True)
+
+        fig, ax = plt.subplots(num=win)
         ax.set_aspect("equal")
         ax.set_axis_off()
         marker = "."
@@ -128,6 +130,8 @@ def visualize():
         print("Superconducting atoms:", NS)
         print("Normal-metal atoms:", NN)
         print("Altermagnetic atoms:", NA)
+
+        plt.ion()
         plt.show()
 
 
@@ -143,8 +147,8 @@ if interactive() is None:
     args = parser.parse_args()
 else:
     # Run interactively.
-    args = parser.parse_args(args=["-v", "-m 3", "-l 3"])
-    # args = parser.parse_args(args=["-d", "-v", "-m 3", "-l 3"])
+    # args = parser.parse_args(args=["-v", "-m 3", "-l 3"])
+    args = parser.parse_args(args=["-d", "-v", "-m 3", "-l 3"])
 
 print(args)
 
@@ -180,23 +184,26 @@ else:
 visualize()
 
 # %% Current calculation.
-φs = [0.5]
+φs = np.linspace(0.0, 1.0, 51)
 for δφ in tqdm(φs, desc="phase"):
     system = Hamiltonian(lattice)
     with system as (H, Δ, V):
         for i in lattice.sites():
             if IN(i):
-                if AM(i):
-                    H[i, i] = -μ * σ0 - m * σ3
-                else:
-                    H[i, i] = -μ * σ0
-
                 if SC1(i):
                     Δ[i, i] = Δ0 * jσ2 * np.exp((-1j / 2) * π * δφ)
                 if SC2(i):
                     Δ[i, i] = Δ0 * jσ2 * np.exp((+1j / 2) * π * δφ)
-        for i, j in lattice.bonds():
-            H[i, j] = -t * σ0
+                if AM(i):
+                    H[i, i] = -μ * σ0 - m * σ3
+                else:
+                    H[i, i] = -μ * σ0
+        for i, j in lattice.bonds(axis=0):
+            if IN(i) and IN(j):
+                H[i, j] = -t * σ0
+        for i, j in lattice.bonds(axis=1):
+            if IN(i) and IN(j):
+                H[i, j] = -t * σ0
 
     J1x, J1y, J2x, J2y = current(system, T=T)
     print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")

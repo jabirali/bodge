@@ -142,6 +142,7 @@ parser.add_argument("-v", "--visualize", default=False, action="store_true")
 parser.add_argument("-d", "--diagonal", default=False, action="store_true")
 parser.add_argument("-l", "--length", type=int, required=True)
 parser.add_argument("-m", "--field", type=float, required=True)
+parser.add_argument("-w", "--width", type=int, required=True)
 
 if interactive() is None:
     # Run as a script.
@@ -157,10 +158,10 @@ print(args)
 DIAG = bool(args.diagonal)
 if DIAG:
     L_SC = 14
-    L_Y = 14
+    L_Y = args.width
 else:
     L_SC = 20
-    L_Y = 20
+    L_Y = args.width
 
 L_NM = 3
 L_AM = args.length
@@ -210,7 +211,7 @@ for δφ in tqdm(φs, desc="phase"):
                 else:
                     H[i, j] = -t * σ0
 
-    # J1x, J1y, J2x, J2y = current(system, T=T)
-    # print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")
+    J1x, J1y, J2x, J2y = current(system, T=T)
+    print(f":: {DIAG},{L_SC},{L_NM},{L_AM},{m},{δφ},{J1x},{J1y},{J2x},{J2y}")
 
 # %%
