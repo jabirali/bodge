@@ -17,6 +17,7 @@ L_Z = 1
 
 lattice = CubicLattice((L_X, L_Y, L_Z))
 
+
 # Function to handle diagonal slicing of junctions.
 def diax(i, n):
     return i[0] + (i[1] - L_Y // 2) * n

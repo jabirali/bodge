@@ -44,6 +44,7 @@ dvecs = {
     "NU2": pwave("(e_x * p_x + je_y * p_y) / 2"),
 }
 
+
 # Function for generating an RKKY Hamiltonian.
 def hamiltonian(lattice, order, s1, s2, δ):
     system = Hamiltonian(lattice)
