@@ -173,7 +173,7 @@ m = Δ0 * args.field
 Tc = Δ0 / 1.764
 T = Tc * args.temp
 
-Δt = Δ0 * np.tanh(1.74 * np.sqrt(Tc/T - 1))
+Δt = Δ0 * np.tanh(1.74 * np.sqrt(Tc / T - 1))
 
 # Lattice construction.
 if DIAG:

@@ -6,7 +6,7 @@ This is useful to e.g. determine the YSR bound states that might exist
 in such materials, which is likely related to RKKY oscillations.
 """
 
-#%% Imports
+# %% Imports
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

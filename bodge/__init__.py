@@ -15,6 +15,7 @@ __all__ = [
     "FermiMatrix",
     "diagonalize",
     "pwave",
+    "dwave",
     "free_energy",
     "spectral",
     "deform",

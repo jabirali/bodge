@@ -196,3 +196,52 @@ def test_dvector_hermitian():
 
         H = system.matrix.todense()
         assert np.allclose(H, H.T.conj())
+
+
+def test_dwave_symmetries():
+    """Test that the d_{x^2 - y^2} order parameter behaves as expected."""
+    Δ_d = dwave()
+
+    # Zero on-site contributions.
+    assert np.allclose(Δ_d((0, 0, 0), (0, 0, 0)), 0 * σ0)
+    assert np.allclose(Δ_d((1, 2, 3), (1, 2, 3)), 0 * σ0)
+
+    # Zero z-axis contributions.
+    assert np.allclose(Δ_d((0, 0, 0), (0, 0, 1)), 0 * σ0)
+    assert np.allclose(Δ_d((0, 0, 1), (0, 0, 0)), 0 * σ0)
+
+    # Positive x-axis contributions.
+    assert np.allclose(Δ_d((0, 0, 0), (1, 0, 0)), +1 * jσ2)
+    assert np.allclose(Δ_d((0, 0, 0), (9, 0, 0)), +1 * jσ2)
+    assert np.allclose(Δ_d((1, 0, 0), (0, 0, 0)), +1 * jσ2)
+    assert np.allclose(Δ_d((9, 0, 0), (0, 0, 0)), +1 * jσ2)
+
+    # Negative y-axis contributions.
+    assert np.allclose(Δ_d((0, 0, 0), (0, 1, 0)), -1 * jσ2)
+    assert np.allclose(Δ_d((0, 0, 0), (0, 9, 0)), -1 * jσ2)
+    assert np.allclose(Δ_d((0, 1, 0), (0, 0, 0)), -1 * jσ2)
+    assert np.allclose(Δ_d((0, 9, 0), (0, 0, 0)), -1 * jσ2)
+
+    # Zero diagonal contributions.
+    assert np.allclose(Δ_d((1, +1, 0), (0, 0, 0)), 0 * σ0)
+    assert np.allclose(Δ_d((1, -1, 0), (0, 0, 0)), 0 * σ0)
+    assert np.allclose(Δ_d((0, 0, 0), (1, +1, 0)), 0 * σ0)
+    assert np.allclose(Δ_d((0, 0, 0), (1, -1, 0)), 0 * σ0)
+
+
+def test_dwave_hermitian():
+    """Test that d-wave superconductors have Hermitian Hamiltonians."""
+    lattice = CubicLattice((10, 10, 1))
+    system = Hamiltonian(lattice)
+    Δ_d = dwave()
+
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            H[i, i] = -0.1 * σ0
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+            Δ[i, j] = -0.1 * Δ_d(i, j)
+
+    H = system.matrix.todense()
+    assert np.allclose(H, H.T.conj())

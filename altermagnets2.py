@@ -34,6 +34,7 @@ L_X: int  # Total length along the junction direction [X]
 L_Y: int  # Total length in the transverse direction [Y]
 L_Z: int = 1  # We consider only 2D lattices here
 
+
 # %% Lattice coordinates.
 # These functions transform lattice coordinates i = (i_x, i_y, 0) to
 # junction coordinates x_i and y_i along either [100] or [110] systems.
@@ -150,6 +151,7 @@ L_X = 2 * L_SC + 2 * L_NM + L_AM
 
 lattice = create_lattice()
 visualize()
+
 
 # %% Current calculations.
 def current(system, N=1000, T=1e-3):

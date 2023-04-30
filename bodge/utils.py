@@ -188,8 +188,26 @@ def free_energy(system: Hamiltonian, temperature: float = 0.01):
     return F
 
 
+def swave() -> Matrix:
+    """Generate the s-wave superconducting order parameter.
+
+    This is only implemented for consistency with `pwave` and `dwave`.
+    Moreover, since the structure is the same for on-site and extended
+    s-wave orders, it is not a function of coordinates but just a matrix.
+    """
+
+    return jσ2
+
+
 def pwave(desc: str):
-    """Convert a d-vector expression into a p-wave gap function."""
+    """Generate the p-wave superconducting order parameter.
+
+    You should provide a d-vector [e.g. "(p_x + jp_y) * (e_x + je_y)"] in order
+    to construct a p-wave triplet order parameter. The function then returns a
+    new function Δ_p(i, j) which lets you evaluate the superconducting order
+    parameter for two lattice sites with coordinates i and j. This is useful
+    when constructing the Hamiltonian of the system numerically.
+    """
     # Basis vectors for spin axes.
     e_x = np.array([[1], [0], [0]])
     e_y = np.array([[0], [1], [0]])
@@ -222,3 +240,24 @@ def pwave(desc: str):
         return np.einsum("iab,i -> ab", Δ, δ)
 
     return Δ_p
+
+
+def dwave():
+    """Generate the d-wave superconducting order parameter.
+
+    The generator is a function Δ(i, j) that takes two lattice points i and j,
+    and returns the superconducting order parameter Δ between those two sites.
+
+    We specifically consider the d_{x^2 - y^2} order parameter on a presumably
+    square lattice. This means that the order parameter should have a momentum
+    structure ~ (p_x^2 - p_y^2)/p_F^2 and spin structure ~ jσ_2 (spin-singlet).
+    It might work on non-square lattices as well, but this has to be verified.
+    """
+
+    def Δ_d(i: Coord, j: Coord) -> Matrix:
+        δ = np.subtract(j, i)
+        Δ_ij = (δ[0] ** 2 - δ[1] ** 2) / (np.sum(δ**2) + 1e-16)
+
+        return Δ_ij * jσ2
+
+    return Δ_d

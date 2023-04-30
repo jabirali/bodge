@@ -2,9 +2,10 @@
 
 from typing import Optional
 
-from bodge import *
 from icecream import ic
 from typer import run
+
+from bodge import *
 
 
 def main(
