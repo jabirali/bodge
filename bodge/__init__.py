@@ -14,6 +14,7 @@ __all__ = [
     "Hamiltonian",
     "FermiMatrix",
     "diagonalize",
+    "swave",
     "pwave",
     "dwave",
     "free_energy",
