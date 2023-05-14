@@ -245,7 +245,7 @@ def pwave(desc: str):
 def dwave():
     """Generate the d-wave superconducting order parameter.
 
-    The generator is a function Δ(i, j) that takes two lattice points i and j,
+    This function returns a function Δ(i, j) that takes two lattice sites i, j,
     and returns the superconducting order parameter Δ between those two sites.
 
     We specifically consider the d_{x^2 - y^2} order parameter on a presumably
