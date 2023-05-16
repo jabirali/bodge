@@ -162,7 +162,7 @@ def critical_temperature(system: Hamiltonian, order: int, T_max=None) -> float:
         Δ1 = np.where(Δ2 > 0, δ, 0)
 
         # Temperature update.
-        if np.mean(Δ2) > np.mean(Δ1):
+        if np.median(Δ2) > np.median(Δ1):
             T_min = Tc
         else:
             T_max = Tc

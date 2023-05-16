@@ -13,15 +13,14 @@ from bodge import *
 # Physical parameters.
 N = 1000
 # TODO: 64x64 normal metal under
-Lx = 32
-Ly = 32
+Lx = 16 # 32
+Ly = 16 # 32
 
 t = 1.0
 μ = 0.0
 U = t
 
-for τ in [0.001 * t, 0.003 * t, 0.01 * t, 0.03 * t, 0.10 * t, 0.30 * t, 1.00 * t]:
-
+for τ in np.arange(0, 0.1, 0.01):
     # Non-superconducting Hamiltonian.
     #lattice = CubicLattice((Lx, Ly, 1))
     lattice = CubicLattice((Lx, Ly, 2))
@@ -42,5 +41,6 @@ for τ in [0.001 * t, 0.003 * t, 0.01 * t, 0.03 * t, 0.10 * t, 0.30 * t, 1.00 * 
         for i, j in lattice.bonds(axis=2):
             H[i, j] = -τ * σ0
 
+    # TODO: Number of iterations per temp?
     Tc = critical_temperature(system, order=N, T_max=0.2)
     print(":: ", τ, Tc)
