@@ -11,25 +11,36 @@ from bodge import *
 # ------------------------------------------------------------
 
 # Physical parameters.
-N = 8000
-Lx = 20
-Ly = 20
+N = 1000
+# TODO: 64x64 normal metal under
+Lx = 32
+Ly = 32
 
 t = 1.0
 μ = 0.0
-U = t / 3
+U = t
 
-# Non-superconducting Hamiltonian.
-lattice = CubicLattice((Lx, Ly, 1))
-system = Hamiltonian(lattice)
+for τ in [0.001 * t, 0.003 * t, 0.01 * t, 0.03 * t, 0.10 * t, 0.30 * t, 1.00 * t]:
 
-with system as (H, Δ, V):
-    for i in lattice.sites():
-        H[i, i] = -μ * σ0
-        V[i, i] = -U
+    # Non-superconducting Hamiltonian.
+    #lattice = CubicLattice((Lx, Ly, 1))
+    lattice = CubicLattice((Lx, Ly, 2))
+    system = Hamiltonian(lattice)
 
-    for i, j in lattice.bonds():
-        H[i, j] = -t * σ0
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            H[i, i] = -μ * σ0
+            if i[2] == 0:
+                V[i, i] = -U
+            else:
+                V[i, i] = 0
 
-Tc = critical_temperature(system, N)
-print(Tc)
+        for i, j in lattice.bonds(axis=0):
+            H[i, j] = -t * σ0
+        for i, j in lattice.bonds(axis=1):
+            H[i, j] = -t * σ0
+        for i, j in lattice.bonds(axis=2):
+            H[i, j] = -τ * σ0
+
+    Tc = critical_temperature(system, order=N, T_max=0.2)
+    print(":: ", τ, Tc)
