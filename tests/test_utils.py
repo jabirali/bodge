@@ -1,6 +1,7 @@
+from scipy.linalg import eigh
+
 from bodge import *
 from bodge.common import *
-from scipy.linalg import eigh
 
 
 def test_ssd():

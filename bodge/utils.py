@@ -1,6 +1,7 @@
 from .chebyshev import *
 from .common import *
 from .hamiltonian import Hamiltonian
+from .fermi import FermiMatrix
 from .lattice import Lattice
 
 
@@ -106,6 +107,68 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
 
     # Merge the dataframes and return.
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
+
+
+def critical_temperature(system: Hamiltonian, order: int) -> float:
+    """Calculate the critical temperature using a bisection method."""
+    # Prepare the Fermi matrix expansion.
+    lattice = system.lattice
+    fermi = FermiMatrix(system, order)
+
+    # Determine zero-temperature gap via binary search.
+    T = 1e-6
+    Δ_min = 0.00
+    Δ_max = 0.03
+    Δ0 = (Δ_min + Δ_max) / 2
+
+    print("Determining zero-temperature gap:")
+    for n in range(12):
+        # Hamiltonian update.
+        with system as (H, Δ, V):
+            for i in lattice.sites():
+                if V[i, i] != 0:
+                    Δ[i, i] = Δ0 * jσ2
+
+        # Convergence control.
+        F = fermi(T)
+        Δ2 = np.abs(F.order_swave())
+        Δ1 = np.where(Δ2 > 0, Δ0, 0)
+
+        if np.mean(Δ2) > np.mean(Δ1):
+            Δ_min = Δ0
+        else:
+            Δ_max = Δ0
+
+        Δ0 = (Δ_min + Δ_max) / 2
+        print(f"Δ0({n}):\t{Δ0}")
+
+    # Determine critical temperature via binary search.
+    δ = Δ0 * 1e-4
+    T_min = 0
+    T_max = 2 * (Δ0 / 1.764)
+    Tc = (T_min + T_max) / 2
+
+    with system as (H, Δ, V):
+        for i in lattice.sites():
+            if V[i, i] != 0:
+                Δ[i, i] = δ * jσ2
+
+    print("Determining critical temperature:")
+    for n in range(12):
+        # Convergence control.
+        Δ2 = np.abs(fermi(Tc).order_swave())
+        Δ1 = np.where(Δ2 > 0, δ, 0)
+
+        # Temperature update.
+        if np.mean(Δ2) > np.mean(Δ1):
+            T_min = Tc
+        else:
+            T_max = Tc
+        Tc = (T_min + T_max) / 2
+
+        print(f"Tc({n}):\t{Tc}")
+
+    return Tc
 
 
 def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:

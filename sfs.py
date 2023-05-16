@@ -6,8 +6,9 @@ from argparse import ArgumentParser
 
 # %% Common imports.
 import numpy as np
-from bodge import *
 from tqdm import tqdm
+
+from bodge import *
 
 
 # %% Check for interactivity.

@@ -14,6 +14,7 @@ __all__ = [
     "FermiMatrix",
     "Hamiltonian",
     "deform",
+    "critical_temperature",
     "diagonalize",
     "dwave",
     "free_energy",
