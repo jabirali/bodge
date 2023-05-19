@@ -127,8 +127,11 @@ def critical_temperature(system: Hamiltonian, order: int, T_max=None) -> float:
             # Hamiltonian update.
             with system as (H, Δ, V):
                 for i in lattice.sites():
-                    if V[i, i] != 0:
-                        Δ[i, i] = Δ0 * jσ2
+                    try:
+                        if V[i, i] != 0:
+                            Δ[i, i] = Δ0 * jσ2
+                    except KeyError:
+                        pass
 
             # Convergence control.
             F = fermi(T)
@@ -152,8 +155,11 @@ def critical_temperature(system: Hamiltonian, order: int, T_max=None) -> float:
 
     with system as (H, Δ, V):
         for i in lattice.sites():
-            if V[i, i] != 0:
-                Δ[i, i] = δ * jσ2
+            try:
+                if V[i, i] != 0:
+                    Δ[i, i] = δ * jσ2
+            except KeyError:
+                pass
 
     print("Determining critical temperature:")
     for n in range(12):
