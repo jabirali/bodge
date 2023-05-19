@@ -57,7 +57,7 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> Csr
         return F_k
 
     # Parallel execution of the blockwise calculation.
-    with mp.Pool() as pool:
+    with mp.Pool(6) as pool:
         ks = trange(K, unit="blk", desc="kpm", smoothing=0, leave=False)
         Fs = pool.map(kernel, ks, chunksize=1)
 

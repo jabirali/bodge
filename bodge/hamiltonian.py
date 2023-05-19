@@ -71,6 +71,8 @@ class Hamiltonian:
 
         # Storage for any Hubbard-type potentials on the lattice.
         self.pot: dict[Coords, float] = {}
+        for i in self.lattice:
+            self.pot[i] = 0
 
     @typecheck
     def __enter__(
