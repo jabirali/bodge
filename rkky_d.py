@@ -19,7 +19,7 @@ def main(
     potential: float = -3.0,
     coupling: float = 3.0,
     supergap: float = 0.10,
-    filename: str = "rkky_sd.csv",
+    filename: str = "rkky_d.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
 
