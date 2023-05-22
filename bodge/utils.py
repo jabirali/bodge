@@ -123,12 +123,12 @@ def critical_temperature(
     T_now = (T_min + T_max) / 2
 
     print("Determining critical temperature:")
-    for n in range(12):
+    for n in trange(12, unit="temp", smoothing=0):
         # Gap initialization.
         Δ_now = {i: Δ_init for i in lattice.sites()}
 
         # Self-consistency iterations.
-        for m in range(iters):
+        for m in trange(iters, unit="gap", smoothing=0):
             with system as (H, Δ, V):
                 for i in lattice.sites():
                     if (i, i) in V:
@@ -144,7 +144,7 @@ def critical_temperature(
             T_max = T_now
         T_now = (T_min + T_max) / 2
 
-        print(f"Tc({n}):\t{T_now}")
+        # print(f"Tc({n}):\t{T_now}")
 
     return T_now
 

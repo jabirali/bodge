@@ -3,6 +3,7 @@
 """Calculation of critical temperature for s-wave superconductors."""
 
 from time import time
+
 import numpy as np
 from icecream import ic
 
