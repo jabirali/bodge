@@ -12,7 +12,7 @@ from bodge import *
 # Specify the physical system under investigation.
 # ------------------------------------------------------------
 
-with open("bench2.dat", "w") as f:
+with open("scrit.dat", "w") as f:
     # Model parameters.
     Lx = 64
     Ly = 64
@@ -70,5 +70,5 @@ with open("bench2.dat", "w") as f:
         Tc = critical_temperature(system, T_max=0.04)
         sec = time() - sec
 
-        f.write(f"{M}, {sec}, {Tc}\n")
+        f.write(f"{sec}, {Tc}\n")
         f.flush()
