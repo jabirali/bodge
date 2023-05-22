@@ -109,201 +109,43 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
 
 
-def critical_temperature(system: Hamiltonian, order: int, iters: int, T_max=None) -> float:
+def critical_temperature(system: Hamiltonian, order: int, iters: int, T_max: float) -> float:
     """Calculate the critical temperature using a bisection method."""
     # Prepare the Fermi matrix expansion.
     lattice = system.lattice
     fermi = FermiMatrix(system, order)
 
-    if T_max is None:
-        raise NotImplementedError()
-        # # Determine zero-temperature gap via binary search.
-        # T = 1e-6
-        # Δ_min = 0.00
-        # Δ_max = 1.00
-        # Δ0 = (Δ_min + Δ_max) / 2
-
-        # print("Determining zero-temperature gap:")
-        # for n in range(12):
-        #     # Hamiltonian update.
-        #     with system as (H, Δ, V):
-        #         for i in lattice.sites():
-        #             try:
-        #                 # TODO: Refactor to use a DefaultDict instead of try/except.
-        #                 if V[i, i] != 0:
-        #                     Δ[i, i] = Δ0 * jσ2
-        #             except KeyError:
-        #                 pass
-
-        #     # Convergence control.
-        #     F = fermi(T)
-        #     Δ2 = np.abs(F.order_swave())
-        #     Δ1 = np.where(Δ2 > 0, Δ0, 0)
-
-        #     if np.mean(Δ2) > np.mean(Δ1):
-        #         Δ_min = Δ0
-        #     else:
-        #         Δ_max = Δ0
-
-        #     Δ0 = (Δ_min + Δ_max) / 2
-        #     print(f"Δ0({n}):\t{Δ0}")
-
-        # T_max = 2 * (Δ0 / 1.764)
-
     # Determine critical temperature via binary search.
-    δ = 1e-5
+    Δ_init = 1e-5
     T_min = 0
-    Tc = (T_min + T_max) / 2
+    T_now = (T_min + T_max) / 2
 
     print("Determining critical temperature:")
     for n in range(12):
-        # Initialize the system state to gap δ.
-        Δ_sc = {i: δ for i in lattice.sites()}
+        # Gap initialization.
+        Δ_now = {i: Δ_init for i in lattice.sites()}
 
-        # Do a few self-consistency iterations.
+        # Self-consistency iterations.
         for m in range(iters):
             with system as (H, Δ, V):
                 for i in lattice.sites():
                     if (i, i) in V:
-                        Δ[i, i] = Δ_sc[i] * jσ2
-            Δ_sc = fermi(Tc).order_swave()
+                        Δ[i, i] = Δ_now[i] * jσ2
+            Δ_now = fermi(T_now).order_swave()
 
-        # Gap change where it's finite.
-
-        # Calculate the average gap change.
-        ratio = np.abs(Δ_sc[np.nonzero(Δ_sc)]) / δ
-        if np.median(ratio) > 1:
-            T_min = Tc
+        # Update critical temperature estimate based on
+        # whether the gap at this temperature increased.
+        Δ_fin = np.median(np.abs(Δ_now[np.nonzero(Δ_now)]))
+        if Δ_fin > Δ_init:
+            T_min = T_now
         else:
-            T_max = Tc
-        Tc = (T_min + T_max) / 2
+            T_max = T_now
+        T_now = (T_min + T_max) / 2
 
-        print(f"Tc({n}):\t{Tc}")
+        print(f"Tc({n}):\t{T_now}")
 
-    return Tc
+    return T_now
 
-def critical_temperature_2(system: Hamiltonian, order: int, iters: int, T_max=None) -> float:
-    """Calculate the critical temperature using a bisection method."""
-    # Prepare the Fermi matrix expansion.
-    lattice = system.lattice
-    fermi = FermiMatrix(system, order)
-
-    if T_max is None:
-        raise NotImplementedError()
-
-    # Determine critical temperature via binary search.
-    δ = 1e-5
-    T_min = 0
-    Tc = (T_min + T_max) / 2
-
-    print("Determining critical temperature:")
-    for n in range(12):
-        # Initialize the system state to gap δ.
-        Δ_sc = {i: δ for i in lattice.sites()}
-
-        # Do a few self-consistency iterations.
-        for m in range(iters):
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    if (i, i) in V:
-                        Δ[i, i] = Δ_sc[i] * jσ2
-            Δ_sc = fermi(Tc).order_swave()
-
-        # Gap change where it's finite.
-        diff = np.abs(Δ_sc[np.nonzero(Δ_sc)]) - δ
-
-        # Calculate the average gap change.
-        if np.mean(diff) > 0:
-            T_min = Tc
-        else:
-            T_max = Tc
-        Tc = (T_min + T_max) / 2
-
-        print(f"Tc({n}):\t{Tc}")
-
-    return Tc
-
-def critical_temperature_3(system: Hamiltonian, order: int, iters: int, T_max=None) -> float:
-    """Calculate the critical temperature using a bisection method."""
-    # Prepare the Fermi matrix expansion.
-    lattice = system.lattice
-    fermi = FermiMatrix(system, order)
-
-    if T_max is None:
-        raise NotImplementedError()
-
-    # Determine critical temperature via binary search.
-    δ = 1e-5
-    T_min = 0
-    Tc = (T_min + T_max) / 2
-
-    print("Determining critical temperature:")
-    for n in range(12):
-        # Initialize the system state to gap δ.
-        Δ_sc = {i: δ for i in lattice.sites()}
-
-        # Do a few self-consistency iterations.
-        for m in range(iters):
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    if (i, i) in V:
-                        Δ[i, i] = Δ_sc[i] * jσ2
-            Δ_sc = fermi(Tc).order_swave()
-
-        # Gap change where it's finite.
-        diff = np.abs(Δ_sc[np.nonzero(Δ_sc)]) - δ
-
-        # Calculate the maximum gap increase.
-        if np.max(diff) > 0:
-            T_min = Tc
-        else:
-            T_max = Tc
-        Tc = (T_min + T_max) / 2
-
-        print(f"Tc({n}):\t{Tc}")
-
-    return Tc
-
-def critical_temperature_4(system: Hamiltonian, order: int, iters: int, T_max=None) -> float:
-    """Calculate the critical temperature using a bisection method."""
-    # Prepare the Fermi matrix expansion.
-    lattice = system.lattice
-    fermi = FermiMatrix(system, order)
-
-    if T_max is None:
-        raise NotImplementedError()
-
-    # Determine critical temperature via binary search.
-    δ = 1e-5
-    T_min = 0
-    Tc = (T_min + T_max) / 2
-
-    print("Determining critical temperature:")
-    for n in range(12):
-        # Initialize the system state to gap δ.
-        Δ_sc = {i: δ for i in lattice.sites()}
-
-        # Do a few self-consistency iterations.
-        for m in range(iters):
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    if (i, i) in V:
-                        Δ[i, i] = Δ_sc[i] * jσ2
-            Δ_sc = fermi(Tc).order_swave()
-
-        # Gap change where it's finite.
-        diff = np.abs(Δ_sc[np.nonzero(Δ_sc)]) - δ
-
-        # Calculate the minimum gap increase.
-        if np.min(diff) > 0:
-            T_min = Tc
-        else:
-            T_max = Tc
-        Tc = (T_min + T_max) / 2
-
-        print(f"Tc({n}):\t{Tc}")
-
-    return Tc
 
 def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     """Calculate the exact eigenstates of the system via direct diagonalization.
