@@ -109,7 +109,9 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
 
 
-def critical_temperature(system: Hamiltonian, order: int, iters: int, T_max: float) -> float:
+def critical_temperature(
+    system: Hamiltonian, order: int = 1200, iters: int = 8, T_max: float = 1.0
+) -> float:
     """Calculate the critical temperature using a bisection method."""
     # Prepare the Fermi matrix expansion.
     lattice = system.lattice
