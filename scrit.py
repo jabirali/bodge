@@ -13,17 +13,17 @@ from bodge import *
 # Physical parameters.
 N = 1000
 # TODO: 64x64 normal metal under
+
 Lx = 16 # 32
 Ly = 16 # 32
+Lz = 2
 
 t = 1.0
 μ = 0.0
 U = t
 
 for τ in np.arange(0, 0.1, 0.01):
-    # Non-superconducting Hamiltonian.
-    #lattice = CubicLattice((Lx, Ly, 1))
-    lattice = CubicLattice((Lx, Ly, 2))
+    lattice = CubicLattice((Lx, Ly, Lz))
     system = Hamiltonian(lattice)
 
     with system as (H, Δ, V):
