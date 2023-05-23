@@ -4,9 +4,6 @@
 
 from time import time
 
-import numpy as np
-from icecream import ic
-
 from bodge import *
 
 # ------------------------------------------------------------

@@ -110,7 +110,12 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
 
 
 def critical_temperature(
-    system: Hamiltonian, order: int = 1200, iters: int = 8, T_max: float = 1.0
+    system: Hamiltonian,
+    order: int = 1200,
+    bisects: int = 12,
+    iters: int = 8,
+    T_min: float = 0.0,
+    T_max: float = 1.0,
 ) -> float:
     """Calculate the critical temperature using a bisection method."""
     # Prepare the Fermi matrix expansion.
@@ -119,11 +124,10 @@ def critical_temperature(
 
     # Determine critical temperature via binary search.
     Δ_init = 1e-5
-    T_min = 0
     T_now = (T_min + T_max) / 2
 
     print("Determining critical temperature:")
-    for n in trange(12, unit="temp", smoothing=0):
+    for n in trange(bisects, unit="temp", smoothing=0):
         # Gap initialization.
         Δ_now = {i: Δ_init for i in lattice.sites()}
 
