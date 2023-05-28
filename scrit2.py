@@ -63,7 +63,6 @@ with open("scrit.dat", "w") as f:
                 if IN(i) and IN(j):
                     H[i, j] = -τ * σ0
 
-        # TODO: Number of iterations per temp?
         sec = time()
         Tc = critical_temperature(system, T_max=0.04)
         sec = time() - sec
