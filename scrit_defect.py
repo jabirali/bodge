@@ -35,25 +35,6 @@ def main(delta: str):
         x, y = i[:-1]
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
     
-    # Verify the profiles.
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    xs, ys, mxs, mys, mzs = [], [], [], [], []
-    for i in lattice.sites():
-        xs.append(i[0])
-        ys.append(i[1])
-        mzs.append(np.real(np.trace(σ3 @ σ(i)) / 2))
-        mys.append(np.real(np.trace(σ2 @ σ(i)) / 2))
-        mxs.append(np.real(np.trace(σ1 @ σ(i)) / 2))
-    
-    sns.scatterplot(x=xs, y=ys, hue=mxs)
-    plt.show()
-    sns.scatterplot(x=xs, y=ys, hue=mys)
-    plt.show()
-    sns.scatterplot(x=xs, y=ys, hue=mzs)
-    plt.show()
-
     # Perform Tc calculations.
     with open(f"scrit_m{delta}.dat", "w") as f:
         # Model parameters.
