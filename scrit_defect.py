@@ -9,6 +9,22 @@ from typer import run
 from bodge import *
 
 def main(delta: str):
+    # Construct an appropriate lattice, including functions to determine
+    # whether a particular region is superconducting or normal metallic.
+    Lx, Ly, Lz = 64, 64, 2
+    lattice = CubicLattice((Lx, Ly, Lz))
+
+    def NM(i: Coord):
+        x, y, z = i
+        return z == 1
+
+    def SC(i: Coord):
+        x, y, z = i
+        return z == 0 and x >= Lx // 4 and x < 3 * Lx // 4 and y >= Ly // 4 and y < 3 * Ly // 4
+
+    def IN(i: Coord):
+        return NM(i) or SC(i)
+
     # Load the interpolated profiles.
     with np.load(f"m_{delta}.npz") as f:
         mx, my, mz = f["mx"], f["my"], f["mz"]
@@ -18,33 +34,33 @@ def main(delta: str):
     def σ(i):
         x, y = i[:-1]
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
+    
+    # Verify the profiles.
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    xs, ys, mxs, mys, mzs = [], [], [], [], []
+    for i in lattice.sites():
+        xs.append(i[0])
+        ys.append(i[1])
+        mzs.append(np.real(np.trace(σ3 @ σ(i)) / 2))
+        mys.append(np.real(np.trace(σ2 @ σ(i)) / 2))
+        mxs.append(np.real(np.trace(σ1 @ σ(i)) / 2))
+    
+    sns.scatterplot(x=xs, y=ys, hue=mxs)
+    plt.show()
+    sns.scatterplot(x=xs, y=ys, hue=mys)
+    plt.show()
+    sns.scatterplot(x=xs, y=ys, hue=mzs)
+    plt.show()
 
     # Perform Tc calculations.
     with open(f"scrit_m{delta}.dat", "w") as f:
         # Model parameters.
-        Lx = 64
-        Ly = 64
-        Lz = 2
-
         t = 1.0
         μ = 0.5
         m = 2.0
         U = t
-
-        # Construct an appropriate lattice, including functions to determine
-        # whether a particular region is superconducting or normal metallic.
-        lattice = CubicLattice((Lx, Ly, Lz))
-
-        def NM(i: Coord):
-            x, y, z = i
-            return z == 1
-
-        def SC(i: Coord):
-            x, y, z = i
-            return z == 0 and x >= Lx // 4 and x < 3 * Lx // 4 and y >= Ly // 4 and y < 3 * Ly // 4
-
-        def IN(i: Coord):
-            return NM(i) or SC(i)
 
         # Calculate critical temperature.
         for τ in [0.03]:  # np.arange(0, 0.1, 0.01):
