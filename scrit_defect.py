@@ -36,7 +36,7 @@ def main(delta: str):
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
     
     # Perform Tc calculations.
-    with open(f"scrit_m{delta}.dat", "w") as f:
+    with open(f"scrit_m_{delta}.dat", "w") as f:
         # Model parameters.
         t = 1.0
         μ = 0.5
@@ -44,7 +44,7 @@ def main(delta: str):
         U = t
 
         # Calculate critical temperature.
-        for τ in [0.03]:  # np.arange(0, 0.1, 0.01):
+        for τ in np.logspace(-3, -1, 10):
             system = Hamiltonian(lattice)
             with system as (H, Δ, V):
                 for i in lattice.sites():
@@ -72,7 +72,7 @@ def main(delta: str):
 
             Tc = critical_temperature(system, T_max=0.04)
 
-            f.write(f"{sec}, {Tc}\n")
+            f.write(f"{τ}, {Tc}\n")
             f.flush()
 
 if __name__ == "__main__":
