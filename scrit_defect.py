@@ -8,7 +8,10 @@ from typer import run
 
 from bodge import *
 
-def main(delta: str):
+def main(delta: str, tau: float):
+    ic(delta)
+    ic(tau)
+
     # Construct an appropriate lattice, including functions to determine
     # whether a particular region is superconducting or normal metallic.
     Lx, Ly, Lz = 64, 64, 2
@@ -26,7 +29,8 @@ def main(delta: str):
         return NM(i) or SC(i)
 
     # Load the interpolated profiles.
-    with np.load(f"m_{delta}.npz") as f:
+    δ = delta
+    with np.load(f"m_{δ}.npz") as f:
         mx, my, mz = f["mx"], f["my"], f["mz"]
         ic(mx, my, mz)
     
@@ -36,44 +40,44 @@ def main(delta: str):
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
     
     # Perform Tc calculations.
-    with open(f"scrit_m_{delta}.dat", "w") as f:
+    with open(f"scrit_m_{δ}.dat", "w") as f:
         # Model parameters.
         t = 1.0
         μ = 0.5
         m = 2.0
         U = t
+        τ = tau
 
         # Calculate critical temperature.
-        for τ in np.logspace(-3, -1, 10):
-            system = Hamiltonian(lattice)
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    # Chemical potential in non-empty space,
-                    # exchange field in non-superconductors.
-                    # Attractive Hubbard in superconductors.
-                    if NM(i):
-                        H[i, i] = -μ * σ0 - m * σ(i)
-                    if SC(i):
-                        H[i, i] = -μ * σ0
-                        V[i, i] = -U
+        system = Hamiltonian(lattice)
+        with system as (H, Δ, V):
+            for i in lattice.sites():
+                # Chemical potential in non-empty space,
+                # exchange field in non-superconductors.
+                # Attractive Hubbard in superconductors.
+                if NM(i):
+                    H[i, i] = -μ * σ0 - m * σ(i)
+                if SC(i):
+                    H[i, i] = -μ * σ0
+                    V[i, i] = -U
 
-                # Intra-plane hopping coefficient t.
-                for i, j in lattice.bonds(axis=0):
-                    if IN(i) and IN(j):
-                        H[i, j] = -t * σ0
-                for i, j in lattice.bonds(axis=1):
-                    if IN(i) and IN(j):
-                        H[i, j] = -t * σ0
+            # Intra-plane hopping coefficient t.
+            for i, j in lattice.bonds(axis=0):
+                if IN(i) and IN(j):
+                    H[i, j] = -t * σ0
+            for i, j in lattice.bonds(axis=1):
+                if IN(i) and IN(j):
+                    H[i, j] = -t * σ0
 
-                # Inter-plane hopping coefficient τ.
-                for i, j in lattice.bonds(axis=2):
-                    if IN(i) and IN(j):
-                        H[i, j] = -τ * σ0
+            # Inter-plane hopping coefficient τ.
+            for i, j in lattice.bonds(axis=2):
+                if IN(i) and IN(j):
+                    H[i, j] = -τ * σ0
 
-            Tc = critical_temperature(system, T_max=0.04)
+        Tc = critical_temperature(system, T_max=0.04)
 
-            f.write(f"{τ}, {Tc}\n")
-            f.flush()
+        f.write(f"{δ}, {τ}, {Tc}\n")
+        f.flush()
 
 if __name__ == "__main__":
     ic()
