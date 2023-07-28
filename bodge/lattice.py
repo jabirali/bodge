@@ -158,3 +158,7 @@ class CubicLattice(Lattice):
                     yield (x, y, Lz - 1), (x, y, 0)
         else:
             raise ValueError("No such axis")
+
+    def __repr__(self):
+        """Representation of the object for `print()`."""
+        return self.__class__.__name__ + str(self.shape)
