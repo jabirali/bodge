@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
-"""Critical temperature for s-wave superconductors with a magnetic defect."""
+"""Critical temperature for s-wave superconductors with a magnetic defect.
+
+The scenarios considered here correspond to a superconductor in contact
+with a magnetic insulator, such that the electron flow inside the magnet
+can be neglected. This way, we can approximate it as an effective exchange
+field inside the superconductor (with a corresponding magnetic texture).
+"""
 
 import numpy as np
 from icecream import ic
@@ -8,26 +14,13 @@ from typer import run
 
 from bodge import *
 
-def main(delta: str, tau: float, mag: float):
+def main(delta: str, mag: float):
     ic(delta)
-    ic(tau)
     ic(mag)
 
-    # Construct an appropriate lattice, including functions to determine
-    # whether a particular region is superconducting or normal metallic.
-    Lx, Ly, Lz = 32, 32, 2
+    # Construct a square lattice.
+    Lx, Ly, Lz = 32, 32, 1
     lattice = CubicLattice((Lx, Ly, Lz))
-
-    def NM(i: Coord):
-        x, y, z = i
-        return z == 1
-
-    def SC(i: Coord):
-        x, y, z = i
-        return z == 0 and x >= Lx // 4 and x < 3 * Lx // 4 and y >= Ly // 4 and y < 3 * Ly // 4
-
-    def IN(i: Coord):
-        return NM(i) or SC(i)
 
     # Load the interpolated profiles.
     δ = delta
@@ -47,38 +40,23 @@ def main(delta: str, tau: float, mag: float):
         t = 1.0
         μ = 0.5
         m = mag
-        τ = tau
         U = t
 
-        # Calculate critical temperature.
+        # Construct the Hamiltonian.
         system = Hamiltonian(lattice)
         with system as (H, Δ, V):
             for i in lattice.sites():
-                # Chemical potential in non-empty space,
-                # exchange field in non-superconductors.
-                # Attractive Hubbard in superconductors.
-                if NM(i):
-                    H[i, i] = -μ * σ0 - m * σ(i)
-                if SC(i):
-                    H[i, i] = -μ * σ0
-                    V[i, i] = -U
+                H[i, i] = -μ * σ0 - m * σ(i)
+                V[i, i] = -U
 
-            # Intra-plane hopping coefficient t.
-            for i, j in lattice.bonds(axis=0):
-                if IN(i) and IN(j):
-                    H[i, j] = -t * σ0
-            for i, j in lattice.bonds(axis=1):
-                if IN(i) and IN(j):
-                    H[i, j] = -t * σ0
+            for i, j in lattice.bonds():
+                H[i, j] = -t * σ0
 
-            # Inter-plane hopping coefficient τ.
-            for i, j in lattice.bonds(axis=2):
-                if IN(i) and IN(j):
-                    H[i, j] = -τ * σ0
-
+        # Calculate the critical temperature.
         Tc = critical_temperature(system, T_max=0.04)
 
-        f.write(f"{δ}, {τ}, {Tc}\n")
+        # Save the results to file.
+        f.write(f"{Lx}x{Ly}, {δ}, {m}, {Tc}\n")
         f.flush()
 
 if __name__ == "__main__":
