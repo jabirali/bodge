@@ -35,7 +35,7 @@ def main(delta: str, mag: float):
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
     
     # Perform Tc calculations.
-    with open(f"defect_{Lx}x{Ly}_{δ}.dat", "w") as f:
+    with open(f"defect_{Lx}x{Ly}_{δ}.dat", "a") as f:
         # Model parameters.
         t = 1.0
         μ = 0.5
@@ -53,7 +53,7 @@ def main(delta: str, mag: float):
                 H[i, j] = -t * σ0
 
         # Calculate the critical temperature.
-        Tc = critical_temperature(system, T_max=0.04)
+        Tc = critical_temperature(system, T_max=0.01, bisects=10, iters=6)
 
         # Save the results to file.
         f.write(f"{Lx}x{Ly}, {δ}, {m}, {Tc}\n")

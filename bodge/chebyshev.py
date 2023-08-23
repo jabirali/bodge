@@ -34,7 +34,10 @@ def cheb(F, X, S, N, filter: Optional[Callable] = None, site_filter=None) -> Csr
     W_cpu = math.ceil(X.shape[1] / mp.cpu_count())  # 1 block/core.
     W_mem = math.ceil(1024**2 / X.shape[0])  # 1 MB blocks.
 
-    W = min(W_cpu, W_mem)
+    if W_cpu < 2 * W_mem:
+        W = W_cpu
+    else:
+        W = W_mem
     K = math.ceil(X.shape[1] / W)
 
     # Blockwise calculation of the Chebyshev expansion.
