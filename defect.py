@@ -11,10 +11,11 @@ field inside the superconductor (with a corresponding magnetic texture).
 import numpy as np
 from icecream import ic
 from typer import run
+from time import time
 
 from bodge import *
 
-def main(delta: str, mag: float):
+def main(delta: str, mag: float, chebs: int):
     ic(delta)
     ic(mag)
 
@@ -53,10 +54,12 @@ def main(delta: str, mag: float):
                 H[i, j] = -t * σ0
 
         # Calculate the critical temperature.
-        Tc = critical_temperature(system, T_max=0.01, bisects=10, iters=6)
+        t0 = time()
+        Tc = critical_temperature(system, T_max=0.01, order=chebs)
+        t1 = time()
 
         # Save the results to file.
-        f.write(f"{Lx}x{Ly}, {δ}, {m}, {Tc}\n")
+        f.write(f"{chebs}, {t1-t0}, {Lx}x{Ly}, {δ}, {m}, {Tc}\n")
         f.flush()
 
 if __name__ == "__main__":
