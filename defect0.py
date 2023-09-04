@@ -8,12 +8,14 @@ can be neglected. This way, we can approximate it as an effective exchange
 field inside the superconductor (with a corresponding magnetic texture).
 """
 
+from time import time
+
 import numpy as np
 from icecream import ic
 from typer import run
-from time import time
 
 from bodge import *
+
 
 def main(delta: str, mag: float, chebs: int):
     ic(delta)
@@ -29,14 +31,14 @@ def main(delta: str, mag: float, chebs: int):
         mx, my, mz = f["mx"], f["my"], f["mz"]
         ic(mx, my, mz)
         ic(mx.shape, my.shape, mz.shape)
-    
+
     # Define a function for magnetization at coordinates.
     def σ(i):
         x, y = i[:-1]
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
-    
+
     # Perform Tc calculations.
-    with open(f"defect_{Lx}x{Ly}_{δ}.dat", "a") as f:
+    with open(f"defect0_{Lx}x{Ly}_{δ}.dat", "a") as f:
         # Model parameters.
         t = 1.0
         μ = 0.5
@@ -55,12 +57,13 @@ def main(delta: str, mag: float, chebs: int):
 
         # Calculate the critical temperature.
         t0 = time()
-        Tc = zero_gap(system, order=chebs)
+        Δ0 = zero_gap(system, order=chebs)
         t1 = time()
 
         # Save the results to file.
-        f.write(f"{chebs}, {t1-t0}, {Lx}x{Ly}, {δ}, {m}, {Tc}\n")
+        f.write(f"{chebs}, {t1-t0}, {Lx}x{Ly}, {δ}, {m}, {Δ0}\n")
         f.flush()
+
 
 if __name__ == "__main__":
     ic()

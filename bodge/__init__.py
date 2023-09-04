@@ -19,6 +19,7 @@ __all__ = [
     "Indices",
     "deform",
     "critical_temperature",
+    "zero_gap",
     "diagonalize",
     "dwave",
     "free_energy",

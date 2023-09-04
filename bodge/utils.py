@@ -153,6 +153,49 @@ def critical_temperature(
     return T_now
 
 
+def zero_gap(
+    system: Hamiltonian,
+    order: int = 1200,
+    bisects: int = 12,
+    iters: int = 8,
+    Δ_min: float = 0.0,
+    Δ_max: float = 1.0,
+) -> float:
+    """Calculate the zero-temperature gap using a bisection method."""
+    # Prepare the Fermi matrix expansion.
+    lattice = system.lattice
+    fermi = FermiMatrix(system, order)
+
+    # Determine critical temperature via binary search.
+    Δ_now = (Δ_min + Δ_max) / 2
+    T_now = 1e-3
+
+    print("Determining critical temperature:")
+    for n in trange(bisects, unit="gap", smoothing=0):
+        # Gap initialization.
+        Δ_map = {i: Δ_now for i in lattice.sites()}
+
+        # Self-consistency iterations.
+        for m in trange(iters, unit="gap", smoothing=0):
+            with system as (H, Δ, V):
+                for i in lattice.sites():
+                    if (i, i) in V:
+                        Δ[i, i] = Δ_map[i] * jσ2
+            Δ_map = fermi(T_now).order_swave()
+
+        # Update gap estimate based on whether the change.
+        Δ_fin = np.median(np.abs(Δ_map[np.nonzero(Δ_map)]))
+        if Δ_fin > Δ_now:
+            Δ_min = Δ_now
+        else:
+            Δ_max = Δ_now
+        Δ_now = (Δ_min + Δ_max) / 2
+
+        print(f"Δ({n}):\t{Δ_now}")
+
+    return Δ_now
+
+
 def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     """Calculate the exact eigenstates of the system via direct diagonalization.
 
