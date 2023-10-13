@@ -71,7 +71,7 @@ for s in ["e_z * p_x"]:
         plt.xlabel(r"Energy $\epsilon/\Delta$")
         plt.ylabel(r"LDOS $N(\epsilon, x)$")
         plt.title(rf"Distance $\delta = {δ}$ along $x$-axis from impurity")
-        plt.show()
+        plt.savefig(f"ysr_imp_δ{δ}.png")
 
         # Look for potential YSR DOS peaks.
         df1 = df1[df1.ε >= 0]
