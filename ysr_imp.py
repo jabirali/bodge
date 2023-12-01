@@ -10,76 +10,86 @@ in such materials, which is likely related to RKKY oscillations.
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.signal import find_peaks
-
 from bodge import *
 from bodge.utils import ldos, pwave
+from scipy.signal import find_peaks
 
-# Parameters used in paper.
+# %% Parameters used in paper.
 t = 1.0
 μ = -3.0 * t
 Δ0 = 0.1 * t
 J0 = 3.0 * t
 
-# Construct a 2D lattice.
-Lx = 80
-Ly = 80
+# %% Construct a 2D lattice.
+Lx = 80  # 200
+Ly = 80  # 200
 Lz = 1
 
 lattice = CubicLattice((Lx, Ly, 1))
 
-# d-vector for p-wave superconductivity.
-for s in ["e_z * p_x"]:
-    # for s in ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x + jp_y) / 2"]:
-    print(s)
-    d = pwave(s)
-    # d = pwave("e_z * (p_x + jp_y)")
-    # d = pwave("e_z * p_y")
-    # d = pwave("(e_x + je_y) * (p_x + jp_y) / 2")
+# %% Function to perform calculations.
+def main(ds, δs):
+    df = []
+    for d in ds:
+        # Convert string to d-vector.
+        d_ = pwave(d)
 
-    # Loop over tight-binding params.
-    for δ in [1]:  # [0, 1, 2, 3, 4, 5]:
-        # NOTE: Not optimal, use many sites instead.
         # Construct the base Hamiltonian.
         system = Hamiltonian(lattice)
-        with system as (H, Δ, V):
+        with system as (H, Δ, _):
             for i in lattice.sites():
                 H[i, i] = -μ * σ0
-                # Δ[i, i] = -Δ0 * jσ2
             for i, j in lattice.bonds():
                 H[i, j] = -t * σ0
-                Δ[i, j] = -Δ0 * d(i, j)
+                Δ[i, j] = -Δ0 * d_(i, j)
 
         # Prepare calculation points.
-        ii = (Lx // 2, Ly // 2, 0)
-        sites = [(ii[0] + δ, ii[1], ii[2])]
         energies = np.linspace(0.00, 2 * Δ0, 51)
+        i = (Lx // 2, Ly // 2, 0)
+        sites = [(i[0] + δ, i[1], i[2]) for δ in δs]
 
         # Calculate the density of states without impurity.
         df0 = ldos(system, sites, energies)
+        df0['d'] = d
+        df0['imp'] = False
 
-        # Add the single impurity.
+        df.append(df0)
+
+        # Add the impurities to the Hamiltonian.
         with system as (H, Δ, V):
-            H[ii, ii] = -μ * σ0 - J0 * σ3
+            H[i, i] = -μ * σ0 - J0 * σ3
 
         # Calculate the density of states with impurity.
         df1 = ldos(system, sites, energies)
+        df1['d'] = d
+        df1['imp'] = True
 
-        plt.figure()
-        # plt.plot(df0.ε / Δ0, df0.dos, 'k')
-        plt.plot(df0.ε / Δ0, df0.dos, df1.ε / Δ0, df1.dos)
-        plt.xlabel(r"Energy $\epsilon/\Delta$")
-        plt.ylabel(r"LDOS $N(\epsilon, x)$")
-        plt.title(rf"Distance $\delta = {δ}$ along $x$-axis from impurity")
-        plt.savefig(f"ysr_imp_δ{δ}.png")
+        df.append(df1)
 
-        # Look for potential YSR DOS peaks.
-        df1 = df1[df1.ε >= 0]
-        ε = np.array(df1.ε)
-        dos = np.array(df1.dos)
-        n_ysr, _ = find_peaks(dos)
+    return pd.concat(df)
 
-        # print(dos)
-        print(Δ0, J0, μ, δ, ε[n_ysr], dos[n_ysr])
+def save(df, name='ysr.csv'):
+    df['δ'] = df['x'] - Lx//2
+    df.to_csv(name, columns=['d','δ','imp','ε','dos'], index=False)
 
-# %%
+# %% Test the function above.
+ds = ["e_x * p_x"]
+δs = [1, 2]
+df = main(ds, δs)
+display(df)
+save(df, 'test.csv')
+
+# %% Perform actual calculations.
+ds = ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x + jp_y) / 2"]
+δs = [0, 1, 2, 3, 4, 5]
+df = main(ds, δs)
+save(df)
+
+
+# %% TODO:
+# For each of the d-vectors:
+# [X] Save the LDOS without impurity
+# [X] Save the LDOS for \delta = [1, 2, 3, 4, 5]
+# [X] Save all to files so I can postprocess locally
+# [ ] Focus on the 200x200 case
+# [ ] Later on: Make waterfall plots for each d-vec
