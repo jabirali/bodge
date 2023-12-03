@@ -58,13 +58,13 @@ clean:
 
 # Automatically install development dependencies as needed.
 venv/bin/pytest:
-	. venv/bin/activate; pip install .[test]
+	. venv/bin/activate; pip install .[dev]
 
 venv/bin/black:
-	. venv/bin/activate; pip install .[format]
+	. venv/bin/activate; pip install .[dev]
 
 venv/bin/ipython:
-	. venv/bin/activate; pip install .[shell]
+	. venv/bin/activate; pip install . ipython
 
 # Run Python scripts inside the virtual environment.
 %.py: .FORCE

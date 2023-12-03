@@ -25,18 +25,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+dev = [
+    "black",
+    "isort",
     "pytest",
     "pytest-cov",
-]
-
-format = [
-    "isort",
-    "black",
-]
-
-shell = [
-    "ipython",
 ]
 
 [tool.black]
