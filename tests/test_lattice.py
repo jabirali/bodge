@@ -1,6 +1,7 @@
+from pytest import raises
+
 from bodge.common import *
 from bodge.lattice import *
-from pytest import raises
 
 
 def test_abc():

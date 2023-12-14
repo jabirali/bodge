@@ -37,7 +37,7 @@ def test_free_energy():
     lattice = CubicLattice((10, 7, 3))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ, _):
+    with system as (H, Δ):
         for i in lattice.sites():
             if i[0] <= 3:
                 H[i, i] = -0.5 * σ0
@@ -66,7 +66,7 @@ def test_diagonalize():
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ, _):
+    with system as (H, Δ):
         for i in lattice.sites():
             H[i, i] = 4 * σ0
             if i[0] > 5:
@@ -176,7 +176,7 @@ def test_dvector_hermitian():
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
 
-    with system as (H, Δ, V):
+    with system as (H, Δ):
         for i in lattice.sites():
             H[i, i] = -0.1 * σ0
 
@@ -191,7 +191,7 @@ def test_dvector_hermitian():
         "(e_x + je_y) * (p_y + jp_z)",
     ]:
         Δ_p = pwave(desc)
-        with system as (H, Δ, V):
+        with system as (H, Δ):
             for i, j in lattice.bonds():
                 Δ[i, j] = -0.1 * Δ_p(i, j)
 
@@ -236,7 +236,7 @@ def test_dwave_hermitian():
     system = Hamiltonian(lattice)
     Δ_d = dwave()
 
-    with system as (H, Δ, V):
+    with system as (H, Δ):
         for i in lattice.sites():
             H[i, i] = -0.1 * σ0
 

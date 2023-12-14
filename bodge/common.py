@@ -1,8 +1,6 @@
 """Common imports and definitions used throughout the project."""
 
-# Numerical libraries.
-import math
-
+# Common imports.
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -11,8 +9,6 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as sa
 from beartype import beartype as typecheck
 from beartype.typing import Any, Callable, Iterator, Optional, Union
-
-# Miscellaneous conveniences.
 from tqdm import tqdm, trange
 
 # Data types for working with Lattice coordinates.
@@ -23,12 +19,12 @@ Coords = tuple[Coord, Coord]
 
 # Data types for working with various matrix formats.
 Matrix = npt.NDArray[np.complex128]
-SpMatrix = sp.spmatrix
 CooMatrix = sp.coo_matrix
 DiaMatrix = sp.dia_matrix
 BsrMatrix = sp.bsr_matrix
 CsrMatrix = sp.csr_matrix
 CscMatrix = sp.csc_matrix
+SpMatrix = sp.spmatrix
 
 # Fundamental constants.
 π = np.pi
