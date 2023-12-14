@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """Binary search in the inter-layer hopping parameter of an S/FM system."""
 

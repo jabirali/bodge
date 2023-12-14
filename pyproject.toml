@@ -17,7 +17,7 @@ dependencies = [
     "beartype",
     "tqdm",
     "typer",
-    "pandas"
+    "pandas",
     "matplotlib",
 ]
 
