@@ -33,7 +33,7 @@ dev = [
 line-length = 99
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report term-missing"
+addopts = "--cov=bodge --cov-report term-missing"
 filterwarnings = [
     'ignore:the imp module is deprecated:DeprecationWarning',
 ]
