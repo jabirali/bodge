@@ -1,7 +1,5 @@
 import pytest
-from scipy.stats import unitary_group
 
-from bodge.chebyshev import *
 from bodge.common import *
 
 
@@ -16,4 +14,3 @@ def test_pauli():
     assert np.allclose(σ3 @ σ1, jσ2)
 
     assert np.allclose(σ1 @ σ2 @ σ3, jσ0)
-
