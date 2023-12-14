@@ -188,26 +188,4 @@ class Hamiltonian:
         js = indices[indptr[i] : indptr[i + 1]]
         k = indptr[i] + np.where(js == j)
 
-        return Index(k)
-
-    def plot(self, grid: bool = False):
-        """Visualize the sparsity structure of the generated matrix."""
-        import matplotlib.pyplot as plt
-
-        plt.figure(figsize=(8, 8))
-        plt.spy(self.matrix, markersize=1, marker="o", color="k")
-        plt.title("Hamiltonian elements stored in the Block Sparse Row (BSR) representation")
-        plt.xticks([])
-        plt.yticks([])
-
-        if grid:
-            plt.xticks([4 * i - 0.5 for i in range(self.lattice.size)])
-            plt.yticks([4 * i - 0.5 for i in range(self.lattice.size)])
-            plt.grid()
-
-        ax = plt.gca()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-
-        plt.tight_layout()
-        plt.show()
+        return Index(k[0, 0])
