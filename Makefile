@@ -1,6 +1,6 @@
 # Makefile metadata.
 all: help
-.PHONY: help install test shell format clean .FORCE
+.PHONY: help install test format clean .FORCE
 .PRECIOUS: %.py
 
 # Default values for flags.
@@ -15,10 +15,9 @@ Targets:
 	help        Show this help message
 	install     Install the package into a virtual environment
 	test        Execute the unit tests bundled with the project
-	shell       Open an iPython shell in the virtual environment
 	format      Reformat source code to fit the project style
 	clean       Remove virtual environment and temporary files
-	<filename>  Run the given Python script in the environment
+	<filename>  Run a Python script in the virtual environment
 
 Flags:
 	PYTHON      Python version to use for the `install` process
@@ -27,10 +26,7 @@ Flags:
 Examples:
 	make install PYTHON=python3.11   # Install with Python 3.11
 	make test                        # Test that everything works
-	make pwave.py                    # Run `pwave.py` using Bodge
-
-Note that `make install` only installs the project dependencies;
-additional development dependencies are installed as needed.
+	make script.py                   # Run `script.py` using Bodge
 endef
 export help
 
@@ -40,31 +36,22 @@ help:
 # Basic user interface for the makefile.
 install:
 	test -d venv || $(PYTHON) -m venv venv
-	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary -e .
+	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary --editable .[dev]
 
-test: venv/bin/pytest
-	. venv/bin/activate; pytest --cov=bodge tests
+test:
+	. venv/bin/activate; pytest tests
 
-format: venv/bin/black
+format:
 	. venv/bin/activate; isort .; black .
 
-shell: venv/bin/ipython
-	. venv/bin/activate; ipython --no-autoindent
+shell:
+	. venv/bin/activate; exec $(SHELL)
 
 clean:
 	rm -rf venv
 	find . -iname "*.pyc" -delete
 	find . -iname "__pycache__" -delete
 
-# Automatically install development dependencies as needed.
-venv/bin/pytest:
-	. venv/bin/activate; pip install .[dev]
-
-venv/bin/black:
-	. venv/bin/activate; pip install .[dev]
-
-venv/bin/ipython:
-	. venv/bin/activate; pip install . ipython
 
 # Run Python scripts inside the virtual environment.
 %.py: .FORCE

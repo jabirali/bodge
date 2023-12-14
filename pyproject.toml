@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "bodge"
 authors = [
-    {name = "Jabir Ali Ouassou", email = "jabir.a.ouassou@ntnu.no"},
+    {name = "Jabir Ali Ouassou", email = "jabir.ali.ouassou@hvl.no"},
 ]
 readme = "README.md"
 requires-python = ">=3.9"
@@ -14,14 +14,10 @@ dynamic = ["version", "description"]
 dependencies = [
     "numpy",
     "scipy",
-    "pandas",
-    "beartype",
-    "multiprocess",
     "matplotlib",
-    "seaborn",
+    "beartype",
     "tqdm",
-    "icecream",
-    "typer"
+    "typer",
 ]
 
 [project.optional-dependencies]
@@ -36,6 +32,7 @@ dev = [
 line-length = 99
 
 [tool.pytest.ini_options]
+addopts = "--cov --cov-report term-missing"
 filterwarnings = [
     'ignore:the imp module is deprecated:DeprecationWarning',
 ]
