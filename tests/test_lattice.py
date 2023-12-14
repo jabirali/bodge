@@ -1,16 +1,32 @@
-from pytest import raises
-
 from bodge.common import *
 from bodge.lattice import *
+from pytest import raises
 
 
-def test_super():
-    # Superclass should not be constructable.
+def test_abc():
+    # Abstract base class should not be constructable.
     with raises(ValueError):
         lat = Lattice((1, 1, 1))
 
+    # Derived classes are constructable but must override other methods to work.
+    class MyLattice(Lattice):
+        pass
 
-def test_sites():
+    lat = MyLattice((1, 2, 3))
+    with raises(NotImplementedError):
+        lat[(0, 0, 0)]
+    with raises(NotImplementedError):
+        lat.sites()
+    with raises(NotImplementedError):
+        lat.bonds()
+    with raises(NotImplementedError):
+        lat.edges()
+
+    # Derived classes should have a readable format.
+    assert str(lat) == "MyLattice(1, 2, 3)"
+
+
+def test_cubic_sites():
     lat = CubicLattice((3, 5, 7))
     tot = 0
     for ind, site in enumerate(lat.sites()):
@@ -27,28 +43,68 @@ def test_sites():
     # Verify that number of elements is correct.
     assert tot == 3 * 5 * 7
 
+    # Verify that we get out-of-bounds errors.
+    with raises(ValueError):
+        lat[(-1, 0, 0)]
+    with raises(ValueError):
+        lat[(0, -1, 0)]
+    with raises(ValueError):
+        lat[(0, 0, -1)]
+    with raises(ValueError):
+        lat[(3, 0, 0)]
+    with raises(ValueError):
+        lat[(0, 5, 0)]
+    with raises(ValueError):
+        lat[(0, 0, 7)]
 
-def test_bonds():
+
+def test_cubic_bonds():
+    tot = 0
     lat = CubicLattice((2, 3, 5))
+
+    # Verify neighbor coordinates along each axis.
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=0):
-        # Verify neighbors along the x-axis.
+        tot += 1
         assert (x2 == x1 + 1 or x2 == x1 - 1) and y2 == y1 and z2 == z1
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=1):
-        # Verify neighbors along the y-axis.
+        tot += 1
         assert x2 == x1 and (y2 == y1 + 1 or y2 == y1 - 1) and z2 == z1
     for (x1, y1, z1), (x2, y2, z2) in lat.bonds(axis=2):
-        # Verify neighbors along the z-axis.
+        tot += 1
         assert x2 == x1 and y2 == y1 and (z2 == z1 + 1 or z2 == z1 - 1)
 
+    # Verify the total number of nearest-neighbor pairings. Note the prefactor 2,
+    # since "forwards" and "backwards" pairings are both counted here.
+    assert tot == 2 * ((2 - 1) * 3 * 5 + 2 * (3 - 1) * 5 + 2 * 3 * (5 - 1))
 
-def test_edges():
+    # Verify that the bounds checks works.
+    with raises(ValueError):
+        for i, j in lat.bonds(axis=3):
+            print(i, j)
+
+
+def test_cubic_edges():
+    tot = 0
     lat = CubicLattice((2, 3, 5))
+
+    # Verify that each coordinate is along an edge.
     for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=0):
+        tot += 1
         assert x1 == 0 or x2 == 0
         assert x1 == 1 or x2 == 1
     for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=1):
+        tot += 1
         assert y1 == 0 or y2 == 0
         assert y1 == 2 or y2 == 2
     for (x1, y1, z1), (x2, y2, z2) in lat.edges(axis=2):
+        tot += 1
         assert z1 == 0 or z2 == 0
         assert z1 == 4 or z2 == 4
+
+    # Verify that the number of edge sites is correct.
+    assert tot == 2 * ((2 * 3) + (3 * 5) + (5 * 2))
+
+    # Verify that the bounds checks works.
+    with raises(ValueError):
+        for i, j in lat.edges(axis=3):
+            print(i, j)

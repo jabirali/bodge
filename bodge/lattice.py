@@ -2,9 +2,9 @@ from .common import *
 
 
 class Lattice:
-    """API for working with generic three-dimensional lattices.
+    """Base class that represents a general atomic lattice (in 1D, 2D, or 3D).
 
-    This is an abstract class which defines an API for iterating over all the
+    This abstract class defines a general interface for iterating over all
     sites (atoms) and bonds (nearest neighbors) in a lattice. In the language
     of graph theory, this class lets us traverse all the nodes and links of a
     simple graph. The actual graph traversal must be defined by subclassing
@@ -16,6 +16,7 @@ class Lattice:
     and y-axes separately when calling `.bonds` on a rectangular lattice.
     However, it must be possible to call both methods without additional
     arguments to traverse all sites and bonds in the lattice, respectively.
+    This is assumed by the class `Hamiltonian` which is built on `Lattice`.
     """
 
     @typecheck
@@ -48,6 +49,10 @@ class Lattice:
         for indices in self.edges():
             yield indices
 
+    def __repr__(self):
+        """Representation of the object for `print()`."""
+        return self.__class__.__name__ + str(self.shape)
+
     @typecheck
     def index(self, coord: Coord) -> Index:
         """Convert a 3D site coordinate to a 1D index."""
@@ -70,7 +75,13 @@ class Lattice:
 
 
 class CubicLattice(Lattice):
-    """Concrete representation of a primitive cubic lattice."""
+    """Concrete representation of a primitive cubic lattice.
+
+    The same class can be used to model square lattices or rectangular lattices
+    as well. To construct an NxM 2D lattice, simply invoke the constructor as:
+
+    >>> lattice = CubicLattice((N, M, 1))
+    """
 
     @typecheck
     def index(self, coord: Coord) -> Index:
@@ -158,7 +169,3 @@ class CubicLattice(Lattice):
                     yield (x, y, Lz - 1), (x, y, 0)
         else:
             raise ValueError("No such axis")
-
-    def __repr__(self):
-        """Representation of the object for `print()`."""
-        return self.__class__.__name__ + str(self.shape)
