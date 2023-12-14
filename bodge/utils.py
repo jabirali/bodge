@@ -1,6 +1,4 @@
-from .chebyshev import *
 from .common import *
-from .fermi import FermiMatrix
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
 
@@ -107,93 +105,6 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
 
     # Merge the dataframes and return.
     return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
-
-
-def critical_temperature(
-    system: Hamiltonian,
-    order: int = 1200,
-    bisects: int = 12,
-    iters: int = 8,
-    T_min: float = 0.0,
-    T_max: float = 1.0,
-) -> float:
-    """Calculate the critical temperature using a bisection method."""
-    # Prepare the Fermi matrix expansion.
-    lattice = system.lattice
-    fermi = FermiMatrix(system, order)
-
-    # Determine critical temperature via binary search.
-    Δ_init = 1e-5
-    T_now = (T_min + T_max) / 2
-
-    print("Determining critical temperature:")
-    for n in trange(bisects, unit="temp", smoothing=0):
-        # Gap initialization.
-        Δ_now = {i: Δ_init for i in lattice.sites()}
-
-        # Self-consistency iterations.
-        for m in trange(iters, unit="gap", smoothing=0):
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    if (i, i) in V:
-                        Δ[i, i] = Δ_now[i] * jσ2
-            Δ_now = fermi(T_now).order_swave()
-
-        # Update critical temperature estimate based on
-        # whether the gap at this temperature increased.
-        Δ_fin = np.median(np.abs(Δ_now[np.nonzero(Δ_now)]))
-        if Δ_fin > Δ_init:
-            T_min = T_now
-        else:
-            T_max = T_now
-        T_now = (T_min + T_max) / 2
-
-        # print(f"Tc({n}):\t{T_now}")
-
-    return T_now
-
-
-def zero_gap(
-    system: Hamiltonian,
-    order: int = 1200,
-    bisects: int = 12,
-    iters: int = 8,
-    Δ_min: float = 0.0,
-    Δ_max: float = 1.0,
-) -> float:
-    """Calculate the zero-temperature gap using a bisection method."""
-    # Prepare the Fermi matrix expansion.
-    lattice = system.lattice
-    fermi = FermiMatrix(system, order)
-
-    # Determine critical temperature via binary search.
-    Δ_now = (Δ_min + Δ_max) / 2
-    T_now = 1e-3
-
-    print("Determining critical temperature:")
-    for n in trange(bisects, unit="gap", smoothing=0):
-        # Gap initialization.
-        Δ_map = {i: Δ_now for i in lattice.sites()}
-
-        # Self-consistency iterations.
-        for m in trange(iters, unit="gap", smoothing=0):
-            with system as (H, Δ, V):
-                for i in lattice.sites():
-                    if (i, i) in V:
-                        Δ[i, i] = Δ_map[i] * jσ2
-            Δ_map = fermi(T_now).order_swave()
-
-        # Update gap estimate based on whether the change.
-        Δ_fin = np.median(np.abs(Δ_map[np.nonzero(Δ_map)]))
-        if Δ_fin > Δ_now:
-            Δ_min = Δ_now
-        else:
-            Δ_max = Δ_now
-        Δ_now = (Δ_min + Δ_max) / 2
-
-        print(f"Δ({n}):\t{Δ_now}")
-
-    return Δ_now
 
 
 def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
