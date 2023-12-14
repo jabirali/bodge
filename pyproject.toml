@@ -14,10 +14,11 @@ dynamic = ["version", "description"]
 dependencies = [
     "numpy",
     "scipy",
-    "matplotlib",
     "beartype",
     "tqdm",
     "typer",
+    "pandas"
+    "matplotlib",
 ]
 
 [project.optional-dependencies]

@@ -1,12 +1,9 @@
-"""Common imports and type definitions for the whole project."""
+"""Common imports and definitions used throughout the project."""
 
-# Core numerical libraries.
+# Numerical libraries.
 import math
 
-import multiprocess as mp
 import numpy as np
-
-# Enable runtime type checks.
 import numpy.typing as npt
 import pandas as pd
 import scipy.linalg as la
