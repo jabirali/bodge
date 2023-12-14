@@ -21,15 +21,18 @@ t = 1.0
 J0 = 3.0 * t
 
 # %% Construct a 2D lattice.
-Lx = 80  # 200
-Ly = 80  # 200
+# Lx = 200
+# Ly = 200
+Lx = 1000
+Ly = 1000
 Lz = 1
+print(Lx, Ly, Lz)
 
 lattice = CubicLattice((Lx, Ly, 1))
 
 # %% Function to perform calculations.
 def main(ds, δs):
-    df = []
+    dfs = []
     for d in ds:
         # Convert string to d-vector.
         d_ = pwave(d)
@@ -53,43 +56,39 @@ def main(ds, δs):
         df0['d'] = d
         df0['imp'] = False
 
-        df.append(df0)
+        print(df0)
+        dfs.append(df0)
 
         # Add the impurities to the Hamiltonian.
         with system as (H, Δ, V):
-            H[i, i] = -μ * σ0 - J0 * σ3
+            H[i, i] = -μ * σ0 - (J0/2) * σ3
 
         # Calculate the density of states with impurity.
         df1 = ldos(system, sites, energies)
         df1['d'] = d
         df1['imp'] = True
 
-        df.append(df1)
+        print(df1)
+        dfs.append(df1)
 
-    return pd.concat(df)
+        df = pd.concat(dfs)
+        save(df)
+
+    return df
 
 def save(df, name='ysr.csv'):
     df['δ'] = df['x'] - Lx//2
     df.to_csv(name, columns=['d','δ','imp','ε','dos'], index=False)
 
 # %% Test the function above.
-ds = ["e_x * p_x"]
-δs = [1, 2]
-df = main(ds, δs)
-display(df)
-save(df, 'test.csv')
+# ds = ["e_x * p_x"]
+# δs = [1, 2]
+# df = main(ds, δs)
+# # display(df)
+# save(df, 'test.csv')
 
 # %% Perform actual calculations.
 ds = ["e_z * p_x", "e_z * p_y", "e_z * (p_x + jp_y)", "(e_x + je_y) * (p_x + jp_y) / 2"]
-δs = [0, 1, 2, 3, 4, 5]
+δs = [1, 2, 3, 4, 5]
 df = main(ds, δs)
-save(df)
-
-
-# %% TODO:
-# For each of the d-vectors:
-# [X] Save the LDOS without impurity
-# [X] Save the LDOS for \delta = [1, 2, 3, 4, 5]
-# [X] Save all to files so I can postprocess locally
-# [ ] Focus on the 200x200 case
-# [ ] Later on: Make waterfall plots for each d-vec
+#save(df)
