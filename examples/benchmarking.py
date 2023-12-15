@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Benchmarking of Bodge vs. Kwant when constructing a Bogoliubov-deGennes Hamiltonian."""
+"""Benchmarking of Bodge vs. Kwant for constructing a Bogoliubov-deGennes Hamiltonian."""
 
 import kwant
 import numpy as np
@@ -20,7 +20,7 @@ def timer(timers=[]):
     # Save the current timestamp.
     timers.append(time())
 
-    # Return the difference since last time stamp.
+    # Difference since last time stamp.
     try:
         return timers[-1] - timers[-2]
     except:
@@ -29,8 +29,6 @@ def timer(timers=[]):
 
 def bench_kwant(L, W, sparse=True):
     """Construct a Bogoliubov-deGennes Hamiltonian on a square lattice using Kwant."""
-    # Import the required libraries.
-
     # Define Pauli matrices for spin degree of freedom.
     σ_0 = np.array([[1, 0], [0, 1]])
     σ_1 = np.array([[0, 1], [1, 0]])
@@ -46,19 +44,15 @@ def bench_kwant(L, W, sparse=True):
     # Start a timer.
     timer()
 
-    # Construct a square lattice and the Hamiltonian.
+    # Construct the lattice and Hamiltonian.
     lattice = kwant.lattice.square(norbs=4)
     system = kwant.Builder()
 
-    # Fill out the terms in the Hamiltonian.
+    # On-site terms in the Hamiltonian.
     for x in range(L):
-        # Calculate the complex phase φ = πx/L of the order parameter at this point.
         φ = χ * x / L
-
-        # The particle-hole structure of the pairing term depends on this phase.
         τ_φ = 1j * (τ_2 * np.cos(φ) + τ_1 * np.sin(φ))
 
-        # Fill out the on-site contributions of the Hamiltonian.
         for y in range(W):
             if x < L // 2:
                 # Superconducting region.
@@ -67,7 +61,7 @@ def bench_kwant(L, W, sparse=True):
                 # Ferromagnetic region.
                 system[lattice(x, y)] = -μ * np.kron(τ_3, σ_0) - M0 * np.kron(τ_3, σ_3)
 
-    # Hopping terms.
+    # Hopping terms in the Hamiltonian.
     for x in range(L - 1):
         for y in range(W):
             system[lattice(x, y), lattice(x + 1, y)] = -t * np.kron(τ_3, σ_0)
@@ -90,11 +84,11 @@ def bench_bodge(L, W, sparse=True):
     # Start a timer.
     timer()
 
-    # Construct the square lattice and the Hamiltonian.
+    # Construct the lattice and Hamiltonian.
     lattice = CubicLattice((L, W, 1))
     system = Hamiltonian(lattice)
 
-    # Fill out the terms in the Hamiltonian.
+    # Fill out the Hamiltonian.
     with system as (H, Δ):
         # On-site terms.
         for i in lattice.sites():
@@ -125,10 +119,11 @@ def bench_bodge(L, W, sparse=True):
 
 
 if __name__ == "__main__":
-    for N in [2**n for n in range(1, 13)]:
-        # Benchmark the matrix construction.
-        H1 = bench_kwant(N, N)
-        H2 = bench_bodge(N, N)
+    for L in [2**n for n in range(1, 12)]:
+        for W in [L, 2 * L]:
+            # Benchmark the matrix construction.
+            H1 = bench_kwant(L, W)
+            H2 = bench_bodge(L, W)
 
-        # Ensure that the results are equal.
-        print(f"Difference: {np.max(np.abs(H1 - H2))}")
+            # Ensure that the results are equal.
+            print(f"Difference: {np.max(np.abs(H1 - H2))}")
