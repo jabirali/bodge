@@ -1,8 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-import kwant
+"""Benchmarking of sparse matrix construction in Bodge vs. Kwant."""
+
 from time import time
 
+import kwant
 import numpy as np
 
 # # For plotting
@@ -72,7 +74,7 @@ t = time()
 lattice = CubicLattice((L, W, 1))
 system = Hamiltonian(lattice)
 
-with system as (H, Δ, _):
+with system as (H, Δ):
     for i in lattice.sites():
         if i[0] < L // 2:
             # Superconducting region.
@@ -91,7 +93,7 @@ t = time() - t
 print(f"Bodge object creation: {t}")
 
 t = time()
-H_bodge_sparse, _, __ = system(format="csr")
+H_bodge_sparse = system(format="csr")
 t = time() - t
 print(f"Bodge sparse construction: {t}")
 
