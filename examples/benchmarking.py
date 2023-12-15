@@ -2,6 +2,8 @@
 
 """Benchmarking of Bodge vs. Kwant for constructing a Bogoliubov-deGennes Hamiltonian."""
 
+from time import sleep
+
 import kwant
 import numpy as np
 from bodge import *
@@ -40,6 +42,9 @@ def bench_kwant(L, W, sparse=True):
     τ_1 = σ_1.copy()
     τ_2 = σ_2.copy()
     τ_3 = σ_3.copy()
+
+    # Sleep before benchmarking.
+    sleep(1)
 
     # Start a timer.
     timer()
@@ -81,6 +86,9 @@ def bench_kwant(L, W, sparse=True):
 
 def bench_bodge(L, W, sparse=True):
     """Construct a Bogoliubov-deGennes Hamiltonian on a square lattice using Bodge."""
+    # Sleep before benchmarking.
+    sleep(1)
+
     # Start a timer.
     timer()
 
