@@ -10,7 +10,7 @@ t = 1  # Hopping parameter
 μ = -3 * t  # Chemical potential
 M0 = 1.5 * t  # Magnetic exchange field
 Δ0 = 0.1 * t  # Superconducting gap
-χ = 0.1  # Superconducting phase winding
+χ = 0.5  # Superconducting phase winding
 
 
 def timer(timers=[]):
@@ -53,7 +53,7 @@ def bench_kwant(L, W, sparse=True):
     # Fill out the terms in the Hamiltonian.
     for x in range(L):
         # Calculate the complex phase φ = πx/L of the order parameter at this point.
-        φ = np.pi * x / L
+        φ = χ * x / L
 
         # The particle-hole structure of the pairing term depends on this phase.
         τ_φ = 1j * (τ_2 * np.cos(φ) + τ_1 * np.sin(φ))
@@ -80,7 +80,7 @@ def bench_kwant(L, W, sparse=True):
     H = system.hamiltonian_submatrix(sparse=sparse)
 
     # Report the benchmark results.
-    print(f"Kwant time for {L}x{W} lattice: {timer()} seconds")
+    print(f"Kwant time for {L}x{W} = {L*W} sites: {timer()} seconds")
 
     return H
 
@@ -101,7 +101,7 @@ def bench_bodge(L, W, sparse=True):
             if i[0] < L // 2:
                 # Superconducting region.
                 H[i, i] = -μ * σ0
-                Δ[i, i] = -Δ0 * np.exp(1j * π * i[0] / L) * jσ2
+                Δ[i, i] = -Δ0 * np.exp(1j * χ * i[0] / L) * jσ2
             else:
                 # Ferromagnetic region.
                 H[i, i] = -μ * σ0 - M0 * σ3
@@ -119,13 +119,13 @@ def bench_bodge(L, W, sparse=True):
         H = system(format="dense")
 
     # Report the benchmark results.
-    print(f"Bodge time for {L}x{W} lattice: {timer()} seconds")
+    print(f"Bodge time for {L}x{W} = {L*W} sites: {timer()} seconds")
 
     return H
 
 
 if __name__ == "__main__":
-    for N in [10, 30, 100, 300]:
+    for N in [2**n for n in range(1, 13)]:
         # Benchmark the matrix construction.
         H1 = bench_kwant(N, N)
         H2 = bench_bodge(N, N)
