@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
-"""Benchmarking of sparse matrix construction in Bodge vs. Kwant."""
+"""Benchmarking of sparse matrix construction for a BdG Hamiltonian in Bodge vs. Kwant."""
+
+# ------------------------------------------------------------
+# Implementation in Kwant
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# Implementation in Kwant
+# ------------------------------------------------------------
 
 from time import time
 
