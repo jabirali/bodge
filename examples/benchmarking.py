@@ -44,7 +44,7 @@ def bench_kwant(L, W, sparse=True):
     τ_3 = σ_3.copy()
 
     # Sleep before benchmarking.
-    sleep(1)
+    sleep(0.01)
 
     # Start a timer.
     timer()
@@ -78,16 +78,16 @@ def bench_kwant(L, W, sparse=True):
     system = system.finalized()
     H = system.hamiltonian_submatrix(sparse=sparse)
 
-    # Report the benchmark results.
-    print(f"Kwant time for {L}x{W} = {L*W} sites: {timer()} seconds")
+    # Benchmark results.
+    T = timer()
 
-    return H
+    return H, T
 
 
 def bench_bodge(L, W, sparse=True):
     """Construct a Bogoliubov-deGennes Hamiltonian on a square lattice using Bodge."""
     # Sleep before benchmarking.
-    sleep(1)
+    sleep(0.01)
 
     # Start a timer.
     timer()
@@ -120,18 +120,37 @@ def bench_bodge(L, W, sparse=True):
     else:
         H = system(format="dense")
 
-    # Report the benchmark results.
-    print(f"Bodge time for {L}x{W} = {L*W} sites: {timer()} seconds")
+    # Benchmark results.
+    T = timer()
 
-    return H
+    return H, T
 
 
 if __name__ == "__main__":
     for L in [2**n for n in range(1, 12)]:
         for W in [L, 2 * L]:
-            # Benchmark the matrix construction.
-            H1 = bench_kwant(L, W)
-            H2 = bench_bodge(L, W)
+            # Number of iterations. We repeat brief calculations to get better statistics.
+            if L * W < 1e4:
+                N = 30
+            else:
+                N = 1
 
-            # Ensure that the results are equal.
-            print(f"Difference: {np.max(np.abs(H1 - H2))}")
+            # Benchmark the matrix construction.
+            T1s = []
+            T2s = []
+            for i in range(N):
+                H1, T1 = bench_bodge(L, W)
+                H2, T2 = bench_kwant(L, W)
+
+                T1s.append(T1)
+                T2s.append(T2)
+
+            T1 = np.min(T1s)
+            T2 = np.min(T2s)
+
+            # Report the benchmarks.
+            print(f"{L*W}\tBodge\t{T1}")
+            print(f"{L*W}\tKwant\t{T2}")
+
+            # Ensure the results are equal.
+            print(f"{L*W}\tDiff\t{np.max(np.abs(H1 - H2))}")
