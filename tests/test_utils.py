@@ -1,7 +1,6 @@
-from scipy.linalg import eigh
-
 from bodge import *
 from bodge.common import *
+from scipy.linalg import eigh
 
 
 def test_ssd():
@@ -169,6 +168,25 @@ def test_dvector_pwave():
                     assert np.allclose(+Δ(i0, j1), -Δ(j1, i0))
                     assert np.allclose(+Δ(i0, j2), -Δ(j2, i0))
                     assert np.allclose(+Δ(i0, j3), -Δ(j3, i0))
+
+
+def test_dvector_pbc():
+    """Check handling of periodic boundary conditions."""
+    Δ = pwave("e_z * (p_x + jp_y + p_z)")
+
+    i0 = (0, 0, 0)
+
+    i1 = (1, 0, 0)
+    i2 = (0, 1, 0)
+    i3 = (0, 0, 1)
+
+    i4 = (100, 0, 0)
+    i5 = (0, 100, 0)
+    i6 = (0, 0, 100)
+
+    assert np.allclose(Δ(i0, i1), Δ(i4, i0))
+    assert np.allclose(Δ(i0, i2), Δ(i5, i0))
+    assert np.allclose(Δ(i0, i3), Δ(i6, i0))
 
 
 def test_dvector_hermitian():

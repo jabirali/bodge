@@ -324,7 +324,33 @@ def pwave(desc: str):
 
     # Function for evaluating Δ(p) on the lattice.
     def Δ_p(i: Coord, j: Coord) -> Matrix:
+        # Nearest-neighbor vector.
         δ = np.subtract(j, i)
+
+        # The above vector is normalized such that |δ| = 1 on a square lattice.
+        # But this is not the case when we turn on periodic boundary conditions,
+        # where i = (200, 0, 0) and j = (0, 0, 0) might have answer |j - i| = 1
+        # when periodic boundary conditions are considered. We handle this here.
+        if np.sum(np.abs(δ)) != 1:
+            # Wrap around the x axis.
+            if δ[0] > +1 and δ[1] == 0 and δ[2] == 0:
+                δ[0] = -1
+            elif δ[0] < -1 and δ[1] == 0 and δ[2] == 0:
+                δ[0] = +1
+            # Wrap around the y axis.
+            elif δ[1] > +1 and δ[2] == 0 and δ[0] == 0:
+                δ[1] = -1
+            elif δ[1] < -1 and δ[2] == 0 and δ[0] == 0:
+                δ[1] = +1
+            # Wrap around the z axis.
+            elif δ[2] > +1 and δ[0] == 0 and δ[1] == 0:
+                δ[2] = -1
+            elif δ[2] < -1 and δ[0] == 0 and δ[1] == 0:
+                δ[2] = +1
+            # Verify that the situation is resolved.
+            else:
+                raise RuntimeError(f"Invalid δ = {δ} encountered!")
+
         return np.einsum("iab,i -> ab", Δ, δ)
 
     return Δ_p
