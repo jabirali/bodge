@@ -331,7 +331,7 @@ def pwave(desc: str):
         # But this is not the case when we turn on periodic boundary conditions,
         # where i = (200, 0, 0) and j = (0, 0, 0) might have answer |j - i| = 1
         # when periodic boundary conditions are considered. We handle this here.
-        if np.sum(np.abs(δ)) != 1:
+        if np.sum(np.abs(δ)) > 1:
             # Wrap around the x axis.
             if δ[0] > +1 and δ[1] == 0 and δ[2] == 0:
                 δ[0] = -1
