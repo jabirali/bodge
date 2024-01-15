@@ -16,8 +16,8 @@ def main(
     mix: float, # Δ_s vs. Δ_p
     phase: bool,  # s+p vs. s+ip
     dvector: Optional[str] = None,
-    length: int = 100,
-    width: int = 100,
+    length: int = 101,
+    width: int = 101,
     potential: float = -3.0,
     coupling: float = 3.0,
     supergap: float = 0.10,
