@@ -15,7 +15,7 @@ def main(
     s2: str,
     mix: float, # Δ_s vs. Δ_p
     phase: bool,  # s+p vs. s+ip
-    dvector: Optional[str] = None,
+    dvector: str,
     length: int = 101,
     width: int = 101,
     potential: float = -3.0,
