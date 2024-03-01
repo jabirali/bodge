@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import numpy as np
+
 from typing import Optional
 
 from icecream import ic
@@ -19,6 +21,7 @@ def main(
     width: int = 101,
     potential: float = -3.0,
     coupling: float = 3.0,
+    winding: int = 0,
     filename: str = "rkky_sp.csv",
 ):
     """RKKY interaction between two impurities on a superconductor."""
@@ -75,6 +78,17 @@ def main(
     ic(σ_p((2, 2, 0), (2, 3, 0)))
     ic(σ_p((2, 2, 0), (2, 1, 0)))
 
+    # Complex phase.
+    def phase(i, j):
+        x = (i[0] + j[0])/2
+        L = lattice.shape[0]
+        return np.exp(1j * 2 * np.pi * winding * x / L)
+
+    for i in lattice.sites():
+        if i[1] == 1:
+            phi = phase(i, i)
+            print(np.arctan2(np.imag(phi), np.real(phi)) / np.pi)
+
     # Construct the Hamiltonian.
     t = 1.0
     μ = potential
@@ -83,7 +97,7 @@ def main(
     system = Hamiltonian(lattice)
     with system as (H, Δ, _):
         for i in lattice.sites():
-            Δ[i, i] = -Δ_s * σ_s
+            Δ[i, i] = -Δ_s * σ_s * phase(i, i)
             if i == i1:
                 H[i, i] = -μ * σ0 - (J0 / 2) * S1
             elif i == i2:
@@ -93,7 +107,7 @@ def main(
 
         for i, j in lattice.bonds():
             H[i, j] = -t * σ0
-            Δ[i, j] = -Δ_p * σ_p(i, j)
+            Δ[i, j] = -Δ_p * σ_p(i, j) * phase(i, j)
 
         for i, j in lattice.edges(axis=0):
             if j[0] == lattice.shape[0] - 1 and i[0] == 0:
@@ -106,14 +120,14 @@ def main(
                 raise RuntimeError("NOPE!")
 
             H[i, j] = -t * σ0
-            Δ[i, j] = -Δ_p * σ_p(I, J)
+            Δ[i, j] = -Δ_p * σ_p(I, J) * phase(I, J)
 
     # Calculate the free energy.
     E = free_energy(system, 0.001 * t)
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {E}\n")
+        f.write(f"{Δ_s}, {Δ_p}, {winding}, {s1}, {s2}, {sep}, {E}\n")
 
 
 if __name__ == "__main__":
