@@ -241,17 +241,25 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     return spectral
 
 
-def free_energy(system: Hamiltonian, temperature: float = 0.01):
+def free_energy(system: Hamiltonian, temperature: float = 0.01, cuda=False):
     """Calculate the Landau free energy from a given Hamiltonian matrix.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
     and subsequently evaluating the entropy contributions to the free energy.
     """
+    
     T = temperature
     H = system(format="dense")
 
     # Calculate the eigenvalues via a dense parallel algorithm.
-    ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
+    # If the argument `cuda` is set, use a GPU instead of a CPU.
+    if cuda:
+        import cupy as cp
+        import cupy.linalg as cla
+
+        ε = cp.asnumpy(cla.eigvalsh(cp.asarray(H)))
+    else:
+        ε = la.eigvalsh(H)
 
     # Extract the positive eigenvalues.
     ε = ε[ε > 0]
