@@ -128,7 +128,7 @@ def main(
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{Δ_s}, {Δ_p}, {winding}, {s2}, {s2}, {sep}, {E}, "periodic"\n")
+        f.write(f"{Δ_s}, {Δ_p}, {winding}, {s2}, {s2}, {sep}, {E}, \"periodic\"\n")
 
 
 if __name__ == "__main__":

@@ -105,7 +105,7 @@ def main(
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {E}, "open"\n")
+        f.write(f"{Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {E}\n")
 
 
 if __name__ == "__main__":
