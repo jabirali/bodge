@@ -41,5 +41,6 @@ filterwarnings = [
 ]
 
 [tool.pyright]
-python.venvPath = "."
-python.venv = "venv"
+python.venvPath = "/opt/conda/envs"
+# python.venv = "venv"
+python.venv = "bodge"
