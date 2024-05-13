@@ -17,12 +17,13 @@ def main(
     gap_s: float,
     gap_p: float,
     dvector: str = "e_z * p_x",
-    length: int = 101,
-    width: int = 101,
+    length: int = 51,
+    width: int = 51,
     potential: float = -3.0,
     coupling: float = 3.0,
     winding: int = 0,
     filename: str = "rkky_sp.csv",
+    cuda: bool = False,
 ):
     """RKKY interaction between two impurities on a superconductor."""
 
@@ -123,7 +124,7 @@ def main(
             Δ[i, j] = -Δ_p * σ_p(I, J) * phase(I, J)
 
     # Calculate the free energy.
-    E = free_energy(system, 0.001 * t)
+    E = free_energy(system, 0.001 * t, cuda=cuda)
 
     # Save the results.
     with open(filename, "a+") as f:

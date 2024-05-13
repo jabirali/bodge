@@ -20,6 +20,7 @@ def main(
     coupling: float = 3.0,
     supergap: float = 0.10,
     filename: str = "rkky.csv",
+    cuda: bool = False,
 ):
     """RKKY interaction between two impurities on a superconductor."""
 
@@ -109,7 +110,7 @@ def main(
                 Δ[i, j] = -Δ0 * σ_p(i, j)
 
     # Calculate the free energy.
-    E = free_energy(system, 0.001 * t)
+    E = free_energy(system, 0.001 * t, cuda=cuda)
 
     # Save the results.
     with open(filename, "a+") as f:
