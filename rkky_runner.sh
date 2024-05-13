@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-for sep in 2 5 10; do
+for sep in 5 2 10; do
 	for winding in $(seq 0 10); do
 		for s1 in "x+" "y+" "x-" "y-"; do
 			for s2 in "x+" "y+" "x-" "y-"; do
@@ -10,3 +10,5 @@ for sep in 2 5 10; do
 		done
 	done
 done
+
+# TODO: Fermi level?

@@ -4,7 +4,7 @@ import numpy as np
 
 from typing import Optional
 
-from icecream import ic
+# from icecream import ic
 from typer import run
 
 from bodge import *
@@ -29,7 +29,7 @@ def main(
 
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
-    ic(lattice.shape)
+    # print(lattice.shape)
 
     # Impurity sites.
     x1 = length // 2
@@ -46,8 +46,8 @@ def main(
     i1 = (x1, y1, z1)
     i2 = (x2, y2, z2)
 
-    ic(i1)
-    ic(i2)
+    # print(i1)
+    # print(i2)
 
     # Impurity spins.
     spins = {
@@ -62,8 +62,8 @@ def main(
     S1 = spins[s1]
     S2 = spins[s2]
 
-    ic(S1)
-    ic(S2)
+    # print(S1)
+    # print(S2)
 
     # Superconductivity.
     Δ_s = gap_s + 0.0j
@@ -73,11 +73,11 @@ def main(
     σ_s = jσ2
     σ_p = pwave(dvector)
 
-    ic(σ_s)
-    ic(σ_p((2, 2, 0), (3, 2, 0)))
-    ic(σ_p((2, 2, 0), (1, 2, 0)))
-    ic(σ_p((2, 2, 0), (2, 3, 0)))
-    ic(σ_p((2, 2, 0), (2, 1, 0)))
+    # print(σ_s)
+    # print(σ_p((2, 2, 0), (3, 2, 0)))
+    # print(σ_p((2, 2, 0), (1, 2, 0)))
+    # print(σ_p((2, 2, 0), (2, 3, 0)))
+    # print(σ_p((2, 2, 0), (2, 1, 0)))
 
     # Complex phase.
     def phase(i, j):
@@ -88,7 +88,7 @@ def main(
     for i in lattice.sites():
         if i[1] == 1:
             phi = phase(i, i)
-            print(np.arctan2(np.imag(phi), np.real(phi)) / np.pi)
+            # print(np.arctan2(np.imag(phi), np.real(phi)) / np.pi)
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -119,6 +119,6 @@ def main(
 
 
 if __name__ == "__main__":
-    ic()
+    # print()
     run(main)
-    ic()
+    # print()
