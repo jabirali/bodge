@@ -13,7 +13,7 @@ def main(
     sep: int,
     s1: str,
     s2: str,
-    mix: float, # Δ_s vs. Δ_p
+    mix: float,  # Δ_s vs. Δ_p
     phase: bool,  # s+p vs. s+ip
     dvector: str,
     length: int = 101,

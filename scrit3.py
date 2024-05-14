@@ -35,13 +35,13 @@ with open("bench3.dat", "w") as f:
 
         def SC(i: Coord):
             x, y, z = i
-            return z == 0 and x >= Lx//4 and x < 3*Lx//4 and y >= Ly//4 and y < 3*Ly//4
+            return z == 0 and x >= Lx // 4 and x < 3 * Lx // 4 and y >= Ly // 4 and y < 3 * Ly // 4
 
         def IN(i: Coord):
             return NM(i) or SC(i)
 
         # Calculate critical temperature.
-        for τ in [0.05]: # np.arange(0, 0.1, 0.01):
+        for τ in [0.05]:  # np.arange(0, 0.1, 0.01):
             system = Hamiltonian(lattice)
             with system as (H, Δ, V):
                 for i in lattice.sites():
@@ -49,10 +49,10 @@ with open("bench3.dat", "w") as f:
                     # exchange field in non-superconductors.
                     # Attractive Hubbard in superconductors.
                     if NM(i):
-                        H[i, i] = - μ * σ0 - m * σ3
+                        H[i, i] = -μ * σ0 - m * σ3
                     if SC(i):
-                        H[i, i] = - μ * σ0
-                        V[i, i] = - U
+                        H[i, i] = -μ * σ0
+                        V[i, i] = -U
 
                 # Intra-plane hopping coefficient t.
                 for i, j in lattice.bonds(axis=0):
@@ -74,4 +74,3 @@ with open("bench3.dat", "w") as f:
 
             f.write(f"{M}, {sec}, {Tc}\n")
             f.flush()
-

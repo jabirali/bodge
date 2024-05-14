@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
-
 from typing import Optional
-
-from icecream import ic
 from typer import run
-
 from bodge import *
 
 
@@ -13,14 +9,13 @@ def main(
     sep: int,
     s1: str,
     s2: str,
-    mix: float, # Δ_s vs. Δ_p
-    phase: bool,  # s+p vs. s+ip
-    dvector: str,
+    dvector: str = "e_z * p_x",
     length: int = 51,
     width: int = 51,
     potential: float = -3.0,
     coupling: float = 3.0,
-    supergap: float = 0.10,
+    gap_s: float = 0.10,
+    gap_p: float = 0.10,
     filename: str = "rkky_sp.csv",
     cuda: bool = False,
 ):
@@ -28,7 +23,6 @@ def main(
 
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
-    ic(lattice.shape)
 
     # Impurity sites.
     x1 = length // 2
@@ -45,9 +39,6 @@ def main(
     i1 = (x1, y1, z1)
     i2 = (x2, y2, z2)
 
-    ic(i1)
-    ic(i2)
-
     # Impurity spins.
     spins = {
         "x+": +σ1,
@@ -61,24 +52,13 @@ def main(
     S1 = spins[s1]
     S2 = spins[s2]
 
-    ic(S1)
-    ic(S2)
-
     # Superconductivity.
-    Δ_s = supergap
-    Δ_p = supergap * mix
-    if phase:
-        Δ_p *= 1.0j
+    Δ_s = gap_s + 0.0j
+    Δ_p = gap_p * 1.0j
     print(f":: {Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}\n")
 
     σ_s = jσ2
     σ_p = pwave(dvector)
-
-    ic(σ_s)
-    ic(σ_p((2, 2, 0), (3, 2, 0)))
-    ic(σ_p((2, 2, 0), (1, 2, 0)))
-    ic(σ_p((2, 2, 0), (2, 3, 0)))
-    ic(σ_p((2, 2, 0), (2, 1, 0)))
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -109,6 +89,4 @@ def main(
 
 
 if __name__ == "__main__":
-    ic()
     run(main)
-    ic()

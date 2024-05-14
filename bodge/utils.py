@@ -247,7 +247,7 @@ def free_energy(system: Hamiltonian, temperature: float = 0.01, cuda=False):
     This is done by computing all the positive eigenvalues ε_n of the matrix,
     and subsequently evaluating the entropy contributions to the free energy.
     """
-    
+
     T = temperature
     H = system(format="dense")
 

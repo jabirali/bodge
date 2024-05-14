@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import numpy as np
-
 from typing import Optional
 
-# from icecream import ic
+import numpy as np
 from typer import run
 
 from bodge import *
@@ -29,7 +27,6 @@ def main(
 
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
-    # print(lattice.shape)
 
     # Impurity sites.
     x1 = length // 2
@@ -46,9 +43,6 @@ def main(
     i1 = (x1, y1, z1)
     i2 = (x2, y2, z2)
 
-    # print(i1)
-    # print(i2)
-
     # Impurity spins.
     spins = {
         "x+": +σ1,
@@ -62,9 +56,6 @@ def main(
     S1 = spins[s1]
     S2 = spins[s2]
 
-    # print(S1)
-    # print(S2)
-
     # Superconductivity.
     Δ_s = gap_s + 0.0j
     Δ_p = gap_p * 1.0j
@@ -73,22 +64,15 @@ def main(
     σ_s = jσ2
     σ_p = pwave(dvector)
 
-    # print(σ_s)
-    # print(σ_p((2, 2, 0), (3, 2, 0)))
-    # print(σ_p((2, 2, 0), (1, 2, 0)))
-    # print(σ_p((2, 2, 0), (2, 3, 0)))
-    # print(σ_p((2, 2, 0), (2, 1, 0)))
-
     # Complex phase.
     def phase(i, j):
-        x = (i[0] + j[0])/2
+        x = (i[0] + j[0]) / 2
         L = lattice.shape[0]
         return np.exp(1j * 2 * np.pi * winding * x / L)
 
     for i in lattice.sites():
         if i[1] == 1:
             phi = phase(i, i)
-            # print(np.arctan2(np.imag(phi), np.real(phi)) / np.pi)
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -128,10 +112,8 @@ def main(
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{Δ_s}, {Δ_p}, {winding}, {s1}, {s2}, {sep}, {E}, \"periodic\"\n")
+        f.write(f'{Δ_s}, {Δ_p}, {winding}, {s1}, {s2}, {sep}, {E}, "periodic"\n')
 
 
 if __name__ == "__main__":
-    # print()
     run(main)
-    # print()

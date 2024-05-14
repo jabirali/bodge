@@ -8,6 +8,7 @@ from typer import run
 
 from bodge import *
 
+
 def main(delta: str, tau: float):
     ic(delta)
     ic(tau)
@@ -33,12 +34,12 @@ def main(delta: str, tau: float):
     with np.load(f"m_{δ}.npz") as f:
         mx, my, mz = f["mx"], f["my"], f["mz"]
         ic(mx, my, mz)
-    
+
     # Define a function for magnetization at coordinates.
     def σ(i):
         x, y = i[:-1]
         return mx[x, y] * σ1 + my[x, y] * σ2 + mz[x, y] * σ3
-    
+
     # Perform Tc calculations.
     with open(f"scrit_weaker_m_{δ}_{tau}.dat", "w") as f:
         # Model parameters.
@@ -78,6 +79,7 @@ def main(delta: str, tau: float):
 
         f.write(f"{δ}, {τ}, {Tc}\n")
         f.flush()
+
 
 if __name__ == "__main__":
     ic()
