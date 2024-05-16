@@ -55,7 +55,7 @@ def main(
     # Superconductivity.
     Δ_s = gap_s + 0.0j
     Δ_p = gap_p * 1.0j
-    print(f":: {Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}\n")
+    print(f":: {Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {potential}\n")
 
     σ_s = jσ2
     σ_p = pwave(dvector)
@@ -85,7 +85,7 @@ def main(
 
     # Save the results.
     with open(filename, "a+") as f:
-        f.write(f"{Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {E}\n")
+        f.write(f"{Δ_s}, {Δ_p}, {dvector}, {s1}, {s2}, {sep}, {μ}, {E}\n")
 
 
 if __name__ == "__main__":
