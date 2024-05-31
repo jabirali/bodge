@@ -40,7 +40,7 @@ install:
 	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary --editable .[dev]
 
 docs: .FORCE
-	quarto render docs/tutorial.qmd
+	. venv/bin/activate; quarto render docs/tutorial.qmd
 
 test:
 	. venv/bin/activate; pytest tests

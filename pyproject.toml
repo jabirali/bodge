@@ -12,13 +12,13 @@ requires-python = ">=3.9"
 dynamic = ["version", "description"]
 
 dependencies = [
-    "numpy",
-    "scipy",
     "beartype",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "scipy",
     "tqdm",
     "typer",
-    "pandas",
-    "matplotlib",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +27,7 @@ dev = [
     "isort",
     "pytest",
     "pytest-cov",
+    "quarto"
 ]
 
 [tool.black]
