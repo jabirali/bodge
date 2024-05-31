@@ -1,6 +1,10 @@
 ---
 title: "Bodge tutorial"
 toc: true
+format:
+  html:
+    theme: united
+  ipynb: default
 ---
 
 ## About
@@ -12,6 +16,9 @@ TODO
 
 ## Quickstart
 The main purpose of this package is to streamline calculations associated with BdG modeling of superconductivity. Let's therefore kick off the tutorial with a simple and mostly self-explanatory example of that usage, before we move on to more thorough documentation.
+
+Test of equations:
+$$\mathcal{H} = -t \sum_{ij} c^\dagger_i c_j$$
 
 ## Lattices
 
