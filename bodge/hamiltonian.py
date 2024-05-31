@@ -3,7 +3,7 @@ from .lattice import Lattice
 
 
 class Hamiltonian:
-    """Representation of a physical system in the tight-binding limit.
+    """Tight-binding representation of a physical system.
 
     This class can be used to construct Hamiltonian matrices for condensed
     matter systems with particle-hole and spin degrees of freedom. Instead of
@@ -124,15 +124,14 @@ class Hamiltonian:
     def __call__(self, format: str = "csr") -> Union[SpMatrix, Matrix]:
         """Return a specific matrix representation of the Hamiltonian.
 
-        If `format = "dense"`, then the Hamiltonian is returned as a dense
-        matrix (i.e. `np.array`). If `format = "bsr" | "csr" | "csc"`, then
-        a sparse matrix is returned instead (i.e. `scipy.sparse.spmatrix`).
+        If the format is set to "dense", the result is returned as a NumPy
+        array. Otherwise, a SciPy sparse matrix is returned instead.
         """
-        # Transform the stored matrix into the requested matrix format.
-        # Trim any remaining zero entries if a sparse matrix is wanted.
+        # Transform the stored matrix into the requested matrix format. Trim
+        # any remaining zero entries if a sparse matrix is requested.
         if format == "bsr":
-            # NOTE: We do not wish to run `.eliminate_zeros` on the original matrix,
-            # as that would preclude adding new elements to the Hamiltonian later.
+            # NOTE: Don't run eliminate_zeros on the original matrix, as that
+            # would preclude adding new elements to the Hamiltonian later.
             H = self.matrix.copy()
             H.eliminate_zeros()
         elif format == "csr":

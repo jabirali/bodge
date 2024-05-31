@@ -44,3 +44,9 @@ jσ2: Matrix = 1j * σ2
 jσ3: Matrix = 1j * σ3
 
 jσ = np.stack([jσ1, jσ2, jσ3])
+
+# ASCII alternatives for Pauli matrices.
+sigma0 = σ0
+sigma1 = σ1
+sigma2 = σ2
+sigma3 = σ3
