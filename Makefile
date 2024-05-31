@@ -14,6 +14,7 @@ Usage:
 Targets:
 	help        Show this help message
 	install     Install the package into a virtual environment
+	docs        Regenerate the documentation using Quarto
 	test        Execute the unit tests bundled with the project
 	format      Reformat source code to fit the project style
 	clean       Remove virtual environment and temporary files
@@ -37,6 +38,9 @@ help:
 install:
 	test -d venv || $(PYTHON) -m venv venv
 	. venv/bin/activate; pip install --upgrade pip; pip install --prefer-binary numpy; pip install --prefer-binary --editable .[dev]
+
+docs: .FORCE
+	quarto render docs/tutorial.qmd
 
 test:
 	. venv/bin/activate; pytest tests
