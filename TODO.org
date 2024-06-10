@@ -1,0 +1,11 @@
+* Module
+** TODO common.py
+- [X] Move most imports to =utils.py=
+- [ ] Consider getting rid of unneeded dependencies (but it's probably fine)
+** TODO hamiltonian.py
+** TODO lattice.py
+** TODO utils,py
+- [ ] Consider renaming and refactoring
+* Scripts
+* Documentation
+* Scaffolding

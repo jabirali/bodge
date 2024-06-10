@@ -1,3 +1,8 @@
+import pandas as pd
+import scipy.linalg as la
+import scipy.sparse.linalg as sla
+from tqdm import tqdm, trange
+
 from .common import *
 from .hamiltonian import Hamiltonian
 from .lattice import Lattice
@@ -79,7 +84,7 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     for ω in tqdm(ωs, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
         A = ω * I - H
-        X = sa.spsolve(A, B)
+        X = spla.spsolve(A, B)
 
         # Extract the few elements of interest.
         x = X.multiply(B).sum(axis=0)
