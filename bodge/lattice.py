@@ -49,7 +49,8 @@ class Lattice:
         for indices in self.edges():
             yield indices
 
-    def __repr__(self):
+    @typecheck
+    def __repr__(self) -> str:
         """Representation of the object for `print()`."""
         return self.__class__.__name__ + str(self.shape)
 
@@ -65,22 +66,36 @@ class Lattice:
 
     @typecheck
     def bonds(self) -> Iterator[Coords]:
-        """Iterate over all atomic bonds in the lattice."""
+        """Iterate over all atomic bonds in the lattice.
+        
+        The intended usage is that `for i, j in lattice.bonds()` should
+        yield all nearest-neighbor sites (i, j) in the lattice.
+        """
         raise NotImplementedError
 
     @typecheck
     def edges(self) -> Iterator[Coords]:
-        """Iterate over pairs of edges in the lattice."""
+        """Iterate over pairs of edges in the lattice.
+        
+        The intended usage is that `for i, j in lattice.edges()` should yield
+        sites i and j on *opposite* edges of a system. Thus, hopping terms 
+        between such sites should result in periodic boundary conditions.
+        """
         raise NotImplementedError
 
 
 class CubicLattice(Lattice):
     """Concrete representation of a primitive cubic lattice.
 
-    The same class can be used to model square lattices or rectangular lattices
-    as well. To construct an NxM 2D lattice, simply invoke the constructor as:
+    The constructor takes as its argument the number of lattice sites along each
+    direction in a 3D Euclidean space. So a 10x10x10 cubic lattice is given by:
 
-    >>> lattice = CubicLattice((N, M, 1))
+    >>> lattice = CubicLattice((10, 10, 10))
+
+    The same class can be used to model square lattices or rectangular lattices
+    as well. To e.g. construct an 30x30 square lattice, simply do the following:
+
+    >>> lattice = CubicLattice((30, 30, 1))
     """
 
     @typecheck
@@ -94,7 +109,10 @@ class CubicLattice(Lattice):
 
     @typecheck
     def sites(self) -> Iterator[Coord]:
-        """Iterate over all atomic sites in the lattice."""
+        """Iterate over all atomic sites in the lattice.
+        
+        Thus, e.g. `for i in lattice.sites()` iterates over all lattice sites.
+        """
         for x in range(self.shape[0]):
             for y in range(self.shape[1]):
                 for z in range(self.shape[2]):
@@ -105,7 +123,10 @@ class CubicLattice(Lattice):
         """Iterate over all atomic bonds in the lattice.
 
         The `axis` argument allows iterating over bonds along only one
-        cardinal axis, where `axis=0` corresponds to the x-axis, etc.
+        cardinal axis. For example, `for i, j in lattice.bonds(axis=0)`
+        would iterate over nearest neighbors connected along the x-axis.
+
+        If `axis` is not set, we iterate over bonds in all directions.
         """
         if axis is None:
             # Neighbors along all axes.
@@ -136,12 +157,15 @@ class CubicLattice(Lattice):
         else:
             raise ValueError("No such axis")
 
-    def edges(self, axis: Optional[int] = None):
+    @typecheck
+    def edges(self, axis: Optional[int] = None) -> Iterator[Coords]:
         """Iterate over pairs of atoms at opposite lattice edges.
 
-        This is useful if you need periodic boundary conditions. For example,
-        to specify periodic boundary conditions along the x-axis, iterate over
-        `.edges(axis=0)` and define hopping amplitudes between these atoms.
+        For instance, if you want periodic boundary conditions along the
+        x-axis, you can use `for i, j in lattice.edges(axis=0)` to find the
+        lattice sites (i, j) that you should connect via hopping terms.
+
+        If `axis` is not set, we iterate over edges in all directions.
         """
         Lx, Ly, Lz = self.shape[0], self.shape[1], self.shape[2]
         if axis is None:

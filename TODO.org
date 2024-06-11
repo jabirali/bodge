@@ -2,6 +2,7 @@
 ** TODO common.py
 - [X] Move most imports to =utils.py=
 - [ ] Consider getting rid of unneeded dependencies (but it's probably fine)
+- [ ] Ensure that both the Pip package and the =environment.yml= are up to date?
 ** TODO hamiltonian.py
 ** TODO lattice.py
 ** TODO utils,py
@@ -9,3 +10,8 @@
 * Scripts
 * Documentation
 * Scaffolding
+* Publication
+- [ ] Wrap it up as a real Pip package
+- [ ] Open up the repo on Github
+- [ ] Try to publish it to PyPi
+  

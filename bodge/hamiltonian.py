@@ -141,7 +141,7 @@ class Hamiltonian:
             H = self.matrix.tocsc()
             H.eliminate_zeros()
         elif format == "dense":
-            H = self.matrix.todense()
+            H: Matrix = self.matrix.todense()
         else:
             raise RuntimeError("Requested matrix format is not yet supported")
 
