@@ -164,3 +164,89 @@ class Hamiltonian:
         k = indptr[i] + np.where(js == j)
 
         return Index(k[0, 0])
+
+
+def swave() -> Matrix:
+    """Generate the s-wave superconducting order parameter.
+
+    This is mainly implemented for consistency with `pwave` and `dwave`.
+    Moreover, since the structure is the same for on-site and extended
+    s-wave orders, it is not a function of coordinates but just a matrix.
+
+    See the documentation for usage examples.
+    """
+
+    return jσ2
+
+
+def pwave(desc: str):
+    """Generate the p-wave superconducting order parameter.
+
+    You should provide a d-vector [e.g. "(p_x + jp_y) * (e_x + je_y)"] in order
+    to construct a p-wave triplet order parameter. The function then returns a
+    new function Δ_p(i, j) which lets you evaluate the superconducting order
+    parameter for two lattice sites with coordinates i and j. This is useful
+    when constructing the Hamiltonian of the system numerically.
+
+    The algorithm implemented here is explained in detail in:
+
+        Ouassou et al. PRB 109, 174506 (2024)
+        DOI: 10.1103/PhysRevB.109.174506
+
+    See the documentation for usage examples.
+    """
+    # Basis vectors for spin axes.
+    e_x = np.array([[1], [0], [0]])
+    e_y = np.array([[0], [1], [0]])
+    e_z = np.array([[0], [0], [1]])
+
+    je_x = 1j * e_x
+    je_y = 1j * e_y
+    je_z = 1j * e_z
+
+    # Basis vectors for momentum.
+    p_x = e_x.T
+    p_y = e_y.T
+    p_z = e_z.T
+
+    jp_x = 1j * p_x
+    jp_y = 1j * p_y
+    jp_z = 1j * p_z
+
+    # Convert the d-vector expression to a 3x3 numerical matrix.
+    D = eval(desc)
+
+    # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = [(D'p) ⋅ σ] jσ2.
+    # In practice, we do this by calculating Δ = D'σ jσ2, such
+    # that we simply end up with the gap matrix Δ(p) = Δ ⋅ p.
+    Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2) / 2
+
+    # Function for evaluating Δ(p) on the lattice.
+    def Δ_p(i: Coord, j: Coord) -> Matrix:
+        δ = np.subtract(j, i)
+        return np.einsum("iab,i -> ab", Δ, δ)
+
+    return Δ_p
+
+
+def dwave():
+    """Generate the d-wave superconducting order parameter.
+
+    This function returns a function Δ(i, j) that takes two lattice sites i, j,
+    and returns the superconducting order parameter Δ between those two sites.
+
+    We specifically consider the d_{x^2 - y^2} order parameter on a presumably
+    square lattice. This means that the order parameter should have a momentum
+    structure ~ (p_x^2 - p_y^2)/p_F^2 and spin structure ~ jσ_2 (spin-singlet).
+    It might work on non-square lattices as well, but this has to be verified.
+
+    See the documentation for usage examples.
+    """
+
+    def Δ_d(i: Coord, j: Coord) -> Matrix:
+        δ = np.subtract(j, i)
+        Δ_ij = (δ[0] ** 2 - δ[1] ** 2) / (np.sum(δ**2) + 1e-16)
+
+        return Δ_ij * jσ2
+
+    return Δ_d

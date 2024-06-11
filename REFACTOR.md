@@ -8,6 +8,9 @@
 - [X] Clean the CubicLattice class
 ## [ ] utils,py
 - [ ] Consider renaming and refactoring
+- [ ] Refactor *wave functions into Hamiltonian
+## [ ] Tests
+- [ ] Get close to 100% test coverage
 # Scripts
 - [ ] Determine which scripts to include as docs. Purge them from the root folder.
 # Documentation
@@ -21,6 +24,7 @@ Modern development practices:
 
 Todo:
 - [ ] Note about using Greek letters in examples. (Allowed by Python, keeps code closer to math, but everything can be used without this.)
+- [ ] Usage examples for swave / pwave / dwave
 # Scaffolding
 - environment.yml and/or pip package?
 - Consider getting rid of unneeded dependencies (but it's probably fine)
