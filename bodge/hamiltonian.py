@@ -14,7 +14,10 @@ class Hamiltonian:
 
     Internally, this constructs a block-sparse matrix (BSR format), enabling
     the construction of megadimensional tight-binding systems (>10^6 sites).
-    The focus is on real-space lattices used for superconductivity research.
+    However, you can use the `__call__` method to export the result to other
+    common sparse matrix formats (e.g. CSR) or a dense matrix (NumPy array).
+
+    For examples of how to use this class, see the bundled documentation.
     """
 
     @typecheck
@@ -132,13 +135,13 @@ class Hamiltonian:
         if format == "bsr":
             # NOTE: Don't run eliminate_zeros on the original matrix, as that
             # would preclude adding new elements to the Hamiltonian later.
-            H = self.matrix.copy()
+            H: BsrMatrix = self.matrix.copy()
             H.eliminate_zeros()
         elif format == "csr":
-            H = self.matrix.tocsr()
+            H: CsrMatrix = self.matrix.tocsr()
             H.eliminate_zeros()
         elif format == "csc":
-            H = self.matrix.tocsc()
+            H: CscMatrix = self.matrix.tocsc()
             H.eliminate_zeros()
         elif format == "dense":
             H: Matrix = self.matrix.todense()
