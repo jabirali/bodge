@@ -12,6 +12,7 @@ from .utils import *
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.9.0"
 __all__ = [
+    # Core library
     "Lattice",
     "CubicLattice",
     "Hamiltonian",
@@ -19,6 +20,7 @@ __all__ = [
     "Coords",
     "Index",
     "Indices",
+    # Helper functions
     "diagonalize",
     "free_energy",
     "spectral",
@@ -27,6 +29,7 @@ __all__ = [
     "swave",
     "pwave",
     "dwave",
+    # Useful constants
     "π",
     "σ",
     "σ0",
@@ -38,8 +41,16 @@ __all__ = [
     "jσ1",
     "jσ2",
     "jσ3",
+    # ASCII alternatives
+    "pi",
+    "sigma",
     "sigma0",
     "sigma1",
     "sigma2",
     "sigma3",
+    "jsigma",
+    "jsigma0",
+    "jsigma1",
+    "jsigma2",
+    "jsigma3",
 ]
