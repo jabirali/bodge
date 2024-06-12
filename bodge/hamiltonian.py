@@ -167,7 +167,7 @@ class Hamiltonian:
 
 
 def swave() -> Matrix:
-    """Generate the s-wave superconducting order parameter.
+    """Hamiltonian terms for s-wave superconducting order.
 
     This is mainly implemented for consistency with `pwave` and `dwave`.
     Moreover, since the structure is the same for on-site and extended
@@ -180,7 +180,7 @@ def swave() -> Matrix:
 
 
 def pwave(desc: str):
-    """Generate the p-wave superconducting order parameter.
+    """Hamiltonian terms for p-wave superconducting order.
 
     You should provide a d-vector [e.g. "(p_x + jp_y) * (e_x + je_y)"] in order
     to construct a p-wave triplet order parameter. The function then returns a
@@ -188,9 +188,9 @@ def pwave(desc: str):
     parameter for two lattice sites with coordinates i and j. This is useful
     when constructing the Hamiltonian of the system numerically.
 
-    The algorithm implemented here is explained in detail in:
+    The algorithm implemented here is explained in detail in Sec. II-B in:
 
-        Ouassou et al. PRB 109, 174506 (2024)
+        Ouassou et al. PRB 109, 174506 (2024).
         DOI: 10.1103/PhysRevB.109.174506
 
     See the documentation for usage examples.

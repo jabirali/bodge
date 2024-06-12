@@ -50,9 +50,9 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     calculate the density of states, since electron-hole symmetry is used to
     get the negative-energy solutions in an efficient manner.
 
-    The algorithm implemented here is explained in detail in:
+    The algorithm implemented here is explained in detail in Appendix A of:
 
-        Ouassou et al. PRB 109, 174506 (2024)
+        Ouassou et al. PRB 109, 174506 (2024).
         DOI: 10.1103/PhysRevB.109.174506
 
     TODO:
@@ -126,6 +126,7 @@ def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     is meant as a benchmark, not for actual large-scale calculations.
     """
     # Calculate the relevant eigenvalues and eigenvectors.
+    # TODO: Integrate CUDA implementation here as well.
     H = system(format="dense")
     eigval, eigvec = la.eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
 
@@ -162,23 +163,37 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     return spectral
 
 
-def free_energy(system: Hamiltonian, temperature: float = 0.01):
-    """Calculate the Landau free energy from a given Hamiltonian matrix.
+def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float = 0.0):
+    """Calculate the Landau free energy for a given Hamiltonian.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
     and subsequently evaluating the entropy contributions to the free energy.
+    The resulting free energy is then formulated as F = U - TS, where U is
+    the internal energy (calculated from ɛ_n), T is the provided temperature,
+    and S is the system's entropy (calculated from ε_n and T).
+    
+    Note that in general, U should also have a constant contribution, which
+    corresponds to the non-matrix parts to the Hamiltonian operator. These
+    implicitly depend on e.g. all mean fields in the system. We can neglect
+    these contributions when doing non-selfconsistent calculations. But if you
+    want to calculate e.g. the critical temperature, then it is important that
+    you calculate this `constant` yourself and provide it as an argument.
+
+    The algorithm implemented here is explained in Appendix C of:
+
+        Ouassou et al. PRB 109, 174506 (2024).
+        DOI: 10.1103/PhysRevB.109.174506
     """
     T = temperature
+    E0 = constant
     H = system(format="dense")
 
     # Calculate the eigenvalues via a dense parallel algorithm.
+    # TODO: Re-integrate the CUDA implementation from master branch.
     ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 
     # Extract the positive eigenvalues.
     ε = ε[ε > 0]
-
-    # TODO: Mean field contributions.
-    E0 = 0.0
 
     # Internal energy.
     U = E0 - (1 / 2) * np.sum(ε)
