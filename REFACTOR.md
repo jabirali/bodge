@@ -23,7 +23,10 @@ Modern development practices:
 - [ ] Docstrings for all classes/functions in core libraries
 - [ ] Beartype for runtime type checking of all core libraries
 - [ ] Pytest for unit testing of all core functionality
-- [ ] GitHub actions for continuous integration (ensuring that it works OK across Python 3.9-3.12)
+- [ ] GitHub actions for continuous integration (ensuring that it works OK across Python 3.10-3.12)
+    - [ ] Skip the `environment.yml` and focus on the PyPi package.
+    - [ ] Keep the `Makefile`, it's needed for GitHub Actions.
+    - [ ] Look if we can then use `match` syntax again.
 
 Todo:
 - [ ] Note about using Greek letters in examples. (Allowed by Python, keeps code closer to math, but everything can be used without this.)
