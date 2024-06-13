@@ -119,7 +119,7 @@ class CubicLattice(Lattice):
                     yield (x, y, z)
 
     @typecheck
-    def bonds(self, axis: Optional[int] = None) -> Iterator[Coords]:
+    def bonds(self, axis: int | None = None) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice.
 
         The `axis` argument allows iterating over bonds along only one
@@ -158,7 +158,7 @@ class CubicLattice(Lattice):
             raise ValueError("No such axis")
 
     @typecheck
-    def edges(self, axis: Optional[int] = None) -> Iterator[Coords]:
+    def edges(self, axis: int | None = None) -> Iterator[Coords]:
         """Iterate over pairs of atoms at opposite lattice edges.
 
         For instance, if you want periodic boundary conditions along the

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from time import time
-from typing import Optional
 
 from icecream import ic
 from typer import run

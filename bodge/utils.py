@@ -1,7 +1,7 @@
 import pandas as pd
 import scipy.linalg as la
 import scipy.sparse.linalg as sla
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 from .common import *
 from .hamiltonian import Hamiltonian
@@ -163,7 +163,7 @@ def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Ma
     return spectral
 
 
-def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float = 0.0):
+def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float = 0.0) -> float:
     """Calculate the Landau free energy for a given Hamiltonian.
 
     This is done by computing all the positive eigenvalues ε_n of the matrix,
@@ -188,7 +188,8 @@ def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float 
     E0 = constant
     H = system(format="dense")
 
-    # Calculate the eigenvalues via a dense parallel algorithm.
+    # Calculate the eigenvalues via a dense parallel algorithm. My benchmarks
+    # have shown that this is usually faster than using the sparse solver.
     # TODO: Re-integrate the CUDA implementation from master branch.
     ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from typing import Optional
-
 from icecream import ic
 from typer import run
 
@@ -12,7 +10,7 @@ def main(
     s: str,
     x: int,
     y: int,
-    dvector: Optional[str] = None,
+    dvector: str | None = None,
     length: int = 80,
     width: int = 80,
     potential: float = -3.0,

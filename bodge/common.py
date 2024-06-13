@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 from beartype import beartype as typecheck
-from beartype.typing import Any, Callable, Iterator, Optional, Union
+from beartype.typing import Callable, Iterator
 
 # Data types for working with Lattice coordinates.
 Index = int

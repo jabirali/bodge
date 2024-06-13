@@ -2,8 +2,6 @@
 
 """Calculate the RKKY interaction for s- and d-wave superconductors."""
 
-from typing import Optional
-
 import numpy as np
 import pandas as pd
 from icecream import ic

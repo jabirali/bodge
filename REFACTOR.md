@@ -10,6 +10,7 @@
 - [ ] Check: renaming, refactoring, testing, docstrings, and return formats (for ldos)
 - [ ] Check which functions can be CUDA-enhanced without too much hassle
 - [X] Refactor *wave functions into Hamiltonian
+- [ ] Consider whether to keep the SSD method. If we do, it might be cleaner to give an `ssd=True` flag to the Hamiltonian matrix itself to enable it during Hamiltonian population, and use a method `_ssd` to implement it. That way, `H[i, j]` etc. would automatically implement this stuff for us.
 ## [ ] Tests
 - [ ] Get close to 100% test coverage
 - [ ] Read through existing tests to check that they're reasonable

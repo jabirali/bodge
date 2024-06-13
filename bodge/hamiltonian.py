@@ -124,7 +124,7 @@ class Hamiltonian:
         del self.pair
 
     @typecheck
-    def __call__(self, format: str = "csr") -> Union[SpMatrix, Matrix]:
+    def __call__(self, format: str = "csr") -> SpMatrix | Matrix:
         """Return a specific matrix representation of the Hamiltonian.
 
         If the format is set to "dense", the result is returned as a NumPy

@@ -2,9 +2,7 @@
 
 """Calculate the RKKY interaction for s- and d-wave superconductors."""
 
-from typing import Optional
-
-from icecream import ic
+# from icecream import # ic
 from typer import run
 
 from bodge import *
@@ -25,7 +23,7 @@ def main(
 
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
-    ic(lattice.shape)
+    # ic(lattice.shape)
 
     # Impurity sites.
     x1 = length // 2
@@ -42,8 +40,8 @@ def main(
     i1 = (x1, y1, z1)
     i2 = (x2, y2, z2)
 
-    ic(i1)
-    ic(i2)
+    # ic(i1)
+    # ic(i2)
 
     # Impurity spins.
     spins = {
@@ -58,18 +56,18 @@ def main(
     S1 = spins[s1]
     S2 = spins[s2]
 
-    ic(S1)
-    ic(S2)
+    # ic(S1)
+    # ic(S2)
 
     # Superconductivity.
     σ_s = 0 * σ0  # swave()
     σ_d = dwave()
 
-    ic(σ_s)
-    ic(σ_d((2, 2, 0), (3, 2, 0)))
-    ic(σ_d((2, 2, 0), (1, 2, 0)))
-    ic(σ_d((2, 2, 0), (2, 3, 0)))
-    ic(σ_d((2, 2, 0), (2, 1, 0)))
+    # ic(σ_s)
+    # ic(σ_d((2, 2, 0), (3, 2, 0)))
+    # ic(σ_d((2, 2, 0), (1, 2, 0)))
+    # ic(σ_d((2, 2, 0), (2, 3, 0)))
+    # ic(σ_d((2, 2, 0), (2, 1, 0)))
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -79,7 +77,7 @@ def main(
     Δs = supergap * 1.0j
 
     system = Hamiltonian(lattice)
-    with system as (H, Δ, _):
+    with system as (H, Δ):
         for i in lattice.sites():
             Δ[i, i] = -Δs * σ_s
             if i == i1:
@@ -102,6 +100,6 @@ def main(
 
 
 if __name__ == "__main__":
-    ic()
+    # ic()
     run(main)
-    ic()
+    # ic()

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-from typing import Optional
-
-from icecream import ic
+# from icecream import ic
 from typer import run
 
 from bodge import *
@@ -12,7 +10,7 @@ def main(
     s: str,
     x: int,
     y: int,
-    dvector: Optional[str] = None,
+    dvector: str | None = None,
     length: int = 80,
     width: int = 80,
     potential: float = -3.0,
@@ -24,7 +22,7 @@ def main(
 
     # Square lattice.
     lattice = CubicLattice((length, width, 1))
-    ic(lattice.shape)
+    # ic(lattice.shape)
 
     # Impurity site.
     z = 0
@@ -33,7 +31,7 @@ def main(
     if x < 0 or x >= length or y < 0 or y >= width:
         raise RuntimeError("Offset requirements violated.")
 
-    ic(i0)
+    # ic(i0)
 
     # Impurity spins.
     spins = {
@@ -48,30 +46,27 @@ def main(
 
     S0 = spins[s]
 
-    ic(S0)
+    # ic(S0)
 
     # Superconductivity.
-    ic(dvector)
+    # ic(dvector)
     if dvector is None:
         # s-wave only.
         σ_s = jσ2
         σ_p = None
 
-        ic(σ_s)
-        ic(σ_p)
+        # ic(σ_s)
+        # ic(σ_p)
     else:
         # p-wave only.
         σ_s = None
         σ_p = pwave(dvector)
 
-        ic(σ_s)
-        ic(σ_p((2, 2, 0), (3, 2, 0)))
-        ic(σ_p((2, 2, 0), (1, 2, 0)))
-        ic(σ_p((2, 2, 0), (2, 3, 0)))
-        ic(σ_p((2, 2, 0), (2, 1, 0)))
-
-    # Hamiltonian deformation.
-    ssd = deform(system, "ssd")
+        # ic(σ_s)
+        # ic(σ_p((2, 2, 0), (3, 2, 0)))
+        # ic(σ_p((2, 2, 0), (1, 2, 0)))
+        # ic(σ_p((2, 2, 0), (2, 3, 0)))
+        # ic(σ_p((2, 2, 0), (2, 1, 0)))
 
     # Construct the Hamiltonian.
     t = 1.0
@@ -81,7 +76,9 @@ def main(
     Tc = Δ0 / 1.764
 
     system = Hamiltonian(lattice)
-    with system as (H, Δ, _):
+    ssd = deform(system, "ssd")
+
+    with system as (H, Δ):
         for i in lattice.sites():
             if σ_s is not None:
                 Δ[i, i] = (-Δ0 * σ_s) * ssd(i, i)
@@ -104,6 +101,6 @@ def main(
 
 
 if __name__ == "__main__":
-    ic()
+    # ic()
     run(main)
-    ic()
+    # ic()

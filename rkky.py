@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 
-from typing import Optional
-
 from icecream import ic
 from typer import run
 
@@ -13,7 +11,7 @@ def main(
     sep: int,
     s1: str,
     s2: str,
-    dvector: Optional[str] = None,
+    dvector: str | None = None,
     length: int = 280,
     width: int = 40,
     potential: float = -3.0,
