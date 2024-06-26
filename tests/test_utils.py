@@ -70,5 +70,3 @@ def test_diagonalize():
             assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
             assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
             assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
-
-

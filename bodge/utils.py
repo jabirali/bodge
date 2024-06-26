@@ -8,7 +8,6 @@ from .hamiltonian import Hamiltonian
 from .lattice import Lattice
 
 
-
 def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     """Calculate the local density of states via a resolvent operator approach.
 
@@ -143,7 +142,7 @@ def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float 
     The resulting free energy is then formulated as F = U - TS, where U is
     the internal energy (calculated from ɛ_n), T is the provided temperature,
     and S is the system's entropy (calculated from ε_n and T).
-    
+
     Note that in general, U should also have a constant contribution, which
     corresponds to the non-matrix parts to the Hamiltonian operator. These
     implicitly depend on e.g. all mean fields in the system. We can neglect

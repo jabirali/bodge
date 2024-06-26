@@ -1,6 +1,7 @@
+from pytest import raises
+
 from bodge import *
 from bodge.common import *
-from pytest import raises
 
 
 def test_hermitian():
@@ -68,6 +69,7 @@ def test_compilation():
         H = system(format="blah")
     with raises(Exception):
         H = system(format=1)
+
 
 def test_pwave_basic():
     """Brute-force test all d(p) = e_i p_j cases."""
@@ -215,6 +217,7 @@ def test_dwave_hermitian():
 
     H = system.matrix.todense()
     assert np.allclose(H, H.T.conj())
+
 
 def test_ssd():
     """Test the mathematical properties of the SSD profile."""

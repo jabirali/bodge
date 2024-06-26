@@ -246,6 +246,7 @@ def dwave():
     structure ~ jσ_2 (spin-singlet). It might work on some non-square
     lattices as well, but this has not been checked by the author.
     """
+
     def Δ_d(i: Coord, j: Coord) -> Matrix:
         δ = np.subtract(j, i)
         Δ_ij = (δ[0] ** 2 - δ[1] ** 2) / (np.sum(δ**2) + 1e-16)
@@ -253,6 +254,7 @@ def dwave():
         return Δ_ij * jσ2
 
     return Δ_d
+
 
 def ssd(system: Hamiltonian) -> Callable:
     """Sine-Squared Deformation of a Hamiltonian on a cubic lattice.
@@ -273,6 +275,7 @@ def ssd(system: Hamiltonian) -> Callable:
     Hodt et al. PRB 107, 224427 (2023).
     DOI: 10.1103/PhysRevB.107.224427
     """
+
     # Define the profile φ(i, j) used in the SSD method.
     def profile(i: Coord, j: Coord):
         # Determine the origin and maximum radius for the system. Since we use

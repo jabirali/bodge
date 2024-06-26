@@ -67,7 +67,7 @@ class Lattice:
     @typecheck
     def bonds(self) -> Iterator[Coords]:
         """Iterate over all atomic bonds in the lattice.
-        
+
         The intended usage is that `for i, j in lattice.bonds()` should
         yield all nearest-neighbor sites (i, j) in the lattice.
         """
@@ -76,9 +76,9 @@ class Lattice:
     @typecheck
     def edges(self) -> Iterator[Coords]:
         """Iterate over pairs of edges in the lattice.
-        
+
         The intended usage is that `for i, j in lattice.edges()` should yield
-        sites i and j on *opposite* edges of a system. Thus, hopping terms 
+        sites i and j on *opposite* edges of a system. Thus, hopping terms
         between such sites should result in periodic boundary conditions.
         """
         raise NotImplementedError
@@ -110,7 +110,7 @@ class CubicLattice(Lattice):
     @typecheck
     def sites(self) -> Iterator[Coord]:
         """Iterate over all atomic sites in the lattice.
-        
+
         Thus, e.g. `for i in lattice.sites()` iterates over all lattice sites.
         """
         for x in range(self.shape[0]):

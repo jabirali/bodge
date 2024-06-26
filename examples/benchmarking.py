@@ -6,6 +6,7 @@ from time import sleep
 
 import kwant
 import numpy as np
+
 from bodge import *
 
 t = 1  # Hopping parameter
