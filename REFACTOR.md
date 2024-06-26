@@ -8,7 +8,7 @@
 - [X] Clean the CubicLattice class
 ## [ ] utils.py
 - [ ] Check: renaming, refactoring, testing, docstrings, and return formats (for ldos)
-- [ ] Check which functions can be CUDA-enhanced without too much hassle
+- [X] Check which functions can be CUDA-enhanced without too much hassle
 - [X] Refactor *wave functions into Hamiltonian
 - [X] Refactor the ssd method into Hamiltonian
 ## [ ] Tests

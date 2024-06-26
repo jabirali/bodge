@@ -13,10 +13,11 @@ dynamic = ["version", "description"]
 
 dependencies = [
     "beartype",
-    "matplotlib",
     "numpy",
-    "pandas",
     "scipy",
+	"cupy",
+    "matplotlib",
+    "pandas",
     "tqdm",
     "typer",
 ]
