@@ -23,7 +23,6 @@ __all__ = [
     # Helper functions
     "diagonalize",
     "free_energy",
-    "spectral",
     "ldos",
     "ssd",
     "swave",

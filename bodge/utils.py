@@ -111,31 +111,6 @@ def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     return eigval, eigvec
 
 
-def spectral(system: Hamiltonian, energies, resolution: float = 1e-3) -> list[Matrix]:
-    """Calculate the exact spectral function of the system via direct inversion.
-
-    Note that this method is quite inefficient since it uses dense matrices;
-    it is meant as a benchmark, not for actual large-scale calculations.
-    """
-    # Restore the Hamiltonian scale and switch to dense matrices.
-    H = system(format="dense")
-    I = np.identity(H.shape[0])
-
-    # The resolution is controlled by the imaginary energy.
-    η = resolution * 1j
-
-    # Calculate the spectral function via direct inversion.
-    spectral = []
-    for ω in energies:
-        Gᴿ = la.inv((ω + η) * I - H)
-        Gᴬ = la.inv((ω - η) * I - H)
-        A = (Gᴿ - Gᴬ) / (-2j * π)
-
-        spectral.append(A)
-
-    return spectral
-
-
 def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float = 0.0) -> float:
     """Calculate the Landau free energy for a given Hamiltonian.
 
