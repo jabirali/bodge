@@ -169,11 +169,12 @@ class Hamiltonian:
 def swave() -> Matrix:
     """Hamiltonian terms for s-wave superconducting order.
 
-    This is mainly implemented for consistency with `pwave` and `dwave`.
-    Moreover, since the structure is the same for on-site and extended
-    s-wave orders, it is not a function of coordinates but just a matrix.
-
-    See the documentation for usage examples.
+    If you let `σ_s = swave()`, then the on-site pairing term for an
+    s-wave superconductor is given by `Δ[i, i] = Δ_s(i) * σ_s`. Here,
+    `Δ_s(i)` can in theory be a complex scalar function of the lattice
+    site `i`, but it is often sufficient to set it to a constant.
+    Since `σ_s` is the same for on-site and extended s-wave orders, it
+    is not a function of coordinates but just a matrix.
     """
 
     return jσ2
@@ -182,18 +183,19 @@ def swave() -> Matrix:
 def pwave(desc: str):
     """Hamiltonian terms for p-wave superconducting order.
 
-    You should provide a d-vector [e.g. "(p_x + jp_y) * (e_x + je_y)"] in order
-    to construct a p-wave triplet order parameter. The function then returns a
-    new function Δ_p(i, j) which lets you evaluate the superconducting order
-    parameter for two lattice sites with coordinates i and j. This is useful
-    when constructing the Hamiltonian of the system numerically.
+    When calling this function, you must provide a d-vector expression
+    as a string [e.g. `σ_p = pwave("(p_x + jp_y) * (e_x + je_y)")`] to
+    construct the a p-wave triplet superconducting order parameter.
+    The result is a function `σ_p(i, j)` that depend on two
+    nearest-neighbor lattice sites `i` and `j`. The superconducting
+    pairing is then given by `Δ[i, j] = Δ_p(i, j) * σ_p(i, j)`, where
+    `Δ_p` can be any complex scalar function of position `(i + j)/2`.
+    It is often sufficient to set the prefactor `Δ_p` to a constant.
 
-    The algorithm implemented here is explained in detail in Sec. II-B in:
+    The algorithm implemented here is explained in Sec. II-B in:
 
-        Ouassou et al. PRB 109, 174506 (2024).
-        DOI: 10.1103/PhysRevB.109.174506
-
-    See the documentation for usage examples.
+    Ouassou et al. PRB 109, 174506 (2024).
+    DOI: 10.1103/PhysRevB.109.174506
     """
     # Basis vectors for spin axes.
     e_x = np.array([[1], [0], [0]])
@@ -232,17 +234,18 @@ def pwave(desc: str):
 def dwave():
     """Generate the d-wave superconducting order parameter.
 
-    This function returns a function Δ(i, j) that takes two lattice sites i, j,
-    and returns the superconducting order parameter Δ between those two sites.
+    This function returns a function `σ_d(i, j)` that takes two
+    nearest-neighbor lattice sites `i` and `j` as arguments. The
+    d-wave pairing is given by `Δ[i, j] = Δ_d(i, j) * σ_d(i, j)`,
+    where the prefactor `Δ_d` can be any complex scalar function
+    of position `(i+j)/2`. Often, it can be set to a constant.
 
-    We specifically consider the d_{x^2 - y^2} order parameter on a presumably
-    square lattice. This means that the order parameter should have a momentum
-    structure ~ (p_x^2 - p_y^2)/p_F^2 and spin structure ~ jσ_2 (spin-singlet).
-    It might work on non-square lattices as well, but this has to be verified.
-
-    See the documentation for usage examples.
+    We specifically consider the d_{x^2 - y^2} order parameter on a
+    presumably square lattice. This means that the order parameter
+    should have a momentum structure ~ (p_x^2 - p_y^2)/p_F^2 and spin
+    structure ~ jσ_2 (spin-singlet). It might work on some non-square
+    lattices as well, but this has not been checked by the author.
     """
-
     def Δ_d(i: Coord, j: Coord) -> Matrix:
         δ = np.subtract(j, i)
         Δ_ij = (δ[0] ** 2 - δ[1] ** 2) / (np.sum(δ**2) + 1e-16)
