@@ -253,3 +253,44 @@ def dwave():
         return Δ_ij * jσ2
 
     return Δ_d
+
+def ssd(system: Hamiltonian) -> Callable:
+    """Sine-Squared Deformation of a Hamiltonian on a cubic lattice.
+
+    When you call this function as `φ = ssd(system)`, where `system`
+    is an instance of the `Hamiltonian` class, you obtain a function
+    `φ(i, j)` that depends on two lattice coordinates `i` and `j`. The
+    usage of this function is to include `φ(i, j)` as a prefactor for
+    every off-site term `H[i, j]` and `Δ[i, j]` in the Hamiltonian,
+    and add `φ(i, i)` as a prefactor for every on-site term `H[i, i]`
+    and `Δ[i, i]`. This approach is known to reduce finite-size
+    effects in real-space simulations, which can be especially
+    important in the case of incommensurate order on the lattice.
+
+    For more information about how this approach can be useful, see
+    the following reference as well as the references therein:
+
+    Hodt et al. PRB 107, 224427 (2023).
+    DOI: 10.1103/PhysRevB.107.224427
+    """
+    # Define the profile φ(i, j) used in the SSD method.
+    def profile(i: Coord, j: Coord):
+        # Determine the origin and maximum radius for the system. Since we use
+        # corner-centered coordinates, these two values are actually the same.
+        # Note however the offset to get a maximum coordinate from a shape.
+        R = np.array([(N - 1) for N in system.lattice.shape]) / 2
+
+        # Determine the distance vectors of the provided coordinates
+        # i = (i_x, i_y, i_z), j = (j_x, j_y, j_z) from the origin.
+        r_i = np.array(i) - R
+        r_j = np.array(j) - R
+        r = (r_i + r_j) / 2
+
+        # We now consider only the magnitude of the distances.
+        R = la.norm(R)
+        r = la.norm(r)
+
+        # Calculate the sine-squared deformation.
+        return (1 / 2) * (1 + np.cos(π * r / (R + 1 / 2)))
+
+    return profile

@@ -25,7 +25,7 @@ __all__ = [
     "free_energy",
     "spectral",
     "ldos",
-    "deform",
+    "ssd",
     "swave",
     "pwave",
     "dwave",
