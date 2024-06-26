@@ -166,21 +166,25 @@ class Hamiltonian:
         return Index(k[0, 0])
 
 
-def swave() -> Matrix:
+def swave() -> Callable:
     """Hamiltonian terms for s-wave superconducting order.
 
     If you let `σ_s = swave()`, then the on-site pairing term for an
-    s-wave superconductor is given by `Δ[i, i] = Δ_s(i) * σ_s`. Here,
-    `Δ_s(i)` can in theory be a complex scalar function of the lattice
-    site `i`, but it is often sufficient to set it to a constant.
-    Since `σ_s` is the same for on-site and extended s-wave orders, it
-    is not a function of coordinates but just a matrix.
+    s-wave superconductor is given by `Δ[i, i] = Δ_s(i) * σ_s(i)`.
+    Similarly, extended s-wave order can be obtained by setting
+    `Δ[i, j] = Δ_s(i, j) * σ_s(i, j) for nearest-neighbor sites
+    `i` and `j`. The prefactors `Δ_s` above can be complex scalar
+    functions of the lattice site indices, but can often be set
+    constant in non-selfconsistent calculations without currents.
     """
 
-    return jσ2
+    def σ_s(*_):
+        return jσ2
+
+    return σ_s
 
 
-def pwave(desc: str):
+def pwave(dvector: str) -> Callable:
     """Hamiltonian terms for p-wave superconducting order.
 
     When calling this function, you must provide a d-vector expression
@@ -216,7 +220,7 @@ def pwave(desc: str):
     jp_z = 1j * p_z
 
     # Convert the d-vector expression to a 3x3 numerical matrix.
-    D = eval(desc)
+    D = eval(dvector)
 
     # Construct gap matrix Δ(p) = [d(p)⋅σ] jσ2 = [(D'p) ⋅ σ] jσ2.
     # In practice, we do this by calculating Δ = D'σ jσ2, such
@@ -224,14 +228,14 @@ def pwave(desc: str):
     Δ = np.einsum("kp,kab,bc -> pac", D, σ, jσ2) / 2
 
     # Function for evaluating Δ(p) on the lattice.
-    def Δ_p(i: Coord, j: Coord) -> Matrix:
+    def σ_p(i: Coord, j: Coord) -> Matrix:
         δ = np.subtract(j, i)
         return np.einsum("iab,i -> ab", Δ, δ)
 
-    return Δ_p
+    return σ_p
 
 
-def dwave():
+def dwave() -> Callable:
     """Generate the d-wave superconducting order parameter.
 
     This function returns a function `σ_d(i, j)` that takes two
@@ -247,13 +251,13 @@ def dwave():
     lattices as well, but this has not been checked by the author.
     """
 
-    def Δ_d(i: Coord, j: Coord) -> Matrix:
+    def σ_d(i: Coord, j: Coord) -> Matrix:
         δ = np.subtract(j, i)
         Δ_ij = (δ[0] ** 2 - δ[1] ** 2) / (np.sum(δ**2) + 1e-16)
 
         return Δ_ij * jσ2
 
-    return Δ_d
+    return σ_d
 
 
 def ssd(system: Hamiltonian) -> Callable:

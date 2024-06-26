@@ -1,3 +1,5 @@
+"""Collection of numerical algorithms that can be used on `Hamiltonian` instances."""
+
 import pandas as pd
 import scipy.linalg as la
 import scipy.sparse.linalg as sla
@@ -5,7 +7,6 @@ from tqdm import tqdm
 
 from .common import *
 from .hamiltonian import Hamiltonian
-from .lattice import Lattice
 
 
 def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
@@ -23,12 +24,14 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
 
     The algorithm implemented here is explained in detail in Appendix A of:
 
-        Ouassou et al. PRB 109, 174506 (2024).
-        DOI: 10.1103/PhysRevB.109.174506
+    Ouassou et al. PRB 109, 174506 (2024).
+    DOI: 10.1103/PhysRevB.109.174506
 
     TODO:
     - Factor out the Green function calculation as separate function that
       accepts Hamiltonian indices as arguments. Can be used for e.g. currents.
+    - Generalize the LDOS calculation to trace over 2x2 matrices. This would
+      allow us to easily extract the spin-resolved LDOS in the future.
     """
     # Prepare input and output variables.
     H, M, I = system(format="csc")
@@ -66,7 +69,6 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
         x = X.multiply(B).sum(axis=0)
 
         # Calculate and store the density of states.
-        # TODO: Reconstruct and trace 2x2 matrices.
         for n, i in enumerate(sites):
             e_up = x[0, 4 * n + 0]
             e_dn = x[0, 4 * n + 1]
@@ -152,8 +154,8 @@ def free_energy(system: Hamiltonian, temperature: float = 0.01, constant: float 
 
     The algorithm implemented here is explained in Appendix C of:
 
-        Ouassou et al. PRB 109, 174506 (2024).
-        DOI: 10.1103/PhysRevB.109.174506
+    Ouassou et al. PRB 109, 174506 (2024).
+    DOI: 10.1103/PhysRevB.109.174506
     """
     T = temperature
     E0 = constant

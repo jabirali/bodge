@@ -71,6 +71,25 @@ def test_compilation():
         H = system(format=1)
 
 
+def test_swave_hermitian():
+    """Test that s-wave superconducting Hamiltonians are Hermitian."""
+    lattice = CubicLattice((10, 10, 1))
+    system = Hamiltonian(lattice)
+
+    σ_s = swave()
+    with system as (H, Δ):
+        for i in lattice.sites():
+            H[i, i] = -0.1 * σ0
+            Δ[i, i] = -0.1j * σ_s(i, i)  # On-site s-wave
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+            Δ[i, j] = -0.3 * σ_s(i, j)  # Extended s-wave
+
+    H = system.matrix.todense()
+    assert np.allclose(H, H.T.conj())
+
+
 def test_pwave_basic():
     """Brute-force test all d(p) = e_i p_j cases."""
     Δ = pwave("e_x * p_x")
