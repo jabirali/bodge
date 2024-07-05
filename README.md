@@ -45,8 +45,8 @@ with system as (H, Δ):
 If you are familiar with tight-binding models, you might notice that this is
 intentionally very close to how one might write the corresponding equations
 with pen and paper. It is similarly easy to model more complex systems: you can
-e.g. easily add p-wave or d-wave superconductivity, antiferromafgnetism,
-spin-orbit coupling, altermagnetism, or inhomogeneities like interfaces. In
+e.g. easily add p-wave or d-wave superconductivity, magnetism, altermagnetism,
+antiferromagnetism, spin-orbit coupling, or inhomogeneities like interfaces. In
 general, `H[i, i]` and `H[i, j]` set the on-site and nearest-neighbor "normal"
 terms in the Hamiltonian matrix, and `Δ[i, i]` and `Δ[i, j]` set the
 corresponding pairing terms representing superconductivity.
