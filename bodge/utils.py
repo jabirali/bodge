@@ -2,7 +2,6 @@
 
 import pandas as pd
 import scipy.linalg as la
-import scipy.sparse.linalg as sla
 from tqdm import tqdm
 
 from .common import *
@@ -30,7 +29,8 @@ def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
     return eigval, eigvec
 
 
-def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
+@typecheck
+def ldos(system: Hamiltonian, site: Coord, energies: Matrix, resolution=None) -> tuple[Matrix, Matrix]:
     """Calculate the local density of states via a resolvent operator approach.
 
     We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
@@ -48,6 +48,8 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
     Ouassou et al. PRB 109, 174506 (2024).
     DOI: 10.1103/PhysRevB.109.174506
     """
+    import scipy.sparse.linalg as sla
+
     # Prepare input and output variables.
     H, M, I = system(format="csc")
     results = []
@@ -66,43 +68,38 @@ def ldos(system, sites, energies, resolution=None) -> pd.DataFrame:
 
     # Construct a reduced identity matrix with only these indices.
     N = H.shape[1]
-    M = 4 * len(sites)
+    M = 4
 
-    rows = np.array([4 * system.lattice[i] + α for i in sites for α in range(4)])
+    i = system.lattice[site]
+    rows = np.array([4 * i + α for α in range(4)])
     cols = np.arange(M)
     data = np.repeat(1, M)
 
     B = CscMatrix((data, (rows, cols)), shape=(N, M))
 
     # Calculate the density of states.
+    results = {}
     for ω in tqdm(ωs, unit="ε", desc="LDOS"):
         # Solve the linear equations for the resolvent.
         A = ω * I - H
-        X = spla.spsolve(A, B)
+        X = sla.spsolve(A, B)
 
         # Extract the few elements of interest.
         x = X.multiply(B).sum(axis=0)
 
         # Calculate and store the density of states.
-        for n, i in enumerate(sites):
-            e_up = x[0, 4 * n + 0]
-            e_dn = x[0, 4 * n + 1]
-            h_up = x[0, 4 * n + 2]
-            h_dn = x[0, 4 * n + 3]
+        e_up = x[0, 0]
+        e_dn = x[0, 1]
+        h_up = x[0, 2]
+        h_dn = x[0, 3]
 
-            e_dos = -np.imag(e_up + e_dn) / π
-            h_dos = -np.imag(h_up + h_dn) / π
+        results[+np.real(ω)] = -np.imag(e_up + e_dn) / π
+        results[-np.real(ω)] = -np.imag(h_up + h_dn) / π
 
-            ε = np.real(ω)
-            results.append(
-                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": +ε, "dos": [e_dos]})
-            )
-            results.append(
-                pd.DataFrame.from_dict({"x": i[0], "y": i[1], "z": i[2], "ε": -ε, "dos": [h_dos]})
-            )
+    ωs = np.array(results.keys())
+    dos = np.array(results.values())
 
-    # Merge the dataframes and return.
-    return pd.concat(results).sort_values(by=["x", "y", "z", "ε"])
+    return ωs, dos
 
 
 def free_energy(system: Hamiltonian, temperature: float = 0.0, cuda=False) -> float:

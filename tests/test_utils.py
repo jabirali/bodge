@@ -4,35 +4,6 @@ from bodge import *
 from bodge.common import *
 
 
-def test_free_energy():
-    # Instantiate a simple S/N/F system.
-    lattice = CubicLattice((10, 7, 3))
-    system = Hamiltonian(lattice)
-
-    with system as (H, Δ):
-        for i in lattice.sites():
-            if i[0] <= 3:
-                H[i, i] = -0.5 * σ0
-                Δ[i, i] = -1.0 * jσ2
-            if i[0] >= 7:
-                H[i, i] = +0.5 * σ0 + 1.5 * σ3
-
-        for i, j in lattice.bonds():
-            H[i, j] = -1 * σ0
-
-    # Verify the expression for free energy.
-    for T in [0.01, 0.1, 1.0]:
-        # Use the predefined function.
-        F1 = free_energy(system, T)
-
-        # Diagonalize and use standard expression.
-        ε, χ = diagonalize(system)
-        ε = np.hstack([-ε, +ε])
-        F2 = -(T / 2) * np.sum(np.log(1 + np.exp(-ε / T)))
-
-        assert np.allclose(F1, F2)
-
-
 def test_diagonalize():
     # Instantiate a system with superconductivity and a barrier.
     lattice = CubicLattice((10, 10, 1))
@@ -70,3 +41,55 @@ def test_diagonalize():
             assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
             assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
             assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
+
+
+def test_free_energy():
+    # Instantiate a simple S/N/F system.
+    lattice = CubicLattice((10, 7, 3))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ):
+        for i in lattice.sites():
+            if i[0] <= 3:
+                H[i, i] = -0.5 * σ0
+                Δ[i, i] = -1.0 * jσ2
+            if i[0] >= 7:
+                H[i, i] = +0.5 * σ0 + 1.5 * σ3
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+
+    # Verify the expression for free energy.
+    for T in [0.01, 0.1, 1.0]:
+        # Use the predefined function.
+        F1 = free_energy(system, T)
+
+        # Diagonalize and use standard expression.
+        ε, χ = diagonalize(system)
+        ε = np.hstack([-ε, +ε])
+        F2 = -(T / 2) * np.sum(np.log(1 + np.exp(-ε / T)))
+
+        assert np.allclose(F1, F2)
+
+
+def test_ldos():
+    """Test that the LDOS calculations in a superconductor are reasonable."""
+    # Construct a small s-wave superconductor.
+    lattice = CubicLattice((11, 11, 1))
+    system = Hamiltonian(lattice)
+    σ_s = swave()
+    with system as (H, Δ):
+        for i in lattice.sites():
+            H[i, i] = -1.0 * σ0
+            Δ[i, i] = -0.1 * σ_s(i, i)
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+
+    # Calculate LDOS for a single energy in the gap.
+    E, D = ldos(system, (5, 5, 0), energies=[0], resolution=0.001)
+    assert E[0] == 0.0
+    assert len(E) == 1
+    assert len(D) == 1
+    print(E, D)
+
+    assert 1 == 2
