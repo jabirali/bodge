@@ -49,15 +49,15 @@ e.g. easily add p-wave or d-wave superconductivity, antiferromafgnetism,
 spin-orbit coupling, altermagnetism, or inhomogeneities like interfaces. In
 general, `H[i, i]` and `H[i, j]` set the on-site and nearest-neighbor "normal"
 terms in the Hamiltonian matrix, and `Δ[i, i]` and `Δ[i, j]` set the
-corresponding pairing terms representing superconductivity. Once you're done,
-you can e.g. call `system("dense")` to get a NumPy array, `system("csr")` to
-get a Compressed Sparse Row matrix, or `system.diagonalize()` to get the
-eigenvectors and eigenvalues of the Hamiltonian you just made.
+corresponding pairing terms representing superconductivity.
 
 The syntax used to construct the Hamiltonian is designed to look like array
 operations, but this is just a friendly interface; under the hood a lot of
 "magic" occurs to efficiently translate what you see into sparse matrix
-operations, while enforcing particle-hole and Hermitian symmetries.
+operations, while enforcing particle-hole and Hermitian symmetries. Once you're
+done with the construction, you can call `system.matrix()` to extract the
+Hamiltonian matrix itself (in dense or sparse form), or use methods such as
+`system.diagonalize` and `system.free_energy` to extract its properties.
 
 ## Installation
 
