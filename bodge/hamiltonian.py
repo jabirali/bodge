@@ -132,21 +132,22 @@ class Hamiltonian:
         """
         # Transform the stored matrix into the requested matrix format. Trim
         # any remaining zero entries if a sparse matrix is requested.
-        if format == "bsr":
-            # NOTE: Don't run eliminate_zeros on the original matrix, as that
-            # would preclude adding new elements to the Hamiltonian later.
-            H: BsrMatrix = self.matrix.copy()
-            H.eliminate_zeros()
-        elif format == "csr":
-            H: CsrMatrix = self.matrix.tocsr()
-            H.eliminate_zeros()
-        elif format == "csc":
-            H: CscMatrix = self.matrix.tocsc()
-            H.eliminate_zeros()
-        elif format == "dense":
-            H: Matrix = self.matrix.todense()
-        else:
-            raise RuntimeError("Requested matrix format is not yet supported")
+        match format:
+            case "bsr":
+                # NOTE: Don't run eliminate_zeros on the original matrix, as that
+                # would preclude adding new elements to the Hamiltonian later.
+                H: BsrMatrix = self.matrix.copy()
+                H.eliminate_zeros()
+            case "csr":
+                H: CsrMatrix = self.matrix.tocsr()
+                H.eliminate_zeros()
+            case "csc":
+                H: CscMatrix = self.matrix.tocsc()
+                H.eliminate_zeros()
+            case "dense":
+                H: Matrix = self.matrix.todense()
+            case _:
+                raise RuntimeError("Requested matrix format is not yet supported")
 
         return H
 

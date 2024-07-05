@@ -8,18 +8,14 @@ authors = [
     {name = "Jabir Ali Ouassou", email = "jabir.ali.ouassou@hvl.no"},
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dynamic = ["version", "description"]
 
 dependencies = [
     "beartype",
     "numpy",
     "scipy",
-	"cupy",
-    "matplotlib",
-    "pandas",
     "tqdm",
-    "typer",
 ]
 
 [project.optional-dependencies]

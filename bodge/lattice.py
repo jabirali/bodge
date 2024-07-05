@@ -128,34 +128,35 @@ class CubicLattice(Lattice):
 
         If `axis` is not set, we iterate over bonds in all directions.
         """
-        if axis is None:
-            # Neighbors along all axes.
-            yield from self.bonds(axis=2)
-            yield from self.bonds(axis=1)
-            yield from self.bonds(axis=0)
-        elif axis == 0:
-            # Neighbors along x-axis.
-            for x in range(self.shape[0] - 1):
-                for y in range(self.shape[1]):
-                    for z in range(self.shape[2]):
-                        yield (x, y, z), (x + 1, y, z)
-                        yield (x + 1, y, z), (x, y, z)
-        elif axis == 1:
-            # Neighbors along y-axis.
-            for x in range(self.shape[0]):
-                for y in range(self.shape[1] - 1):
-                    for z in range(self.shape[2]):
-                        yield (x, y, z), (x, y + 1, z)
-                        yield (x, y + 1, z), (x, y, z)
-        elif axis == 2:
-            # Neighbors along z-axis.
-            for x in range(self.shape[0]):
-                for y in range(self.shape[1]):
-                    for z in range(self.shape[2] - 1):
-                        yield (x, y, z), (x, y, z + 1)
-                        yield (x, y, z + 1), (x, y, z)
-        else:
-            raise ValueError("No such axis")
+        match axis:
+            case None:
+                # Neighbors along all axes.
+                yield from self.bonds(axis=2)
+                yield from self.bonds(axis=1)
+                yield from self.bonds(axis=0)
+            case 0:
+                # Neighbors along x-axis.
+                for x in range(self.shape[0] - 1):
+                    for y in range(self.shape[1]):
+                        for z in range(self.shape[2]):
+                            yield (x, y, z), (x + 1, y, z)
+                            yield (x + 1, y, z), (x, y, z)
+            case 1:
+                # Neighbors along y-axis.
+                for x in range(self.shape[0]):
+                    for y in range(self.shape[1] - 1):
+                        for z in range(self.shape[2]):
+                            yield (x, y, z), (x, y + 1, z)
+                            yield (x, y + 1, z), (x, y, z)
+            case 2:
+                # Neighbors along z-axis.
+                for x in range(self.shape[0]):
+                    for y in range(self.shape[1]):
+                        for z in range(self.shape[2] - 1):
+                            yield (x, y, z), (x, y, z + 1)
+                            yield (x, y, z + 1), (x, y, z)
+            case _:
+                raise ValueError("No such axis")
 
     @typecheck
     def edges(self, axis: int | None = None) -> Iterator[Coords]:
@@ -168,28 +169,29 @@ class CubicLattice(Lattice):
         If `axis` is not set, we iterate over edges in all directions.
         """
         Lx, Ly, Lz = self.shape[0], self.shape[1], self.shape[2]
-        if axis is None:
-            # Edges along all axes.
-            yield from self.edges(axis=2)
-            yield from self.edges(axis=1)
-            yield from self.edges(axis=0)
-        elif axis == 0:
-            # Edges at x=0 and x=Lx-1.
-            for y in range(Ly):
-                for z in range(Lz):
-                    yield (0, y, z), (Lx - 1, y, z)
-                    yield (Lx - 1, y, z), (0, y, z)
-        elif axis == 1:
-            # Edges at y=0 and y=Ly-1.
-            for x in range(Lx):
-                for z in range(Lz):
-                    yield (x, 0, z), (x, Ly - 1, z)
-                    yield (x, Ly - 1, z), (x, 0, z)
-        elif axis == 2:
-            # Edges at z=0 and z=Lz-1.
-            for x in range(Lx):
+        match axis:
+            case None:
+                # Edges along all axes.
+                yield from self.edges(axis=2)
+                yield from self.edges(axis=1)
+                yield from self.edges(axis=0)
+            case 0:
+                # Edges at x=0 and x=Lx-1.
                 for y in range(Ly):
-                    yield (x, y, 0), (x, y, Lz - 1)
-                    yield (x, y, Lz - 1), (x, y, 0)
-        else:
-            raise ValueError("No such axis")
+                    for z in range(Lz):
+                        yield (0, y, z), (Lx - 1, y, z)
+                        yield (Lx - 1, y, z), (0, y, z)
+            case 1:
+                # Edges at y=0 and y=Ly-1.
+                for x in range(Lx):
+                    for z in range(Lz):
+                        yield (x, 0, z), (x, Ly - 1, z)
+                        yield (x, Ly - 1, z), (x, 0, z)
+            case 2:
+                # Edges at z=0 and z=Lz-1.
+                for x in range(Lx):
+                    for y in range(Ly):
+                        yield (x, y, 0), (x, y, Lz - 1)
+                        yield (x, y, Lz - 1), (x, y, 0)
+            case _:
+                raise ValueError("No such axis")

@@ -35,7 +35,13 @@ computations. To use this, follow Intel's official instructions and
 then install the dependencies listed in `pyproject.toml`. Afterwards,
 simply run the various Bodge scripts directly in that environment.
 
+Another recommendation would be to install [CuPy][2], which is an
+optional dependency of this project. On machines with nVidia GPUs,
+you can then provide a `cuda=True` flag to some computational
+methods in order to perform GPU instead of CPU computations.
+
 [1]: https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html#gs.h2ajdj
+[2]: https://cupy.dev/
 
 
 

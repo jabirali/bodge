@@ -1,6 +1,5 @@
 """Collection of numerical algorithms that can be used on `Hamiltonian` instances."""
 
-import pandas as pd
 import scipy.linalg as la
 from tqdm import tqdm
 
@@ -30,7 +29,9 @@ def diagonalize(system: Hamiltonian) -> tuple[Matrix, Matrix]:
 
 
 @typecheck
-def ldos(system: Hamiltonian, site: Coord, energies: Matrix, resolution=None) -> tuple[Matrix, Matrix]:
+def ldos(
+    system: Hamiltonian, site: Coord, energies: Matrix, resolution=None
+) -> tuple[Matrix, Matrix]:
     """Calculate the local density of states via a resolvent operator approach.
 
     We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
