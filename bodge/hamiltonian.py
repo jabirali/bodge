@@ -201,7 +201,7 @@ class Hamiltonian:
         return eigval, eigvec
 
     @typecheck
-    def free_energy(self, temperature: float = 0.01) -> float:
+    def free_energy(self, temperature: float = 0.0) -> float:
         """Calculate the Landau free energy for a given Hamiltonian.
 
         This is done by computing all the positive eigenvalues ε_n of the matrix,
