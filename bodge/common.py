@@ -15,7 +15,7 @@ Indices = tuple[Index, Index]
 Coords = tuple[Coord, Coord]
 
 # Data types for working with various matrix formats.
-Matrix = npt.NDArray[np.complex128]
+Matrix = npt.NDArray[np.float64] | npt.NDArray[np.complex128]
 CooMatrix = sp.coo_matrix
 DiaMatrix = sp.dia_matrix
 BsrMatrix = sp.bsr_matrix

@@ -7,7 +7,6 @@ For more information, please consult the bundled documentation and examples.
 from .common import *
 from .hamiltonian import *
 from .lattice import *
-from .utils import *
 
 __author__ = "Jabir Ali Ouassou"
 __version__ = "0.9.0"
@@ -21,7 +20,6 @@ __all__ = [
     "Index",
     "Indices",
     # Helper functions
-    "diagonalize",
     "ssd",
     "swave",
     "pwave",
