@@ -1,9 +1,18 @@
 # Bodge
 
-Bodge is a Python package for modeling large-scale tight-binding
-models in real space. Although general systems are supported, we
-especially focus on the BOgoliubov-DeGEnnes equations for modeling
-superconductivity, which is where the name of the package comes from.
+Bodge is a Python package for constructing large real-space tight-binding
+models. Although quite general tight-binding models can be constructed, we
+focus on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is used to model
+superconductivity in clean materials. In other words: If you want a lattice
+model for superconducting nanostructures, and want something that is easy to
+use and has high performance, then you've come to the right place.
+
+Internally, the package uses a sparse matrix (`scipy.sparse`) to represent the
+Hamiltonian, which allows you to efficiently construct tight-binding models
+with millions of lattice sites if needed. However, you can also easily convert
+the result to a dense matrix (`numpy.array`) if that's more convenient. The
+package follows modern software development practices: full test coverage
+(`pytest`), runtime type checks (`beartype`), and PEP-8 compliance (`black`).
 
 ## Installation
 To use the default Python version on your system, simply run:

@@ -22,8 +22,6 @@ __all__ = [
     "Indices",
     # Helper functions
     "diagonalize",
-    "free_energy",
-    "ldos",
     "ssd",
     "swave",
     "pwave",

@@ -15,7 +15,6 @@ dependencies = [
     "beartype",
     "numpy",
     "scipy",
-    "tqdm",
 ]
 
 [project.optional-dependencies]
