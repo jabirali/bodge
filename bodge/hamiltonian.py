@@ -14,8 +14,10 @@ class Hamiltonian:
 
     Internally, this constructs a block-sparse matrix (BSR format), enabling
     the construction of megadimensional tight-binding systems (>10^6 sites).
-    However, you can use the `__call__` method to export the result to other
+    However, you can use the `.matrix()` method to export the result to other
     common sparse matrix formats (e.g. CSR) or a dense matrix (NumPy array).
+    You can also use the `.diagonalize()` method to get the eigenvalues and
+    eigenvectors of the Hamiltonian, although this is usually inefficient.
 
     For examples of how to use this class, see the bundled documentation.
     """
@@ -58,11 +60,11 @@ class Hamiltonian:
 
         # Save a complex matrix that encodes the Hamiltonian matrix itself.
         # Each element is set to zero and must later be populated for use.
-        self.matrix: BsrMatrix = BsrMatrix(skeleton, dtype=np.complex128)
-        self.matrix.data[...] = 0
+        self._matrix: BsrMatrix = BsrMatrix(skeleton, dtype=np.complex128)
+        self._matrix.data[...] = 0
 
         # Simplify direct access to the underlying data structure.
-        self.data: Matrix = self.matrix.data
+        self._data: Matrix = self._matrix.data
 
     @typecheck
     def __enter__(self) -> tuple[dict[Coords, Matrix], dict[Coords, Matrix]]:
@@ -81,10 +83,10 @@ class Hamiltonian:
         all the elements of H and Δ to the correct locations in the Hamiltonian.
         """
         # Prepare storage for the context manager.
-        self.hopp = {}
-        self.pair = {}
+        self._hopp = {}
+        self._pair = {}
 
-        return self.hopp, self.pair
+        return self._hopp, self._pair
 
     @typecheck
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -97,38 +99,39 @@ class Hamiltonian:
         - Verifying that the constructed Hamiltonian is actually Hermitian.
         """
         # Process hopping terms: H[i, j].
-        for (i, j), val in self.hopp.items():
+        for (i, j), val in self._hopp.items():
             # Find this matrix block.
             k = self.index(i, j)
 
             # Update respecting electron-hole symmetry.
-            self.data[k, 0:2, 0:2] = +val
-            self.data[k, 2:4, 2:4] = -val.conj()
+            self._data[k, 0:2, 0:2] = +val
+            self._data[k, 2:4, 2:4] = -val.conj()
 
         # Process pairing terms: Δ[i, j].
-        for (i, j), val in self.pair.items():
+        for (i, j), val in self._pair.items():
             # Find this matrix block.
             k1 = self.index(i, j)
             k2 = self.index(j, i)
 
             # Update respecting Hermitian symmetry.
-            self.data[k1, 0:2, 2:4] = +val
-            self.data[k2, 2:4, 0:2] = +val.T.conj()
+            self._data[k1, 0:2, 2:4] = +val
+            self._data[k2, 2:4, 0:2] = +val.T.conj()
 
         # Verify that the matrix is Hermitian.
-        if np.max(np.abs(self.matrix - self.matrix.getH())) > 1e-6:
+        if np.max(np.abs(self._matrix - self._matrix.getH())) > 1e-6:
             raise RuntimeError("The constructed Hamiltonian is not Hermitian!")
 
         # Reset accessors.
-        del self.hopp
-        del self.pair
+        del self._hopp
+        del self._pair
 
     @typecheck
-    def __call__(self, format: str = "csr") -> SpMatrix | Matrix:
+    def matrix(self, format: str = "dense") -> SpMatrix | Matrix:
         """Return a specific matrix representation of the Hamiltonian.
 
         If the format is set to "dense", the result is returned as a NumPy
-        array. Otherwise, a SciPy sparse matrix is returned instead.
+        array. If it is set to one of {"bsr", "csr", "csc"}, then the
+        corresponding SciPy sparse matrix format is used instead.
         """
         # Transform the stored matrix into the requested matrix format. Trim
         # any remaining zero entries if a sparse matrix is requested.
@@ -136,16 +139,16 @@ class Hamiltonian:
             case "bsr":
                 # NOTE: Don't run eliminate_zeros on the original matrix, as that
                 # would preclude adding new elements to the Hamiltonian later.
-                H: BsrMatrix = self.matrix.copy()
+                H: BsrMatrix = self._matrix.copy()
                 H.eliminate_zeros()
             case "csr":
-                H: CsrMatrix = self.matrix.tocsr()
+                H: CsrMatrix = self._matrix.tocsr()
                 H.eliminate_zeros()
             case "csc":
-                H: CscMatrix = self.matrix.tocsc()
+                H: CscMatrix = self._matrix.tocsc()
                 H.eliminate_zeros()
             case "dense":
-                H: Matrix = self.matrix.todense()
+                H: Matrix = self._matrix.todense()
             case _:
                 raise RuntimeError("Requested matrix format is not yet supported")
 
@@ -158,7 +161,7 @@ class Hamiltonian:
         This can be used to access `self.data[index, :, :]` when direct
         changes to the encapsulated block-sparse matrix are required.
         """
-        indices, indptr = self.matrix.indices, self.matrix.indptr
+        indices, indptr = self._matrix.indices, self._matrix.indptr
 
         i, j = self.lattice[row], self.lattice[col]
         js = indices[indptr[i] : indptr[i + 1]]
@@ -171,9 +174,11 @@ class Hamiltonian:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
         This calculates and returns the eigenvalues and eigenvectors of the system.
-        If you run it as `E, v = diagonalize(system)`, then the eigenvalue `E[n]`
+        If you run it as `E, v = system.diagonalize()`, then the eigenvalue `E[n]`
         corresponds to the eigenvector `v[n, :, :]`, where the remaining indices
-        of the vector correspond to a position index and a Nambu⊗Spin index.
+        of the vector correspond to a position index and a Nambu⊗Spin index. The
+        last one means that at a given lattice site `i`, `v[n, i, 0:3]` will give
+        you the eigenvector components corresponding to indices {e↑, e↓, h↑, h↓}.
 
         Please note that this function uses *dense* matrices and thus requires
         a lot of compute power and memory for large matrices. Many computations
@@ -181,7 +186,7 @@ class Hamiltonian:
         a lattice with millions of sites I would consider alternative methods.
         """
         # Convert to a dense matrix.
-        H = self(format="dense")
+        H = self.matrix(format="dense")
 
         # Calculate the relevant eigenvalues and eigenvectors.
         eigval, eigvec = la.eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
@@ -194,6 +199,55 @@ class Hamiltonian:
         eigvec = eigvec.T.reshape((eigval.size, -1, 4))
 
         return eigval, eigvec
+
+    @typecheck
+    def free_energy(self, temperature: float = 0.01) -> float:
+        """Calculate the Landau free energy for a given Hamiltonian.
+
+        This is done by computing all the positive eigenvalues ε_n of the matrix,
+        and subsequently evaluating the entropy contributions to the free energy.
+        The resulting free energy is then formulated as F = U - TS, where U is
+        the internal energy (calculated from ɛ_n), T is the provided temperature,
+        and S is the system's entropy (calculated from ε_n and T).
+
+        In general, U has a constant contribution as well which corresponds to
+        the non-matrix parts to the Hamiltonian operator. This contribution
+        can't be calculated by this method as it is not part of the Hamiltonian
+        matrix. For non-selfconsistent calculations, you usually don't need this
+        constant. However, since this "constant" contribution is generally a
+        function of the mean fields, you need to add it to the return value of
+        this function for selfconsistent calculations to be correct.
+
+        The algorithm implemented here is explained in Appendix C of:
+
+            Ouassou et al. PRB 109, 174506 (2024).
+            DOI: 10.1103/PhysRevB.109.174506
+        """
+        T = temperature
+        H = self.matrix(format="dense")
+
+        # Calculate the eigenvalues via a dense parallel algorithm. My benchmarks
+        # have shown that this is usually faster than using the sparse solver.
+        ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
+
+        # Extract the positive eigenvalues.
+        ε = ε[ε > 0]
+
+        # Internal energy.
+        U = -(1 / 2) * np.sum(ε)
+
+        # Entropy contribution.
+        if T == 0:
+            S = 0
+        elif T > 0:
+            S = np.sum(np.log(1 + np.exp(-ε / T)))
+        else:
+            raise ValueError("Expected non-negative temperature!")
+
+        # Free energy
+        F = U - T * S
+
+        return F
 
 
 def swave() -> Callable:
@@ -308,6 +362,9 @@ def ssd(system: Hamiltonian) -> Callable:
 
     Hodt et al. PRB 107, 224427 (2023).
     DOI: 10.1103/PhysRevB.107.224427
+
+    TODO: Consider integrating this into `Hamiltonian.__exit__` to
+    make it more transparent to the user (if it proves very useful).
     """
 
     # Define the profile φ(i, j) used in the SSD method.

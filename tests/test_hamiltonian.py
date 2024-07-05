@@ -25,7 +25,7 @@ def test_hermitian():
             Δ[i, j] = 9 * σ3 + 11 * σ2
 
     # Verify that the result is Hermitian.
-    H = system.matrix.todense()
+    H = system._matrix.todense()
     assert np.allclose(H, H.T.conj())
 
     # Check non-hermiticity warnings.
@@ -46,10 +46,10 @@ def test_compilation():
             Δ[i, j] = 2 * σ3 + 5 * σ2
 
     # Construct matrix instances in different formats.
-    H_BSR = system(format="bsr")
-    H_CSR = system(format="csr")
-    H_CSC = system(format="csc")
-    H_DNS = system(format="dense")
+    H_BSR = system.matrix(format="bsr")
+    H_CSR = system.matrix(format="csr")
+    H_CSC = system.matrix(format="csc")
+    H_DNS = system.matrix(format="dense")
 
     # Check that the dense matrix looks right.
     assert np.real(H_DNS[0, 0]) == 3
@@ -67,9 +67,9 @@ def test_compilation():
 
     # Test error handling.
     with raises(Exception):
-        H = system(format="blah")
+        H = system.matrix(format="blah")
     with raises(Exception):
-        H = system(format=1)
+        H = system.matrix(format=1)
 
 
 def test_swave_hermitian():
@@ -87,7 +87,7 @@ def test_swave_hermitian():
             H[i, j] = -1 * σ0
             Δ[i, j] = -0.3 * σ_s(i, j)  # Extended s-wave
 
-    H = system.matrix.todense()
+    H = system._matrix.todense()
     assert np.allclose(H, H.T.conj())
 
 
@@ -186,7 +186,7 @@ def test_pwave_hermitian():
             for i, j in lattice.bonds():
                 Δ[i, j] = -0.1 * Δ_p(i, j)
 
-        H = system.matrix.todense()
+        H = system._matrix.todense()
         assert np.allclose(H, H.T.conj())
 
 
@@ -235,7 +235,7 @@ def test_dwave_hermitian():
             H[i, j] = -1 * σ0
             Δ[i, j] = -0.1 * Δ_d(i, j)
 
-    H = system.matrix.todense()
+    H = system._matrix.todense()
     assert np.allclose(H, H.T.conj())
 
 
@@ -283,7 +283,7 @@ def test_diagonalize():
             H[i, j] = -1 * σ0
 
     # Calculate the eigenvalues the manual way.
-    H = system(format="dense")
+    H = system.matrix(format="dense")
     E, X = eigh(H, subset_by_value=(0, np.inf))
     X = X.T
 
@@ -304,3 +304,37 @@ def test_diagonalize():
             assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
             assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
             assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
+
+
+def test_free_energy():
+    # Instantiate a simple S/N/F system.
+    lattice = CubicLattice((10, 7, 3))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ):
+        for i in lattice.sites():
+            if i[0] <= 3:
+                H[i, i] = -0.5 * σ0
+                Δ[i, i] = -1.0 * jσ2
+            if i[0] >= 7:
+                H[i, i] = +0.5 * σ0 + 1.5 * σ3
+
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0
+
+    # Verify the expression for free energy.
+    ε, χ = system.diagonalize()
+    ε = np.hstack([-ε, +ε])
+    for T in [0.01, 0.1, 1.0]:
+        # Use the predefined function.
+        F1 = system.free_energy(T)
+
+        # Use standard expression.
+        F2 = -(T / 2) * np.sum(np.log(1 + np.exp(-ε / T)))
+
+        assert np.allclose(F1, F2)
+
+    # Check the zero-temperature result.
+    F1 = system.free_energy(0.0)
+    F2 = (1 / 2) * np.sum(ε[ε < 0])
+    assert np.allclose(F1, F2)
