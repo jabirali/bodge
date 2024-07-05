@@ -167,17 +167,13 @@ class Hamiltonian:
         return Index(k[0, 0])
 
     @typecheck
-    def diagonalize(self, cuda=False) -> tuple[Matrix, Matrix]:
+    def diagonalize(self) -> tuple[Matrix, Matrix]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
         This calculates and returns the eigenvalues and eigenvectors of the system.
         If you run it as `E, v = diagonalize(system)`, then the eigenvalue `E[n]`
         corresponds to the eigenvector `v[n, :, :]`, where the remaining indices
         of the vector correspond to a position index and a Nambu⊗Spin index.
-
-        If you set the flag `cuda=True`, then the computations are run on an
-        nVidia GPU using CUDA. This requires you to install the optional
-        dependency `CuPy`, as well as having a compatible graphics card.
 
         Please note that this function uses *dense* matrices and thus requires
         a lot of compute power and memory for large matrices. Many computations
@@ -188,39 +184,14 @@ class Hamiltonian:
         H = self(format="dense")
 
         # Calculate the relevant eigenvalues and eigenvectors.
-        if cuda:
-            # GPU-accelerated branch using CuPy.
-            try:
-                # Import libraries.
-                import cupy as cp
-                import cupy.linalg as cla
-
-                # Diagonalize using CUDA.
-                H = cp.asarray(H)
-                eigval, eigvec = cla.eigh(H)
-                eigval = cp.asnumpy(eigval)
-                eigvec = cp.asnumpy(eigvec)
-
-                # Extract positive eigenvalues.
-                ind = np.where(eigval > 0)
-                eigval, eigvec = eigval[ind], eigvec[:, ind]
-            except ModuleNotFoundError:
-                raise RuntimeError(
-                    "Optional dependency `cupy` must be installed to use the flag `cuda=True`."
-                )
-        else:
-            # CPU fallback branch using SciPy.
-            eigval, eigvec = la.eigh(
-                H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr"
-            )
-            eigval = np.array(eigval)
-            eigvec = np.array(eigvec)
+        eigval, eigvec = la.eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
+        eigval = np.array(eigval)
+        eigvec = np.array(eigvec)
 
         # Restructure the eigenvectors to have the format eigvec[n, i, α],
         # where n corresponds to eigenvalue E[n], i is a position index, and
         # α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
         eigvec = eigvec.T.reshape((eigval.size, -1, 4))
-        print(type(eigval), type(eigvec))
 
         return eigval, eigvec
 

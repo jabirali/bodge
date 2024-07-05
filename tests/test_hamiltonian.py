@@ -1,9 +1,8 @@
 import numpy as np
-from pytest import raises
-from scipy.linalg import eigh
-
 from bodge import *
 from bodge.common import *
+from pytest import raises
+from scipy.linalg import eigh
 
 
 def test_hermitian():
@@ -305,22 +304,3 @@ def test_diagonalize():
             assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
             assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
             assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
-
-    # If CuPy is available, then test that implementation as well.
-    # Since this feature is optional and doesn't work on all OS,
-    # we don't want it to be an error that CuPy doesn't work.
-    try:
-        import cupy
-
-        eigval, eigvec = system.diagonalize(cuda=True)
-        assert np.allclose(eigval, E)
-        for n, E_n in enumerate(E):
-            for m in range(100):
-                assert np.allclose(eigvec[n, m, 0], X[n, 4 * m + 0])
-                assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
-                assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
-                assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
-
-    except ModuleNotFoundError:
-        print("Warning: Skipping CUDA tests...")
-        pass
