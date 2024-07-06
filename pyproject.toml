@@ -23,7 +23,8 @@ dev = [
     "isort",
     "pytest",
     "pytest-cov",
-    "quarto"
+    "quarto",
+    "flit",
 ]
 
 [tool.black]

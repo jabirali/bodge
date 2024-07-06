@@ -57,7 +57,7 @@ operations, but this is just a friendly interface; under the hood a lot of
 operations, while enforcing particle-hole and Hermitian symmetries. Once you're
 done with the construction, you can call `system.matrix()` to extract the
 Hamiltonian matrix itself (in dense or sparse form), or use methods such as
-`system.diagonalize()` and `system.free_energy()` to extract its properties.
+`system.diagonalize()` and `system.free_energy()` to get derived properties.
 
 ## Installation
 
