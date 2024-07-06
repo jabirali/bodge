@@ -23,10 +23,10 @@ This package is [published on PyPi][4], and is easily installed via `pip`:
 
 One of the main features of this package is a simple syntax if all you want to
 do is to create a real-space lattice Hamiltonian with some superconductivity.
-For instance, say that you want a $100\times100$ s-wave superconductor with
-a chemical potential $μ = -3t$, s-wave superconducting gap $Δ_s = 0.1t$,
-magnetic spin splitting along the z-direction $m = 0.05t$, and with
-nearest-neighbor hopping parameter $t = 1$. Using Bodge, you write:
+For instance, say that you want a $100a\times100a$ s-wave superconductor with
+a chemical potential $μ = -3t$, superconducting gap $Δ_s = 0.1t$, magnetic
+spin splitting along the z-direction $m = 0.05t$, and with nearest-neighbor
+hopping parameter $t = 1$. Using Bodge, you can just write:
 
 ```python
 from bodge import *
@@ -51,10 +51,9 @@ If you are familiar with tight-binding models, you might notice that this is
 intentionally very close to how one might write the corresponding equations
 with pen and paper. It is similarly easy to model more complex systems: you can
 e.g. easily add p-wave or d-wave superconductivity, magnetism, altermagnetism,
-antiferromagnetism, spin-orbit coupling, or inhomogeneities like interfaces. In
-general, `H[i, i]` and `H[i, j]` set the on-site and nearest-neighbor "normal"
-terms in the Hamiltonian matrix, and `Δ[i, i]` and `Δ[i, j]` set the
-corresponding pairing terms representing superconductivity.
+antiferromagnetism, spin-orbit coupling, etc. The lattice sites `i` and `j`
+are implemented as tuples `i = (x_i, y_i, z_i)`, so that you can easily use
+the lattice coordinates to design inhomogeneous materials via `if`-tests.
 
 The syntax used to construct the Hamiltonian is designed to look like array
 operations, but this is just a friendly interface; under the hood a lot of
@@ -63,6 +62,24 @@ operations, while enforcing particle-hole and Hermitian symmetries. Once you're
 done with the construction, you can call `system.matrix()` to extract the
 Hamiltonian matrix itself (in dense or sparse form), or use methods such as
 `system.diagonalize()` and `system.free_energy()` to get derived properties.
+
+Formally, the Hamiltonian operator that corresponds to the constructed matrix is
+
+$`\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,`$
+
+where $`\hat{c}_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)`$
+is a vector of all spin-dependent electron operators on lattice site $i$ and
+$E_0$ is a constant. The $4\times4$ matrix $\hat{H}_{ij}$ in Nambu⊗Spin space
+is generally further decomposed into $2\times2$ blocks in spin space:
+
+$`\mathcal{H}_{ij} = \begin{pmatrix} H_{ij} & \Delta_{ij} \\ \Delta^\dagger_{ij} & -H^*_{ij} \end{pmatrix}`$
+
+It is precisely these $2\times2$ blocks $H_{ij}$ and $\Delta_{ij}$ that are
+specified when you provide Bodge with values for `H[i, j]` and `∆[i, j]`.
+After the matrix construction compltes, you obtain a $4N\times4N$ matrix
+in Lattice⊗Nambu⊗Spin space, where $N$ is the number of lattice sites.
+You don't need to specify the bottom row of $\hat{H}_{ij}$ as these follow
+from symmetry, and Bodge will warn you if the Hamiltonian is non-Hermitian.
 
 ## Development
 After cloning the [Git repository][5] on a Unix-like system, you can run:
