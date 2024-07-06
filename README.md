@@ -87,7 +87,6 @@ unit tests, run scripts that use the Bodge package, or run the
 autoformatter after you have updated the code. PRs are welcome!
 
 ## Acknowledgements
-
 I wrote most of this code as a PostDoc in the research group of Prof. Jacob
 Linder at the [Center for Quantum Spintronics, NTNU, Norway][1]. I would like
 to thank Jacob for introducing me to the BdG formalism that is implemented in
