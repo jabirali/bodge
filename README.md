@@ -65,14 +65,14 @@ Hamiltonian matrix itself (in dense or sparse form), or use methods such as
 
 Formally, the Hamiltonian operator that corresponds to the constructed matrix is
 
-$`\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,`$
+$$\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,$$
 
-where $`\hat{c}_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)`$
+where $\hat{c}\_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)$
 is a vector of all spin-dependent electron operators on lattice site $i$ and
 $E_0$ is a constant. The $4\times4$ matrix $\hat{H}_{ij}$ in Nambu⊗Spin space
 is generally further decomposed into $2\times2$ blocks in spin space:
 
-$`\mathcal{H}_{ij} = \begin{pmatrix} H_{ij} & \Delta_{ij} \\ \Delta^\dagger_{ij} & -H^*_{ij} \end{pmatrix}`$
+$$\mathcal{H}\_{ij} = \begin{pmatrix} H_{ij} & \Delta_{ij} \\\\ \Delta^\dagger_{ij} & -H^*_{ij} \end{pmatrix}$$
 
 It is precisely these $2\times2$ blocks $H_{ij}$ and $\Delta_{ij}$ that are
 specified when you provide Bodge with values for `H[i, j]` and `∆[i, j]`.
