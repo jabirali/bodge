@@ -1,11 +1,13 @@
 # Bodge
-
 Bodge is a Python package for constructing large real-space tight-binding
 models. Although quite general tight-binding models can be constructed, we
 focus on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is used to model
 superconductivity in clean materials. In other words: If you want a lattice
 model for superconducting nanostructures, and want something that is
 computationally efficient yet easy to use, you've come to the right place.
+During my PostDoc, this code was used to investigate several interesting
+research topics in superconductivity, including the [DC Josephson effect in
+altermagnets][2] and [RKKY interaction in triplet superconductors][3].
 
 Internally, the package uses a sparse matrix (`scipy.sparse`) to represent the
 Hamiltonian, which allows you to efficiently construct tight-binding models
@@ -15,6 +17,9 @@ package follows modern software development practices: full test coverage
 (`pytest`), runtime type checks (`beartype`), and PEP-8 compliance (`black`).
 
 ## Quickstart
+This package is [published on PyPi][4], and is easily installed via `pip`:
+
+    pip install bodge
 
 One of the main features of this package is a simple syntax if all you want to
 do is to create a real-space lattice Hamiltonian with some superconductivity.
@@ -59,9 +64,8 @@ done with the construction, you can call `system.matrix()` to extract the
 Hamiltonian matrix itself (in dense or sparse form), or use methods such as
 `system.diagonalize()` and `system.free_energy()` to get derived properties.
 
-## Installation
-
-To use the default Python version on your system, simply run:
+## Development
+After cloning the [Git repository][5] on a Unix-like system, you can run:
 
 	make install
 
@@ -80,7 +84,7 @@ Afterwards, mention what Python version to use when installing Bodge:
 Run `make` without any command-line arguments to see how to proceed
 further. This should provide information on how to run the bundled
 unit tests, run scripts that use the Bodge package, or run the
-autoformatter after updates.
+autoformatter after you have updated the code. PRs are welcome!
 
 ## Acknowledgements
 
@@ -88,11 +92,9 @@ I wrote most of this code as a PostDoc in the research group of Prof. Jacob
 Linder at the [Center for Quantum Spintronics, NTNU, Norway][1]. I would like
 to thank Jacob for introducing me to the BdG formalism that is implemented in
 this package – and before that, to the theory superconductivity in general.
-During my PostDoc, this code was used to investigate several interesting
-research topics in superconductivity, including the [dc Josephson effect in
-altermagnets][2] and [RKKY interaction in triplet superconductors][3].
 
 [1]: https://www.ntnu.edu/quspin
 [2]: https://doi.org/10.1103/PhysRevLett.131.076003
 [3]: https://dx.doi.org/10.1103/PhysRevB.109.174506
-
+[4]: https://pypi.org/project/bodge/
+[5]: https://github.com/jabirali/bodge
