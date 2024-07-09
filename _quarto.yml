@@ -1,0 +1,19 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - TUTORIAL.md
+
+website:
+  title: "Bodge documentation"
+  navbar:
+    left:
+      - href: https://github.com/jabirali/bodge
+        text: GitHub repository
+      - href: https://pypi.org/project/bodge/
+        text: PyPi package
+
+format:
+  html:
+    theme: united
+    toc: true
