@@ -16,6 +16,8 @@ the result to a dense matrix (`numpy.array`) if that's more convenient. The
 package follows modern software development practices: full test coverage
 (`pytest`), runtime type checks (`beartype`), and PEP-8 compliance (`black`).
 
+The full documentation of the Bodge package is available [here][0].
+
 ## Quickstart
 This package is [published on PyPi][4], and is easily installed via `pip`:
 
@@ -80,6 +82,8 @@ Lattice⊗Nambu⊗Spin space, where $N$ is the number of lattice sites. You don'
 need to specify the bottom row of $\hat{H}_{ij}$ as these follow from symmetry,
 and Bodge will warn you if the Hamiltonian is non-Hermitian.
 
+For more information on usage, please see [the full documentation][0].
+
 ## Development
 After cloning the [Git repository][5] on a Unix-like system, you can run:
 
@@ -108,6 +112,7 @@ Linder at the [Center for Quantum Spintronics, NTNU, Norway][1]. I would like
 to thank Jacob for introducing me to the BdG formalism that is implemented in
 this package – and before that, to the theory superconductivity in general.
 
+[0]: https://jabirali.github.io/bodge/
 [1]: https://www.ntnu.edu/quspin
 [2]: https://doi.org/10.1103/PhysRevLett.131.076003
 [3]: https://dx.doi.org/10.1103/PhysRevB.109.174506
