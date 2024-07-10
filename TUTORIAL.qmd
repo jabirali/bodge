@@ -1,0 +1,81 @@
+---
+title: "Bodge tutorial"
+date: 2024-07-09
+author:
+  - name: Jabir Ali Ouassou
+    email: jabir.ali.ouassou@hvl.no
+    url: https://scholar.google.com/citations?user=SbyugkkAAAAJ
+abstract: > 
+  Bodge is a Python package for constructing large real-space tight-binding
+  models. Although quite general tight-binding models can be constructed, we
+  focus on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is used to
+  model superconductivity in clean materials. So if you want a lattice model
+  for superconducting nanostructures, and want something that is efficient yet
+  easy to use, then you've come to the right place.
+---
+
+# Installation
+
+Bodge has been [uploaded](https://pypi.org/project/bodge/) to the Python Package Index (PyPI). This means that if you have a recent version of Python and Pip installed on your system, installing this package should be as simple as:
+
+    pip install bodge
+
+For more installation alternatives, please see the [README on GitHub](https://github.com/jabirali/bodge).
+
+The next two sections below discusses in some detail how Bodge has been designed and implemented. If you just want to *use* the package, feel free to skip directly to the section [Getting started][] below.
+
+# Mathematical background
+
+In condensed matter physics, one usually writes the Hamiltonian operator $\mathcal{H}$ of some physical system in the language of quantum field theory. To describe electrons living in a crystal lattice (e.g. a metal), the basic building blocks we need are an operator $c_{i\sigma}^\dagger$ that "puts" an electron with spin $\sigma \in \{\uparrow, \downarrow\}$ at a lattice site described by some index $i$, and another operator $c_{i\sigma}$ that "removes" a corresponding electron from that site. One can describe many physical phenomena in this way. For instance, a product $c^\dagger_{1,\uparrow} c_{2,\downarrow}^{\phantom{\dagger}}$ of two such operators would remove a spin-down electron from site $2$ and place a spin-up electron at site $1$: this models an electron that jumps between two lattice sites while flipping its spin. After summing many terms like this, the Hamiltonian operator $\mathcal{H}$ will contain a complete description of the permitted processes in our model – which can then be used to determine the system's ground state, order parameters, electric currents, and other properties of interest.
+
+We here focus on systems that can harbor superconductivity, which is often modeled using variants of the "Bogoliubov-deGennes Hamiltonian". In a very general form, such a Hamiltonian operator can be written:
+$$\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,$$
+where $\hat{c}_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)$ is a vector of all spin-dependent electron operators on lattice site $i$. $E_0$ is a constant that can often be neglected, but can be important if you need to self-consistently determine any order parameters. The $4\times4$ matrices $\hat{H}_{ij}$ can be further decomposed into $2\times2$ blocks $H_{ij}$ and $\Delta_{ij}$:
+$$\hat{H}_{ij} = \begin{pmatrix} H_{ij} & \Delta_{ij} \\ \Delta^\dagger_{ij} & -H^*_{ij} \end{pmatrix}.$$
+Physically, the matrices $\{ H_{ij} \}$ describe all the non-superconducting properties of the system. A typical example of a non-magnetic system – and what some people might call *the* tight-binding model – would be:
+$$H_{ij} = \begin{cases} -\mu\sigma_0 & \text{if $i = j$,} \\ -t\sigma_0 & \text{if $i, j$ are neighbors,} \\ 0 & \text{otherwise.} \end{cases}$$
+Here, $\sigma_0$ is a $2\times2$ identity matrix, signifying that the Hamiltonian has no spin structure and therefore no magnetic properties.
+The constant $\mu$ is the chemical potential and provides a contribution to the Hamiltonian for every electron that is present regardless of lattice site, while the constant $t$ is the hopping amplitude which parametrizes how easily the electrons jump between neighboring lattice sites. In magnetic systems, one can use the Pauli vector $\boldsymbol{\sigma} = (\sigma_1, \sigma_2, \sigma_3)$ in on-site terms (first row) to model ferromagnets and antiferromagnets, or in nearest-neighbor terms (second row) to model altermagnets and spin-orbit coupling. Moreover, in the example above we have considered a homogeneous system – basically, one uniform chunk of metal. But once can easily make $H_{ij}$ a function of the exact values of $i$ and $j$, in which case one can model inhomogeneous systems where e.g. a magnetic field only appears in one half of the system.
+
+In the context of this library, the other matrices $\{ \Delta_{ij} \}$ are particularly interesting: These represent electron-electron pairing and are used to model superconductivity. The simplest is the conventional Bardeen–Cooper–Schrieffer (BCS) superconductivity, also known as "$s$-wave spin-singlet superconductivity". This can be modeled using an on-site pairing:
+$$\Delta_{ij} = \begin{cases} -\Delta_s i\sigma_2 & \text{if $i = j$,} \\ 0 & \text{otherwise.} \end{cases}$$
+But the same formalism can be used to model other types of "unconventional" superconductivity. For instance, the $d$-wave superconductivity that is common in "high-temperature superconductors" can be described by the expression
+$$\Delta_{ij} = \begin{cases} -\Delta_d i\sigma_2 & \text{if $i$ and $j$ are neighbors along the $x$ axis,} \\ +\Delta_d i\sigma_2 & \text{if $i$ and $j$ are neighbors along the $y$ axis,} \\ 0 & \text{otherwise.} \end{cases}$$
+
+Thus, we have motivated that the formalism above is able to describe a quite general condensed-matter systems including superconductors. For more information, many books have been written on this topic, and e.g. the textbook [Bogoliubov-de Gennes method and its applications](https://doi.org/10.1007/978-3-319-31314-6) might be a good place to start.
+
+The Bodge package essentially provides an interface that lets you directly set the elements of $H_{ij}$ and $\Delta_{ij}$ discussed above via a Pythonic interface (specifically, a context manager). You don't have to manually specify $\Delta^\dagger_{ij}$ and $-H^*_{ij}$, since these are fixed by Hermitian and particle-hole symmetries. The main output is then a $4N \times 4N$ matrix of the form
+$$\check{H} = \begin{pmatrix} \hat{H}_{11} & \cdots & \hat{H}_{1N} \\ \vdots & \ddots & \vdots \\ \hat{H}_{N1} & \cdots & \hat{H}_{NN} \end{pmatrix},$$
+where $N$ is the total number of lattice sites in the system. Since the eigenvalues and eigenvectors of this matrix are directly related to those of the original operator $\mathcal{H}$, we can without loss of generality use this matrix as its substitute when we want to make predictions about a physical system.
+
+# Technical details
+
+One of the main goals of Bodge is that it should be fast, and scale well even to very large systems (i.e. even for millions of lattice sites). In practice, this is achieved using sparse matrices internally. This is important because most tight-binding models result in extremely sparse Hamiltonians.
+
+For instance, consider a 2D square lattice with side lengths $L$, which has in total $N = L \times L$ lattice sites. The Hamiltonian matrix $\check{H}$ of this system contains $\mathcal{O}(N^2)$ elements. However, there are only $N$ on-site terms and $4N$ nearest-neighbor terms, resulting in only $\mathcal{O}(N)$ non-zero elements in this matrix. Thus, the proportion of non-zero elements in the matrix scales as $\mathcal{O}(1/N)$, resulting in a huge waste of CPU and RAM for large $N$. If we use sparse matrices, then only the non-zero elements are actually stored in memory and used in e.g. matrix multiplications, thus providing an $\mathcal{O}(N)$ improvement of many matrix algorithms. Internally, Bodge represents the Hamiltonian matrix as a `scipy.sparse.bsr_matrix` with block size 4, since we know that the $4N \times 4N$ Hamiltonian is constructed from $4\times4$ matrix blocks. Methods are however provided to convert this into either an `numpy.array` (dense matrix) or other relevant `scipy.sparse` matrix format.
+
+Below, I show some results generated using `misc/benchmark.py`. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with $N$ atomic sites using both Bodge and [Kwant](https://kwant-project.org/). The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark. 
+```{python}
+#| code-fold: true
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.style.use("bmh")
+
+df = pd.read_csv("misc/benchmark.csv")
+sns.lineplot(df, x="Atoms", y="Seconds", hue="Package")
+plt.xscale("log")
+plt.yscale("log")
+```
+As you can see, both libraries construct the Hamiltonian in $\mathcal{O}(N)$ time, in contrast to the $\mathcal{O}(N^2)$ time one might have expected if one used dense matrices. On my machine, both libraries can construct a 2D Hamiltonian with one million lattice sites in roughly two minutes.
+
+Note that Bodge assumes that we are only interested in on-site and nearest-neighbor interactions. This is the most common use case, and constrains the sparsity structure of the resulting Hamiltonian.
+
+# Getting started
+
+This section is still under construction.
+
+# Examples
+
+This section is still under construction.

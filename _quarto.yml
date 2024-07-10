@@ -2,7 +2,7 @@ project:
   type: website
   output-dir: docs
   render:
-    - TUTORIAL.md
+    - TUTORIAL.qmd
 
 website:
   title: "Bodge tutorial"
@@ -11,7 +11,7 @@ website:
       - href: https://github.com/jabirali/bodge
         text: GitHub
       - href: https://pypi.org/project/bodge/
-        text: PyPi
+        text: PyPI
 
 format:
   html:
