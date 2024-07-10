@@ -24,7 +24,7 @@ For more installation alternatives, please see the [README on GitHub](https://gi
 
 The next two sections below discusses in some detail how Bodge has been designed and implemented. If you just want to *use* the package, feel free to skip directly to the section [Getting started][] below.
 
-# Mathematical background
+# BdG Hamiltonian
 
 In condensed matter physics, one usually writes the Hamiltonian operator $\mathcal{H}$ of some physical system in the language of quantum field theory. To describe electrons living in a crystal lattice (e.g. a metal), the basic building blocks we need are an operator $c_{i\sigma}^\dagger$ that "puts" an electron with spin $\sigma \in \{\uparrow, \downarrow\}$ at a lattice site described by some index $i$, and another operator $c_{i\sigma}$ that "removes" a corresponding electron from that site. One can describe many physical phenomena in this way. For instance, a product $c^\dagger_{1,\uparrow} c_{2,\downarrow}^{\phantom{\dagger}}$ of two such operators would remove a spin-down electron from site $2$ and place a spin-up electron at site $1$: this models an electron that jumps between two lattice sites while flipping its spin. After summing many terms like this, the Hamiltonian operator $\mathcal{H}$ will contain a complete description of the permitted processes in our model – which can then be used to determine the system's ground state, order parameters, electric currents, and other properties of interest.
 
@@ -48,13 +48,13 @@ The Bodge package essentially provides an interface that lets you directly set t
 $$\check{H} = \begin{pmatrix} \hat{H}_{11} & \cdots & \hat{H}_{1N} \\ \vdots & \ddots & \vdots \\ \hat{H}_{N1} & \cdots & \hat{H}_{NN} \end{pmatrix},$$
 where $N$ is the total number of lattice sites in the system. Since the eigenvalues and eigenvectors of this matrix are directly related to those of the original operator $\mathcal{H}$, we can without loss of generality use this matrix as its substitute when we want to make predictions about a physical system.
 
-# Technical details
+# Sparse matrices
 
 One of the main goals of Bodge is that it should be fast, and scale well even to very large systems (i.e. even for millions of lattice sites). In practice, this is achieved using sparse matrices internally. This is important because most tight-binding models result in extremely sparse Hamiltonians.
 
 For instance, consider a 2D square lattice with side lengths $L$, which has in total $N = L \times L$ lattice sites. The Hamiltonian matrix $\check{H}$ of this system contains $\mathcal{O}(N^2)$ elements. However, there are only $N$ on-site terms and $4N$ nearest-neighbor terms, resulting in only $\mathcal{O}(N)$ non-zero elements in this matrix. Thus, the proportion of non-zero elements in the matrix scales as $\mathcal{O}(1/N)$, resulting in a huge waste of CPU and RAM for large $N$. If we use sparse matrices, then only the non-zero elements are actually stored in memory and used in e.g. matrix multiplications, thus providing an $\mathcal{O}(N)$ improvement of many matrix algorithms. Internally, Bodge represents the Hamiltonian matrix as a `scipy.sparse.bsr_matrix` with block size 4, since we know that the $4N \times 4N$ Hamiltonian is constructed from $4\times4$ matrix blocks. Methods are however provided to convert this into either an `numpy.array` (dense matrix) or other relevant `scipy.sparse` matrix format.
 
-Below, I show some results generated using `misc/benchmark.py`. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with $N$ atomic sites using both Bodge and [Kwant](https://kwant-project.org/). The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark. 
+Below, I show some results generated using `misc/benchmark.py`. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with $N$ atomic sites using both Bodge and [Kwant](https://kwant-project.org/). The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark. As you can see, both libraries construct the Hamiltonian in $\mathcal{O}(N)$ time, in contrast to the $\mathcal{O}(N^2)$ time one might have expected if one used dense matrices.
 ```{python}
 #| code-fold: true
 
@@ -68,7 +68,7 @@ sns.lineplot(df, x="Atoms", y="Seconds", hue="Package")
 plt.xscale("log")
 plt.yscale("log")
 ```
-As you can see, both libraries construct the Hamiltonian in $\mathcal{O}(N)$ time, in contrast to the $\mathcal{O}(N^2)$ time one might have expected if one used dense matrices. On my machine, both libraries can construct a 2D Hamiltonian with one million lattice sites in roughly two minutes.
+On my machine, both libraries can construct a 2D Hamiltonian with one million lattice sites in roughly two minutes. For comparison: To construct this Hamiltonian using dense matrices (NumPy arrays), we would have needed to store $4N \times 4N$ complex doubles, which would require minimum 256 TB of RAM... Whereas only $(N+4N)(4\times4)$ complex doubles are required for the sparse representation, requiring a bit more than 1 GB of RAM.
 
 Note that Bodge assumes that we are only interested in on-site and nearest-neighbor interactions. This is the most common use case, and constrains the sparsity structure of the resulting Hamiltonian.
 
