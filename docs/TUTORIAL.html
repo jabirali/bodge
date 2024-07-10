@@ -9,7 +9,7 @@
 <meta name="author" content="Jabir Ali Ouassou">
 <meta name="dcterms.date" content="2024-07-09">
 
-<title>Bodge documentation</title>
+<title>Bodge tutorial - Bodge documentation</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -69,6 +69,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -80,7 +109,7 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Bodge documentation</span>
+    <span class="navbar-title">Bodge tutorial</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -91,11 +120,11 @@ ul.task-list li input[type="checkbox"] {
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
     <a class="nav-link" href="https://github.com/jabirali/bodge"> 
-<span class="menu-text">GitHub repository</span></a>
+<span class="menu-text">GitHub</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="https://pypi.org/project/bodge/"> 
-<span class="menu-text">PyPi package</span></a>
+<span class="menu-text">PyPi</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -109,7 +138,16 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
+  <li><a href="#mathematical-background" id="toc-mathematical-background" class="nav-link" data-scroll-target="#mathematical-background">Mathematical background</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting started</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -126,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Jabir Ali Ouassou <a href="mailto:jabir.ali.ouassou@hvl.no" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+             <p><a href="https://scholar.google.com/citations?user=SbyugkkAAAAJ">Jabir Ali Ouassou</a> <a href="mailto:jabir.ali.ouassou@hvl.no" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
           </div>
   </div>
     
@@ -151,9 +189,29 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This website is currently under construction.</p>
+<section id="installation" class="level1">
+<h1>Installation</h1>
+<p>Bodge has been <a href="https://pypi.org/project/bodge/">uploaded</a> to the official PyPi package repository. This means that if you have a recent version of Python and Pip installed on your system, installing this package should be as simple as:</p>
+<pre><code>pip install bodge</code></pre>
+<p>For more installation alternatives, please see the <a href="https://github.com/jabirali/bodge">README file on GitHub</a>.</p>
+</section>
+<section id="mathematical-background" class="level1">
+<h1>Mathematical background</h1>
+<p>In condensed matter physics, one usually describes the Hamiltonian <span class="math inline">\(\mathcal{H}\)</span> of a system using the quantum field theory. In the context of crystal lattices, the building blocks are then one operator <span class="math inline">\(c_{i\sigma}^\dagger\)</span> that “puts” an electron with spin <span class="math inline">\(\sigma \in \{\uparrow, \downarrow\}\)</span> at a lattice site described by some index <span class="math inline">\(i\)</span>, and another operator <span class="math inline">\(c_{i\sigma}\)</span> that “removes” a corresponding electron from that site. One can then describe many physical phenomena in this language: <span class="math inline">\(c^\dagger_{i+1,\uparrow} c_{i,\downarrow}\)</span> would e.g.&nbsp;remove a spin-down electron from site <span class="math inline">\(i\)</span> and place a spin-up electron at site <span class="math inline">\(i+1\)</span>, thus describing an electron that “hops” between two lattice sites while flipping its spin. By summing up the different allowed processes on the lattice, the Hamiltonian operator <span class="math inline">\(\mathcal{H}\)</span> contains a description of all the permitted processes in our model – which can then be used to determine the system’s ground state, order parameters, electric currents, etc.</p>
+<p>We here focus on systems that can harbor superconductivity, which is often modeled using variants of the “Bogoliubov-deGennes Hamiltonian”. In a very general form, such a Hamiltonian operator can be written: <span class="math display">\[\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,\]</span> where <span class="math inline">\(\hat{c}_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)\)</span> is a vector of all spin-dependent electron operators on lattice site <span class="math inline">\(i\)</span> and <span class="math inline">\(E_0\)</span> is a constant. The <span class="math inline">\(4\times4\)</span> matrix <span class="math inline">\(\hat{H}_{ij}\)</span> is generally further decomposed into <span class="math inline">\(2\times2\)</span> blocks <span class="math inline">\(H_{ij}\)</span> and <span class="math inline">\(\Delta_{ij}\)</span>: <span class="math display">\[\hat{H}_{ij} = \begin{pmatrix} H_{ij} &amp; \Delta_{ij} \\ \Delta^\dagger_{ij} &amp; -H^*_{ij} \end{pmatrix}.\]</span> Physically, the matrix <span class="math inline">\(H_{ij}\)</span> describes all the non-superconducting components in the system. A typical example of a non-magnetic system – and what some people might call <em>the</em> tight-binding model – would be: <span class="math display">\[H_{ij} = \begin{cases} -\mu\sigma_0 &amp; \text{if $i = j$,} \\ -t\sigma_0 &amp; \text{if $i, j$ are neighbors,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span> Here, <span class="math inline">\(\sigma_0\)</span> is a <span class="math inline">\(2\times2\)</span> identity matrix, signifying that the Hamiltonian has no spin structure and therefore no magnetic properties. The constant <span class="math inline">\(\mu\)</span> is the chemical potential and provides a contribution to the Hamiltonian for every present electron, while the constant <span class="math inline">\(t\)</span> is the hopping amplitude which parametrizes how mobile the electrons are. In magnetic systems, one can include the Pauli vector <span class="math inline">\(\boldsymbol{\sigma} = (\sigma_1, \sigma_2, \sigma_3)\)</span> in on-site terms (first row) to model ferromagnets and antiferromagnets, or in nearest-neighbor terms (second row) to model altermagnets and spin-orbit coupling.</p>
+<p>The other matrix <span class="math inline">\(\Delta_{ij}\)</span> represents electron-electron pairing, and models different forms of superconductivity on the lattice. The simplest version is the conventional Bardeen–Cooper–Schrieffer (BCS) superconductivity, also known as “<span class="math inline">\(s\)</span>-wave spin-singlet superconductivity”. This is most easily modeled using an on-site electron-electron pairing: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_s i\sigma_2 &amp; \text{if $i = j$,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span> But the same formalism can be used to model other types of “unconventional” superconductivity. For instance, the <span class="math inline">\(d\)</span>-wave superconductivity that appears at “high temperatures” (liquid nitrogen) in cuprates can be described by the more complicated expression <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d i\sigma_2 &amp; \text{if $i$ and $j$ are neighbors along the $x$ axis,} \\ +\Delta_d i\sigma_2 &amp; \text{if $i$ and $j$ are neighbors along the $y$ axis,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span></p>
+<p>Thus, we have motivated that the equation above is able to describe a quite general class of materials. Bodge essentially provides an interface that lets you directly set the elements of <span class="math inline">\(H_{ij}\)</span> and <span class="math inline">\(\Delta_{ij}\)</span> using a Python context manager, thus simplifying the process of constructing tight-binding models on a computer. The main assumption behind the Bodge implementation is that we are <em>only</em> interested in on-site and nearest-neighbor interactions, and not e.g.&nbsp;next-nearest-neighbor interactions (sometimes used to study magnetic frustration) or long-distance interactions (sometimes relevant for strongly correlated systems). For the majority of tight-binding models, nearest-neighbor interactions is however an acceptable and realistic cutoff, and this assumption makes the Bodge source code faster and cleaner.</p>
+</section>
+<section id="getting-started" class="level1">
+<h1>Getting started</h1>
+<p>This section is still under construction.</p>
+</section>
+<section id="examples" class="level1">
+<h1>Examples</h1>
+<p>This section is still under construction.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

@@ -5,15 +5,15 @@ project:
     - TUTORIAL.md
 
 website:
-  title: "Bodge documentation"
+  title: "Bodge tutorial"
   navbar:
     left:
       - href: https://github.com/jabirali/bodge
-        text: GitHub repository
+        text: GitHub
       - href: https://pypi.org/project/bodge/
-        text: PyPi package
+        text: PyPi
 
 format:
   html:
-    theme: united
+    theme: journal
     toc: true
