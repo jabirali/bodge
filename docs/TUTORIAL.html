@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.53">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jabir Ali Ouassou">
+<meta name="dcterms.date" content="2024-07-09">
+
+<title>Bodge tutorial</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Bodge tutorial</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/jabirali/bodge"> 
+<span class="menu-text">GitHub</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://pypi.org/project/bodge/"> 
+<span class="menu-text">PyPI</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
+  <li><a href="#mathematical-background" id="toc-mathematical-background" class="nav-link" data-scroll-target="#mathematical-background">Mathematical background</a></li>
+  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical details</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting started</a>
+  <ul class="collapse">
+  <li><a href="#normal-metal" id="toc-normal-metal" class="nav-link" data-scroll-target="#normal-metal">Normal metal</a></li>
+  </ul></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Bodge tutorial</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://scholar.google.com/citations?user=SbyugkkAAAAJ">Jabir Ali Ouassou</a> <a href="mailto:jabir.ali.ouassou@hvl.no" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 9, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+<div>
+  <div class="abstract">
+    <div class="block-title">Abstract</div>
+    <p>Bodge is a Python package for constructing large real-space tight-binding models. Although quite general tight-binding models can be constructed, we focus on the Bogoliubov-DeGennes (“BoDGe”) Hamiltonian, which is used to model superconductivity in clean materials. So if you want a lattice model for superconducting nanostructures, and want something that is efficient yet easy to use, then you’ve come to the right place.</p>
+  </div>
+</div>
+
+
+</header>
+
+
+<section id="installation" class="level1">
+<h1>Installation</h1>
+<p>Bodge has been <a href="https://pypi.org/project/bodge/">uploaded</a> to the Python Package Index (PyPI). This means that if you have a recent version of Python and Pip installed on your system, installing this package should be as simple as:</p>
+<pre><code>pip install bodge</code></pre>
+<p>For more installation alternatives, please see the <a href="https://github.com/jabirali/bodge">README on GitHub</a>.</p>
+<p>The next two sections below discusses in some detail how Bodge has been designed and implemented. If you just want to <em>use</em> the package, feel free to skip directly to the section <a href="#getting-started">Getting started</a> below.</p>
+</section>
+<section id="mathematical-background" class="level1">
+<h1>Mathematical background</h1>
+<p>In condensed matter physics, one usually writes the Hamiltonian operator <span class="math inline">\(\mathcal{H}\)</span> of some physical system in the language of quantum field theory. To describe electrons living in a crystal lattice (e.g.&nbsp;a metal), the basic building blocks we need are an operator <span class="math inline">\(c_{i\sigma}^\dagger\)</span> that “puts” an electron with spin <span class="math inline">\(\sigma \in \{\uparrow, \downarrow\}\)</span> at a lattice site described by some index <span class="math inline">\(i\)</span>, and another operator <span class="math inline">\(c_{i\sigma}\)</span> that “removes” a corresponding electron from that site. One can describe many physical phenomena in this way. For instance, a product <span class="math inline">\(c^\dagger_{1,\uparrow} c_{2,\downarrow}^{\phantom{\dagger}}\)</span> of two such operators would remove a spin-down electron from site <span class="math inline">\(2\)</span> and place a spin-up electron at site <span class="math inline">\(1\)</span>: this models an electron that jumps between two lattice sites while flipping its spin. After summing many terms like this, the Hamiltonian operator <span class="math inline">\(\mathcal{H}\)</span> will contain a complete description of the permitted processes in our model – which can then be used to determine the system’s ground state, order parameters, electric currents, and other properties of interest.</p>
+<p>We here focus on systems that can harbor superconductivity, which is often modeled using variants of the “Bogoliubov-deGennes Hamiltonian”. In a very general form, such a Hamiltonian operator can be written: <span class="math display">\[\mathcal{H} = E_0 + \frac{1}{2} \sum_{ij} \hat{c}^\dagger_i \hat{H}_{ij} \hat{c}_j,\]</span> where <span class="math inline">\(\hat{c}_i = (c_{i\uparrow}, c_{i\downarrow}, c_{i\uparrow}^\dagger, c_{i\downarrow}^\dagger)\)</span> is a vector of all spin-dependent electron operators on lattice site <span class="math inline">\(i\)</span>. <span class="math inline">\(E_0\)</span> is a constant that can often be neglected, but can be important if you need to self-consistently determine any order parameters. The <span class="math inline">\(4\times4\)</span> matrices <span class="math inline">\(\hat{H}_{ij}\)</span> can be further decomposed into <span class="math inline">\(2\times2\)</span> blocks <span class="math inline">\(H_{ij}\)</span> and <span class="math inline">\(\Delta_{ij}\)</span>: <span class="math display">\[\hat{H}_{ij} = \begin{pmatrix} H_{ij} &amp; \Delta_{ij} \\ \Delta^\dagger_{ij} &amp; -H^*_{ij} \end{pmatrix}.\]</span> Physically, the matrices <span class="math inline">\(\{ H_{ij} \}\)</span> describe all the non-superconducting properties of the system. A typical example of a non-magnetic system – and what some people might call <em>the</em> tight-binding model – would be: <span class="math display">\[H_{ij} = \begin{cases} -\mu\sigma_0 &amp; \text{if $i = j$,} \\ -t\sigma_0 &amp; \text{if $i, j$ are neighbors,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span> Here, <span class="math inline">\(\sigma_0\)</span> is a <span class="math inline">\(2\times2\)</span> identity matrix, signifying that the Hamiltonian has no spin structure and therefore no magnetic properties. The constant <span class="math inline">\(\mu\)</span> is the chemical potential and provides a contribution to the Hamiltonian for every electron that is present regardless of lattice site, while the constant <span class="math inline">\(t\)</span> is the hopping amplitude which parametrizes how easily the electrons jump between neighboring lattice sites. In magnetic systems, one can use the Pauli vector <span class="math inline">\(\boldsymbol{\sigma} = (\sigma_1, \sigma_2, \sigma_3)\)</span> in on-site terms (first row) to model ferromagnets and antiferromagnets, or in nearest-neighbor terms (second row) to model altermagnets and spin-orbit coupling. Moreover, in the example above we have considered a homogeneous system – basically, one uniform chunk of metal. But once can easily make <span class="math inline">\(H_{ij}\)</span> a function of the exact values of <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, in which case one can model inhomogeneous systems where e.g.&nbsp;a magnetic field only appears in one half of the system.</p>
+<p>In the context of this library, the other matrices <span class="math inline">\(\{ \Delta_{ij} \}\)</span> are particularly interesting: These represent electron-electron pairing and are used to model superconductivity. The simplest is the conventional Bardeen–Cooper–Schrieffer (BCS) superconductivity, also known as “<span class="math inline">\(s\)</span>-wave spin-singlet superconductivity”. This can be modeled using an on-site pairing: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_s i\sigma_2 &amp; \text{if $i = j$,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span> But the same formalism can be used to model other types of “unconventional” superconductivity. For instance, the <span class="math inline">\(d\)</span>-wave superconductivity that is common in “high-temperature superconductors” can be described by the expression <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d i\sigma_2 &amp; \text{if $i$ and $j$ are neighbors along the $x$ axis,} \\ +\Delta_d i\sigma_2 &amp; \text{if $i$ and $j$ are neighbors along the $y$ axis,} \\ 0 &amp; \text{otherwise.} \end{cases}\]</span></p>
+<p>Thus, we have motivated that the formalism above is able to describe a quite general condensed-matter systems including superconductors. For more information, many books have been written on this topic, and e.g.&nbsp;the textbook <a href="https://doi.org/10.1007/978-3-319-31314-6">Bogoliubov-de Gennes method and its applications</a> might be a good place to start.</p>
+<p>The Bodge package essentially provides an interface that lets you directly set the elements of <span class="math inline">\(H_{ij}\)</span> and <span class="math inline">\(\Delta_{ij}\)</span> discussed above via a Pythonic interface (specifically, a context manager). You don’t have to manually specify <span class="math inline">\(\Delta^\dagger_{ij}\)</span> and <span class="math inline">\(-H^*_{ij}\)</span>, since these are fixed by Hermitian and particle-hole symmetries. The main output is then a <span class="math inline">\(4N \times 4N\)</span> matrix of the form <span class="math display">\[\check{H} = \begin{pmatrix} \hat{H}_{11} &amp; \cdots &amp; \hat{H}_{1N} \\ \vdots &amp; \ddots &amp; \vdots \\ \hat{H}_{N1} &amp; \cdots &amp; \hat{H}_{NN} \end{pmatrix},\]</span> where <span class="math inline">\(N\)</span> is the total number of lattice sites in the system. Since the eigenvalues and eigenvectors of this matrix are directly related to those of the original operator <span class="math inline">\(\mathcal{H}\)</span>, we can without loss of generality use this matrix as its substitute when we want to make predictions about a physical system.</p>
+</section>
+<section id="technical-details" class="level1">
+<h1>Technical details</h1>
+<p>One of the main goals of Bodge is that it should be fast, and scale well even to very large systems (i.e.&nbsp;even for millions of lattice sites). In practice, this is achieved using sparse matrices internally. This is important because most tight-binding models result in extremely sparse Hamiltonians.</p>
+<p>For instance, consider a 2D square lattice with side lengths <span class="math inline">\(L\)</span>, which has in total <span class="math inline">\(N = L \times L\)</span> lattice sites. The Hamiltonian matrix <span class="math inline">\(\check{H}\)</span> of this system contains <span class="math inline">\(\mathcal{O}(N^2)\)</span> elements. However, there are only <span class="math inline">\(N\)</span> on-site terms and <span class="math inline">\(4N\)</span> nearest-neighbor terms, resulting in only <span class="math inline">\(\mathcal{O}(N)\)</span> non-zero elements in this matrix. Thus, the proportion of non-zero elements in the matrix scales as <span class="math inline">\(\mathcal{O}(1/N)\)</span>, resulting in a huge waste of CPU and RAM for large <span class="math inline">\(N\)</span>. If we use sparse matrices, then only the non-zero elements are actually stored in memory and used in e.g.&nbsp;matrix multiplications, thus providing an <span class="math inline">\(\mathcal{O}(N)\)</span> improvement of many matrix algorithms. Internally, Bodge represents the Hamiltonian matrix as a <code>scipy.sparse.bsr_matrix</code> with block size 4, since we know that the <span class="math inline">\(4N \times 4N\)</span> Hamiltonian is constructed from <span class="math inline">\(4\times4\)</span> matrix blocks. Methods are however provided to convert this into either an <code>numpy.array</code> (dense matrix) or other relevant <code>scipy.sparse</code> matrix format.</p>
+<p>Below, I show some results generated using <code>misc/benchmark.py</code>. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with <span class="math inline">\(N\)</span> atomic sites using both Bodge and <a href="https://kwant-project.org/">Kwant</a>. The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark.</p>
+<div id="b981ad7c" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">"bmh"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"misc/benchmark.csv"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>sns.lineplot(df, x<span class="op">=</span><span class="st">"Atoms"</span>, y<span class="op">=</span><span class="st">"Seconds"</span>, hue<span class="op">=</span><span class="st">"Package"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TUTORIAL_files/figure-html/cell-2-output-1.png" width="597" height="431" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As you can see, both libraries construct the Hamiltonian in <span class="math inline">\(\mathcal{O}(N)\)</span> time, in contrast to the <span class="math inline">\(\mathcal{O}(N^2)\)</span> time one might have expected if one used dense matrices. On my machine, both libraries can construct a 2D Hamiltonian with one million lattice sites in roughly two minutes.</p>
+<p>Note that Bodge assumes that we are only interested in on-site and nearest-neighbor interactions. This is the most common use case, and constrains the sparsity structure of the resulting Hamiltonian.</p>
+</section>
+<section id="getting-started" class="level1">
+<h1>Getting started</h1>
+<p>I believe the easiest way to get started is “learning by doing”, so let’s have a look at some examples of how one can use Bodge in practice.</p>
+<section id="normal-metal" class="level2">
+<h2 class="anchored" data-anchor-id="normal-metal">Normal metal</h2>
+<p>This section is still under construction.</p>
+<div id="4e7164e1" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((<span class="dv">32</span>, <span class="dv">32</span>, <span class="dv">1</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="dv">3</span><span class="op">*</span>t</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#system.diagonalize</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="examples" class="level1">
+<h1>Examples</h1>
+<p>This section is still under construction.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

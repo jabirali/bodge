@@ -1,0 +1,16 @@
+[
+  {
+    "objectID": "TUTORIAL.html",
+    "href": "TUTORIAL.html",
+    "title": "Bodge tutorial",
+    "section": "",
+    "text": "Bodge has been uploaded to the Python Package Index (PyPI). This means that if you have a recent version of Python and Pip installed on your system, installing this package should be as simple as:\npip install bodge\nFor more installation alternatives, please see the README on GitHub.\nThe next two sections below discusses in some detail how Bodge has been designed and implemented. If you just want to use the package, feel free to skip directly to the section Getting started below."
+  },
+  {
+    "objectID": "TUTORIAL.html#normal-metal",
+    "href": "TUTORIAL.html#normal-metal",
+    "title": "Bodge tutorial",
+    "section": "Normal metal",
+    "text": "Normal metal\nThis section is still under construction.\n\nfrom bodge import *\n\nlattice = CubicLattice((32, 32, 1))\nsystem = Hamiltonian(lattice)\n\nt = 1\nμ = -3*t\n\nwith system as (H, Δ):\n    for i in lattice.sites():\n        H[i, i] = -μ * σ0\n    for i, j in lattice.bonds():\n        H[i, j] = -t * σ0\n\n#system.diagonalize"
+  }
+]
