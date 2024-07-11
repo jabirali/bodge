@@ -17,7 +17,6 @@ format:
   html:
     theme: journal
     toc: true
-  ipynb: default
 
 execute: 
   cache: true

@@ -3,7 +3,7 @@ Bodge is a Python package for constructing large real-space tight-binding models
 
 Research papers where this code has been used include:
 - [DC Josephson effect in altermagnets][2]
-- [RKKY interaction in triplet superconductors][3].
+- [RKKY interaction in triplet superconductors][3]
 - [Dzyaloshinskii-Moriya spin-spin interaction from mixed-parity superconductivity][6]
 
 Internally, the package uses a sparse matrix (`scipy.sparse`) to represent the Hamiltonian, which allows you to efficiently construct tight-binding models with millions of lattice sites if needed. However, you can also easily convert the result to a dense matrix (`numpy.array`) if that's more convenient. The package follows modern software development practices: near-complete test coverage (`pytest`), fast runtime type checking (`beartype`), and mostly PEP-8 compliant (`black`).

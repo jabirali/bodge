@@ -151,14 +151,14 @@ with system as (H, Δ):
 
 ```
 
-## Unconventional superconductivity
+## Unconventional superconductors
 
 In unconventional superconductors, the electrons that form a Cooper pair reside on different lattice sites. Moreover, they often have a complex dependence on directionality, such that pairing terms along different cardinal axes on the lattice have different complex phases. Generally, this kind of pairing term contributes as follows to the Hamiltonian:
 $$\mathcal{H}_S = -\sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (\Delta_{ij})_{\sigma\sigma'} c^\dagger_{j\sigma'} + \text{h.c.,}$$
 where we have to specify some pairing function $\Delta_{ij}$.
 
 One example of such a state is a "$d$-wave singlet superconductor", which describes e.g. high-temperature cuprates. This can be modeled as:
-$$\Delta_{ij} = \begin{cases} -\Delta_d & \text{if $i, j$ are neighbors along the $x$ axis,\\ +\Delta_d & \text{if $i, j$ are neighbors along the $y$ axis,\\ 0 & \text{otherwise.}\end{cases}$$
+$$\Delta_{ij} = \begin{cases} -\Delta_d & \text{if $i, j$ are neighbors along the $x$ axis,}\\ +\Delta_d & \text{if $i, j$ are neighbors along the $y$ axis.}\end{cases}$$
 Implementing this kind of system in Bodge is straight-forward:
 ```{python}
 Δd = 0.1 * t
@@ -211,15 +211,15 @@ plt.ylabel("Density of states ρ(ω)")
 plt.plot(ω, ρ)
 ```
 
-More complex $d$-vector expressions are also possible; for instance, you can use `pwave("(e_x + je_y) * (p_x + jp_y) / 2")` to get a non-unitary chiral $p$-wave state. The main "rule" is that you need to write the $d$-vector in a form where all the unit vectors $\{ \mathbf{e}_x, \mathbf{e}_y, \mathbf{e}_z \}$ are written to the left of the momentum variables $\{ p_x, p_y, p_z \}$. Moreover, note that `je_y` etc. are available as short-hand notation for what we would otherwise write as `1j * e_y`. The algorithm used internally in `pwave` is described in Sec. II-B of [this paper](https://doi.org/10.1103/PhysRevB.109.174506).
+More complex $d$-vector expressions are also possible; for instance, you can use `pwave("(e_x + je_y) * (p_x + jp_y) / 2")` to get a non-unitary chiral $p$-wave state. The main "rule" is that you need to write the $d$-vector in a form where all the unit vectors $\{ \mathbf{e}_x, \mathbf{e}_y, \mathbf{e}_z \}$ are written to the left of the momentum variables $\{ p_x, p_y, p_z \}$. The algorithm used in `pwave` is described in Sec. II-B of [this paper](https://doi.org/10.1103/PhysRevB.109.174506).
 
-In addition to the `pwave` function, Bodge provides a `dwave` function for modeling $d_{x^2-y^2}$ superconductors and an `swave` function for consistency.
+In addition to the `pwave` function, Bodge provides a `dwave` function for modeling $d_{x^2-y^2}$ superconductors and an `swave` function for consistency. However, for singlet superconductors, you may find it easier to encode the tight-binding model "manually" as shown above.
 
-## Magnetism and spin-dependence
+## Magnetic materials
 
 Let us now consider a superconductor exposed to a strong magnetic field, where the Zeeman effect can result in a spin splitting. Alternatively, the same physics would arise in e.g. superconductor/ferromagnet bilayers, and Bodge can model these as well (you just need some simple `if` tests to determine which fields apply to which lattice sites).
 
-Magnetism can be modeled by introducing a spin-dependent term $-\mathbf{M} \cdot \boldsymbol{\sigma}$ into the on-site Hamiltonian $H_{ii}$. In the simple case $\mathbf{M} = M_z \mathbf{e}_z$ of a homogeneous magnetic field, we are simply left with a term $-M_z \sigma_3$ in the Hamiltonian. Modifying the code from [Conventional superconductor][], we get:
+Magnetism can be modeled by introducing a spin-dependent term $-\mathbf{M} \cdot \boldsymbol{\sigma}$ into the on-site Hamiltonian $H_{ii}$. In the simple case $\mathbf{M} = M_z \mathbf{e}_z$ of a homogeneous magnetic field, we are simply left with a term $-M_z \sigma_3$ in the Hamiltonian. Modifying the code for the [conventional superconductor][], we get:
 ```{python}
 import numpy as np
 import matplotlib.pyplot as plt
@@ -261,7 +261,7 @@ We see that the presence of magnetism causes the well-known "spin splitting" of 
 
 Other forms of spin-dependence are also easily implemented in Bodge:
 
-- Inhomogeneous magnetism can be implemented by setting `H[i, i] = -Mx(i) * σ1 - My(i) * σ2 - Mz(i) * σ3` for some functions $\{M_x(i), M_y(i), M_z(i)\}$. These can be set to analytical expressions (e.g. $M_x(i) = M \cos \nu x$) or from experimental fits.
+- Ferromagnetic domain walls can be implemented by setting `H[i, i] = -Mx(i) * σ1 - My(i) * σ2 - Mz(i) * σ3` for arbitrary functions $\{M_x(i), M_y(i), M_z(i)\}$ that depend on the lattice sites $i = (x_i, y_i, z_i)$.
 - Antiferromagnetism can be modeled by letting the spin alternate from site to site. For instance, `H[i, i] = -Mz * σ3 * (-1)**sum(i)` would create a "checkerboard-patterned" antiferromagnet.
 - Altermagnetism and spin-orbit coupling can be modeled by having spin-dependent hopping terms instead of spin-dependent on-site terms. For instance, you can let `H[i, j] = -t * σ0 -m * σ3`.
 

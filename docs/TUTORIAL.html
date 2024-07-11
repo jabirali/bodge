@@ -181,13 +181,13 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#normal-metal" id="toc-normal-metal" class="nav-link" data-scroll-target="#normal-metal">Normal metal</a></li>
   <li><a href="#conventional-superconductor" id="toc-conventional-superconductor" class="nav-link" data-scroll-target="#conventional-superconductor">Conventional superconductor</a></li>
-  <li><a href="#unconventional-superconductivity" id="toc-unconventional-superconductivity" class="nav-link" data-scroll-target="#unconventional-superconductivity">Unconventional superconductivity</a></li>
-  <li><a href="#magnetism-and-spin-dependence" id="toc-magnetism-and-spin-dependence" class="nav-link" data-scroll-target="#magnetism-and-spin-dependence">Magnetism and spin-dependence</a></li>
+  <li><a href="#unconventional-superconductors" id="toc-unconventional-superconductors" class="nav-link" data-scroll-target="#unconventional-superconductors">Unconventional superconductors</a></li>
+  <li><a href="#magnetic-materials" id="toc-magnetic-materials" class="nav-link" data-scroll-target="#magnetic-materials">Magnetic materials</a></li>
   </ul></li>
   <li><a href="#mathematical-details" id="toc-mathematical-details" class="nav-link" data-scroll-target="#mathematical-details">Mathematical details</a></li>
   <li><a href="#numerical-details" id="toc-numerical-details" class="nav-link" data-scroll-target="#numerical-details">Numerical details</a></li>
   </ul>
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="TUTORIAL.ipynb" download="TUTORIAL.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -362,10 +362,10 @@ window.Quarto = {
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="unconventional-superconductivity" class="level2">
-<h2 class="anchored" data-anchor-id="unconventional-superconductivity">Unconventional superconductivity</h2>
+<section id="unconventional-superconductors" class="level2">
+<h2 class="anchored" data-anchor-id="unconventional-superconductors">Unconventional superconductors</h2>
 <p>In unconventional superconductors, the electrons that form a Cooper pair reside on different lattice sites. Moreover, they often have a complex dependence on directionality, such that pairing terms along different cardinal axes on the lattice have different complex phases. Generally, this kind of pairing term contributes as follows to the Hamiltonian: <span class="math display">\[\mathcal{H}_S = -\sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (\Delta_{ij})_{\sigma\sigma'} c^\dagger_{j\sigma'} + \text{h.c.,}\]</span> where we have to specify some pairing function <span class="math inline">\(\Delta_{ij}\)</span>.</p>
-<p>One example of such a state is a “<span class="math inline">\(d\)</span>-wave singlet superconductor”, which describes e.g.&nbsp;high-temperature cuprates. This can be modeled as: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d &amp; \text{if $i, j$ are neighbors along the $x$ axis,\\ +\Delta_d &amp; \text{if $i, j$ are neighbors along the $y$ axis,\\ 0 &amp; \text{otherwise.}\end{cases}\]</span> Implementing this kind of system in Bodge is straight-forward:</p>
+<p>One example of such a state is a “<span class="math inline">\(d\)</span>-wave singlet superconductor”, which describes e.g.&nbsp;high-temperature cuprates. This can be modeled as: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d &amp; \text{if $i, j$ are neighbors along the $x$ axis,}\\ +\Delta_d &amp; \text{if $i, j$ are neighbors along the $y$ axis.}\end{cases}\]</span> Implementing this kind of system in Bodge is straight-forward:</p>
 <div id="0d161f28" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Δd <span class="op">=</span> <span class="fl">0.1</span> <span class="op">*</span> t</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
@@ -422,13 +422,13 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>More complex <span class="math inline">\(d\)</span>-vector expressions are also possible; for instance, you can use <code>pwave("(e_x + je_y) * (p_x + jp_y) / 2")</code> to get a non-unitary chiral <span class="math inline">\(p\)</span>-wave state. The main “rule” is that you need to write the <span class="math inline">\(d\)</span>-vector in a form where all the unit vectors <span class="math inline">\(\{ \mathbf{e}_x, \mathbf{e}_y, \mathbf{e}_z \}\)</span> are written to the left of the momentum variables <span class="math inline">\(\{ p_x, p_y, p_z \}\)</span>. Moreover, note that <code>je_y</code> etc. are available as short-hand notation for what we would otherwise write as <code>1j * e_y</code>. The algorithm used internally in <code>pwave</code> is described in Sec. II-B of <a href="https://doi.org/10.1103/PhysRevB.109.174506">this paper</a>.</p>
-<p>In addition to the <code>pwave</code> function, Bodge provides a <code>dwave</code> function for modeling <span class="math inline">\(d_{x^2-y^2}\)</span> superconductors and an <code>swave</code> function for consistency.</p>
+<p>More complex <span class="math inline">\(d\)</span>-vector expressions are also possible; for instance, you can use <code>pwave("(e_x + je_y) * (p_x + jp_y) / 2")</code> to get a non-unitary chiral <span class="math inline">\(p\)</span>-wave state. The main “rule” is that you need to write the <span class="math inline">\(d\)</span>-vector in a form where all the unit vectors <span class="math inline">\(\{ \mathbf{e}_x, \mathbf{e}_y, \mathbf{e}_z \}\)</span> are written to the left of the momentum variables <span class="math inline">\(\{ p_x, p_y, p_z \}\)</span>. The algorithm used in <code>pwave</code> is described in Sec. II-B of <a href="https://doi.org/10.1103/PhysRevB.109.174506">this paper</a>.</p>
+<p>In addition to the <code>pwave</code> function, Bodge provides a <code>dwave</code> function for modeling <span class="math inline">\(d_{x^2-y^2}\)</span> superconductors and an <code>swave</code> function for consistency. However, for singlet superconductors, you may find it easier to encode the tight-binding model “manually” as shown above.</p>
 </section>
-<section id="magnetism-and-spin-dependence" class="level2">
-<h2 class="anchored" data-anchor-id="magnetism-and-spin-dependence">Magnetism and spin-dependence</h2>
+<section id="magnetic-materials" class="level2">
+<h2 class="anchored" data-anchor-id="magnetic-materials">Magnetic materials</h2>
 <p>Let us now consider a superconductor exposed to a strong magnetic field, where the Zeeman effect can result in a spin splitting. Alternatively, the same physics would arise in e.g.&nbsp;superconductor/ferromagnet bilayers, and Bodge can model these as well (you just need some simple <code>if</code> tests to determine which fields apply to which lattice sites).</p>
-<p>Magnetism can be modeled by introducing a spin-dependent term <span class="math inline">\(-\mathbf{M} \cdot \boldsymbol{\sigma}\)</span> into the on-site Hamiltonian <span class="math inline">\(H_{ii}\)</span>. In the simple case <span class="math inline">\(\mathbf{M} = M_z \mathbf{e}_z\)</span> of a homogeneous magnetic field, we are simply left with a term <span class="math inline">\(-M_z \sigma_3\)</span> in the Hamiltonian. Modifying the code from <a href="#conventional-superconductor">Conventional superconductor</a>, we get:</p>
+<p>Magnetism can be modeled by introducing a spin-dependent term <span class="math inline">\(-\mathbf{M} \cdot \boldsymbol{\sigma}\)</span> into the on-site Hamiltonian <span class="math inline">\(H_{ii}\)</span>. In the simple case <span class="math inline">\(\mathbf{M} = M_z \mathbf{e}_z\)</span> of a homogeneous magnetic field, we are simply left with a term <span class="math inline">\(-M_z \sigma_3\)</span> in the Hamiltonian. Modifying the code for the <a href="#conventional-superconductor">conventional superconductor</a>, we get:</p>
 <div id="3f3c21e0" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -476,7 +476,7 @@ window.Quarto = {
 <p>We see that the presence of magnetism causes the well-known “spin splitting” of the density of states, where the sharp peaks at <span class="math inline">\(\omega = \pm\Delta_s\)</span> are split in two. The strength of this splitting is given by <span class="math inline">\(M_z\)</span>.</p>
 <p>Other forms of spin-dependence are also easily implemented in Bodge:</p>
 <ul>
-<li>Inhomogeneous magnetism can be implemented by setting <code>H[i, i] = -Mx(i) * σ1 - My(i) * σ2 - Mz(i) * σ3</code> for some functions <span class="math inline">\(\{M_x(i), M_y(i), M_z(i)\}\)</span>. These can be set to analytical expressions (e.g.&nbsp;<span class="math inline">\(M_x(i) = M \cos \nu x\)</span>) or from experimental fits.</li>
+<li>Ferromagnetic domain walls can be implemented by setting <code>H[i, i] = -Mx(i) * σ1 - My(i) * σ2 - Mz(i) * σ3</code> for arbitrary functions <span class="math inline">\(\{M_x(i), M_y(i), M_z(i)\}\)</span> that depend on the lattice sites <span class="math inline">\(i = (x_i, y_i, z_i)\)</span>.</li>
 <li>Antiferromagnetism can be modeled by letting the spin alternate from site to site. For instance, <code>H[i, i] = -Mz * σ3 * (-1)**sum(i)</code> would create a “checkerboard-patterned” antiferromagnet.</li>
 <li>Altermagnetism and spin-orbit coupling can be modeled by having spin-dependent hopping terms instead of spin-dependent on-site terms. For instance, you can let <code>H[i, j] = -t * σ0 -m * σ3</code>.</li>
 </ul>
