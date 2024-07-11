@@ -5,6 +5,7 @@ import numpy as np
 import numpy.typing as npt
 import scipy.linalg as la
 import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 from beartype import beartype as typecheck
 from beartype.typing import Callable, Iterator
 

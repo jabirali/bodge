@@ -249,6 +249,71 @@ class Hamiltonian:
 
         return F
 
+    def ldos(self, site: Coord, energies: Matrix) -> tuple[Matrix, Matrix]:
+        """Calculate the local density of states via a resolvent operator approach.
+
+        We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
+        divided into vectors R(ε) = [r_1 ... r_N] and I = [e_1 ... e_N]. Diagonal
+        elements of the resolvent matrix correspond to the density of states. By
+        calculating one vector at a time via a sparse linear solver `spsolve`, the
+        local density of states can be efficiently calculated at specific points.
+
+        Note that if the requested energies are symmetric around ε = 0, then only
+        half the calculations need to be performed due to particle-hole symmetry.
+
+        The algorithm implemented here is explained in detail in Appendix A of:
+
+        Ouassou et al. PRB 109, 174506 (2024).
+        DOI: 10.1103/PhysRevB.109.174506
+        """
+        # Sparse Hamiltonian and identity matrices.
+        H = self.matrix(format="csc")
+        I = sp.identity(H.shape[0], format="csc")
+
+        # Ensure that the input is NumPy floats.
+        energies = np.array(energies, dtype=float)
+
+        # Determine which energies we need calculations for.
+        ε = np.unique(np.abs(energies))
+
+        # Determine broadening parameter from the provided energies.
+        Γ = np.gradient(ε)
+
+        # Construct a reduced identity matrix for the relevant coordinate.
+        N = H.shape[1]
+        M = 4
+
+        i = self.lattice[site]
+        rows = np.array([4 * i + α for α in range(4)])
+        cols = np.arange(M)
+        data = np.repeat(1, M)
+
+        B = CscMatrix((data, (rows, cols)), shape=(N, M))
+
+        # Calculate the density of states.
+        ρ = {}
+        for ε_n, Γ_n in zip(ε, Γ):
+            # Solve the linear equations for the resolvent.
+            A = (ε_n + 1j * Γ_n) * I - H
+            X = spla.spsolve(A, B)
+
+            # Extract the few elements of interest.
+            x = X.multiply(B).sum(axis=0)
+
+            # Calculate and store the density of states.
+            e_up = x[0, 0]
+            e_dn = x[0, 1]
+            h_up = x[0, 2]
+            h_dn = x[0, 3]
+
+            ρ[+ε_n] = -np.imag(e_up + e_dn) / π
+            ρ[-ε_n] = -np.imag(h_up + h_dn) / π
+
+        # Extract only the requested values.
+        ρ = np.array([ρ[ε_n] for ε_n in energies])
+
+        return ρ
+
 
 def swave() -> Callable:
     """Hamiltonian terms for s-wave superconducting order.
