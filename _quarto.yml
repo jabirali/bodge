@@ -17,3 +17,8 @@ format:
   html:
     theme: journal
     toc: true
+
+execute: 
+  cache: true
+
+jupyter: python3

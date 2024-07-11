@@ -74,7 +74,108 @@ Note that Bodge assumes that we are only interested in on-site and nearest-neigh
 
 # Getting started
 
+I believe the easiest way to get started is "learning by doing", so let's have a look at some examples of how one can use Bodge in practice. For more advanced usage, I would recommend looking through the source code itself, which is documented in the form of docstrings and comments.
+
+## Normal-metal wire
+
+Let us start with a simple case: Calculating the local density of states (LDOS) in the middle of a long normal-metal wire. Such a wire can be considered as an $L_x \times L_y \times L_z$ cubic lattice where $L_x \gg  L_y = L_z = 1$. A normal metal is generally modeled as having only a chemical potential $\mu$ and a hopping amplitude $t.$ The following code performs the required calculations:
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+from bodge import *
+
+# Model parameters
+Lx = 512
+Ly = 1
+Lz = 1
+
+t = 1
+μ = 1.5 * t
+
+# Construct the Hamiltonian
+lattice = CubicLattice((Lx, Ly, Lz))
+system = Hamiltonian(lattice)
+
+with system as (H, _):
+    for i in lattice.sites():
+        H[i, i] = -μ * σ0
+    for i, j in lattice.bonds():
+        H[i, j] = -t * σ0
+
+# Calculate the central density of states.
+i = (Lx//2, Ly//2, Lz//2)
+ω = np.linspace(-5 * t, 5 * t, 101)
+ρ = system.ldos(i, ω)
+
+# Plot the density of states at the system center.
+plt.figure()
+plt.xlabel("Quasiparticle energi ω/t")
+plt.ylabel("Density of states ρ(ω)")
+plt.plot(ω, ρ)
+```
+
+Some things I want to elaborate on regarding this example:
+
+- Bodge implements a "context manager" for filling out terms `H[i, j]` in the Hamiltonian. So every time you want to update the Hamiltonian, you write a `with system as ...:` block, after which you can pretend that `H[i, j]` simply indexes a large Hamiltonian matrix. Once you exit the `with` block, Bodge takes care of the gory details: Transferring the terms in the Hamiltonian to the underlying sparse matrix, ensuring that Hermitian and particle-hole symmetries are satisfied, and complaining loudly if the Hamiltonian is non-Hermitian.
+- Note that everything you insert using `H[i, j] = ...` must be a $2\times2$ complex matrix, which is most easily done by multiplying coefficients with an identity matrix `σ0`, a Pauli matrix `σ1, σ2, σ3`, or their complex equivalents `jσ0 = 1j * σ0` etc. These symbols are automatically imported when you do `from bodge import *`. I like to code using Greek letters to keep the notation as close to a physics paper as possible, and typing Greek letters is usually straight-forward.[^1] But if you don't want to code using Unicode symbols, that is completely fine as well: Bodge doesn't *require* Unicode anywhere. Every object exported by the library has an ASCII version, so you can e.g. type `sigma0` and `jsigma2` instead of `σ0` and `jσ2` if you prefer that.
+- When instantiating the matrix, we can use `lattice.sites()` and `lattice.bonds()` to iterate over the whole lattice. In this case, we have kept it simple, and only have one type of on-site term and one type of hopping term, but Bodge itself is very flexible. You can e.g. use `lattice.bonds(axis=0)` to iterate over only bonds that point along the 0th axis (x axis), which is useful if you need different hopping terms in different directions. Moreover, each coordinate `i` above is simply a tuple `(x_i, y_i, z_i)` where $0 \leq x_i < L_x$ and so on. Thus, you can easily use some `if` tests on these coordinates to implement interfaces between different materials, or a function like `np.cos(ν * i[0])` to implement magnetic textures, etc.
+- Every `Hamiltonian` object must be instantiated on a `Lattice` object. Currently, only one lattice is implemented, namely the `CubicLattice` illustrated above. However, Bodge itself is designed to be completely independent of the lattice structure, and can easily be used with say a triangular or hexagonal lattice if you want: To do this, you only need to define your own subclass of `Lattice` where you implement methods `.sites()` and `.bonds()` that can be used to iterate over all the atomic sites and nearest-neighbor bonds in the lattice. The best way to learn how to do this, is to look at the `CubicLattice` code.
+- The `system.ldos` method implements an efficient sparse matrix algorithm to obtain the local density of states at only a single site $i$ – in this case, the center of the system. The algorithm implemented is explained in detail in Appendix A of [this paper](https://doi.org/10.1103/PhysRevB.109.174506), and is essentially a simplified version of the algorithm from [this paper](https://doi.org/10.7566/jpsj.86.014708).
+- If you wish, you can diagonalize the system instead using `E, X = system.diagonalize()`, and then use the eigenvalues `E[n]` and corresponding eigenvectors `X[n,:,:]` to obtain the density of states. This method uses dense matrices (NumPy arrays), and is significantly slower for large systems.
+
+[^1]: Examples: Vim has built-in "digraphs" where you can press `<C-k>s*` in insert mode to type `σ`. Emacs has a built-in "TeX input method", which means that after pressing `C-\` you can type `\sigma` to insert the symbol `σ`. Most other editors code have third-party plugins for this, e.g. [Unicode Latex](https://marketplace.visualstudio.com/items?itemName=oijaz.unicode-latex) for VSCode. Another option is to use an OS-wide snippet expander (e.g. TextExpander), which you can setup to e.g. convert `;s` to `σ` in any application. There are many alternatives!
+
+## BCS Superconductor
+
+Let's consider a small two-dimensional superconductor: Specifically, a $32\times32$ atom $s$-wave singlet superconductor.
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+from bodge import *
+
+# Model parameters
+Lx = 101
+Ly = 101
+
+t = 1
+μ = -3 * t
+Δs = 0.2 * t
+
+# Construct the Hamiltonian
+lattice = CubicLattice((Lx, Ly, 1))
+system = Hamiltonian(lattice)
+
+with system as (H, Δ):
+    for i in lattice.sites():
+        H[i, i] = -μ * σ0
+        Δ[i, i] = -Δs * jσ2
+    for i, j in lattice.bonds():
+        H[i, j] = -t * σ0
+
+# Calculate the central density of states for energies near the gap.
+i = (Lx//2, Ly//2, 0)
+ω = np.linspace(-1.5 * Δs, 1.5 * Δs, 101)
+ρ = system.ldos(i, ω)
+
+# Plot the density of states at the system center.
+plt.plot(ω, ρ)
+plt.xlabel("Quasiparticle energi ω/t")
+plt.ylabel("Density of states ρ(ω)")
+```
+
+`E, v = system.diagonalize()`
+
 This section is still under construction.
+
+
+## Superconductivity
+
+## Non-rectangular lattices
+
+All the examples above assume that we have a rectangular lattice, i.e. that the lattice is an instance of `CubicLattice`. However, this is not required to use Bodge itself, it is just the only lattice type implemented so far. If you wish to study other lattices – e.g. triangular or hexagonal lattices – the only thing you need to do is to create a subclass of `Lattice`, where you implement your own methods `.sites()`, `.bonds()`, and `.edges()` which can be used to iterate through your custom lattice. 
 
 # Examples
 
