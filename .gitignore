@@ -1,4 +1,5 @@
 /.quarto/
+/TUTORIAL_files/
 /dist/
 /venv/
 __pycache__
