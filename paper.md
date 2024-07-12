@@ -63,18 +63,18 @@ lattice = CubicLattice((64, 64, 1))
 system = Hamiltonian(lattice)
 
 with system as (H, Δ):
+    for i, j in lattice.bonds():
+        H[i, j] = -t * σ0
     for i in lattice.sites():
         if i[0] < 32:
             H[i, i] = -μ * σ0
             Δ[i, i] = -Δs * jσ2
         else:
             H[i, i] = -μ * σ0 - Mz * σ3
-    for i, j in lattice.bonds():
-        H[i, j] = -t * σ0
 
 H = system.matrix(format="csr")
 ```
-You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the local density of states, free energy, etc. of the system for you. More such convenience methods are currently under development.
+You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the density of states, free energy, etc. More such convenience methods are currently under development.
 
 # Acknowledgements
 
