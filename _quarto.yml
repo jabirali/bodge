@@ -2,7 +2,7 @@ project:
   type: website
   output-dir: docs
   render:
-    - TUTORIAL.qmd
+    - tutorial.qmd
 
 website:
   title: "Bodge tutorial"

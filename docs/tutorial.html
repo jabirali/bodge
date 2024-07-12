@@ -243,7 +243,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="normal-metal">Normal metal</h2>
 <p>The simplest electronic tight-binding model is arguably a one-dimensional normal-metal wire. As an introductory example, let’s therefore try to calculate the local density of states (LDOS) in the middle of such a wire.</p>
 <p>A wire can be considered an <span class="math inline">\(L_x \times L_y \times L_z\)</span> cubic lattice in the limit that <span class="math inline">\(L_x \gg  L_y = L_z\)</span>. The tight-binding model for normal metals contains only a chemical potential <span class="math inline">\(\mu\)</span> and a hopping amplitude <span class="math inline">\(t\)</span>, and is often written as: <span class="math display">\[\mathcal{H} = -\mu \sum_{i\sigma} c^\dagger_{i\sigma} c_{i\sigma} -t \sum_{\langle ij \rangle \sigma} c^\dagger_{i\sigma} c_{j\sigma}.\]</span> Bodge however requires that it be written in the form: <span class="math display">\[\mathcal{H} = \sum_{i\sigma\sigma'} c^\dagger_{i\sigma} (H_{ii})_{\sigma\sigma'} c_{i\sigma'} + \sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (H_{ij})_{\sigma\sigma'} c_{j\sigma'},\]</span> where <span class="math inline">\(H_{ii}\)</span> and <span class="math inline">\(H_{ij}\)</span> are <span class="math inline">\(2\times2\)</span> matrices that represents spin dependence. From this, we basically see that the system above can be summarized as: <span class="math display">\[H_{ij} = \begin{cases} -\mu\sigma_0 &amp; \text{if $i = j$,} \\ -t\sigma_0 &amp; \text{otherwise.} \end{cases}\]</span> This is precisely what we need to tell Bodge to create the desired Hamiltonian. The following code performs the calculations we want:</p>
-<div id="601a7b60" class="cell" data-execution_count="2">
+<div id="f79ab2f5" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standard imports in every numerical Python code</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -276,7 +276,7 @@ window.Quarto = {
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the central density of states</span></span>
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, Lz<span class="op">//</span><span class="dv">2</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span>μ<span class="op">-</span><span class="dv">4</span><span class="op">*</span>t, <span class="op">-</span>μ<span class="op">+</span><span class="dv">4</span><span class="op">*</span>t, <span class="dv">51</span>)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span>μ<span class="op">-</span><span class="dv">4</span><span class="op">*</span>t, <span class="op">-</span>μ<span class="op">+</span><span class="dv">4</span><span class="op">*</span>t, <span class="dv">101</span>)</span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the density of states at the system center</span></span>
@@ -287,7 +287,7 @@ window.Quarto = {
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="TUTORIAL_files/figure-html/cell-2-output-1.png" width="587" height="427" class="figure-img"></p>
+<p><img src="tutorial_files/figure-html/cell-2-output-1.png" width="589" height="429" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -305,7 +305,7 @@ window.Quarto = {
 <p>Let’s now consider a two-dimensional conventional (BCS) superconductor, which has an <span class="math inline">\(s\)</span>-wave singlet order parameter <span class="math inline">\(Δ_s\)</span>. In this case, we want to consider a medium-large <span class="math inline">\(101\times101\)</span> lattice, but are only interested in the density of states in a narrow energy range around the “superconducting gap” at the Fermi level – since this is the part of the energy spectrum that is relevant for most transport phenomena.</p>
 <p>Conventional superconductors can be described by a Hamiltonian operator <span class="math inline">\(\mathcal{H} = \mathcal{H}_N + \mathcal{H}_S\)</span> that contain both the normal-metal contributions <span class="math inline">\(\mathcal{H}_N\)</span> described under <a href="#normal-metal">normal metal</a> and an additional pairing term <span class="math display">\[\mathcal{H}_S = -\sum_{i\sigma\sigma'} c^\dagger_{i\sigma} (\Delta_s i\sigma_2)_{\sigma\sigma'} c^\dagger_{i\sigma'} + \text{h.c.,}\]</span> where <span class="math inline">\(\Delta_s\)</span> is a complex number that can in general be a function of position. The matrix <span class="math inline">\(i\sigma_2\)</span> simply produces a spin structure of the form <span class="math inline">\(\uparrow\downarrow - \downarrow\uparrow\)</span>, which is appropriate for a spin-singlet state.</p>
 <p>To model this using Bodge, we simply use a <code>with system as (H, Δ)</code> block to access the Hamiltonian object, and set the on-site terms <code>Δ[i, i]</code> to the contents <span class="math inline">\(\Delta_s i\sigma_2\)</span> of the parentheses above:</p>
-<div id="b81b5612" class="cell" data-execution_count="3">
+<div id="385b8570" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -332,7 +332,7 @@ window.Quarto = {
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">51</span>)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
 <span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
@@ -343,14 +343,14 @@ window.Quarto = {
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="TUTORIAL_files/figure-html/cell-3-output-1.png" width="587" height="427" class="figure-img"></p>
+<p><img src="tutorial_files/figure-html/cell-3-output-1.png" width="589" height="429" class="figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The rest of the code is the same as for the normal metal. We correctly get a “superconducting gap” of width <span class="math inline">\(2Δ_s\)</span> at the Fermi level <span class="math inline">\(\omega=0\)</span>.</p>
 <p>It is also quite straight-forward if you want to consider a current-carrying superconductor: you just need to introduce a complex phase winding into the superconducting gap. For instance, to get one full phase winding across the system along the <span class="math inline">\(x\)</span> direction, we can let <span class="math inline">\(\Delta_s \to \Delta_s e^{2 \pi i x/L_x}\)</span>. To ensure that charge current is conserved at the system’s edges, you may however want to turn on periodic boundary conditions as well. Bodge can facilitate this using another iterator <code>lattice.edges()</code>, which returns pairs of lattice sites <code>(i, j)</code> on opposite ends of the lattice so that we can add hopping terms that “wrap around” the lattice. This is usually a decent model for the behavior of a large bulk superconductor with an applied electric current:</p>
-<div id="6510351c" class="cell" data-execution_count="4">
+<div id="6a2bb127" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        Δi <span class="op">=</span> Δs <span class="op">*</span> np.exp(<span class="dv">2</span><span class="op">*</span>π<span class="op">*</span><span class="ot">1j</span><span class="op">*</span>i[<span class="dv">0</span>]<span class="op">/</span>Lx)</span>
@@ -365,8 +365,8 @@ window.Quarto = {
 <section id="unconventional-superconductors" class="level2">
 <h2 class="anchored" data-anchor-id="unconventional-superconductors">Unconventional superconductors</h2>
 <p>In unconventional superconductors, the electrons that form a Cooper pair reside on different lattice sites. Moreover, they often have a complex dependence on directionality, such that pairing terms along different cardinal axes on the lattice have different complex phases. Generally, this kind of pairing term contributes as follows to the Hamiltonian: <span class="math display">\[\mathcal{H}_S = -\sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (\Delta_{ij})_{\sigma\sigma'} c^\dagger_{j\sigma'} + \text{h.c.,}\]</span> where we have to specify some pairing function <span class="math inline">\(\Delta_{ij}\)</span>.</p>
-<p>One example of such a state is a “<span class="math inline">\(d\)</span>-wave singlet superconductor”, which describes e.g.&nbsp;high-temperature cuprates. This can be modeled as: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d &amp; \text{if $i, j$ are neighbors along the $x$ axis,}\\ +\Delta_d &amp; \text{if $i, j$ are neighbors along the $y$ axis.}\end{cases}\]</span> Implementing this kind of system in Bodge is straight-forward:</p>
-<div id="0d161f28" class="cell" data-execution_count="5">
+<p>One example of such a state is a “<span class="math inline">\(d\)</span>-wave singlet superconductor”, which describes e.g.&nbsp;high-temperature cuprates. This can be modeled as: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d i\sigma_2 &amp; \text{if $i, j$ are neighbors along the $x$ axis,}\\ +\Delta_d i\sigma_2 &amp; \text{if $i, j$ are neighbors along the $y$ axis.}\end{cases}\]</span> Implementing this kind of system in Bodge is straight-forward:</p>
+<div id="c1d84b56" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Δd <span class="op">=</span> <span class="fl">0.1</span> <span class="op">*</span> t</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
@@ -376,8 +376,8 @@ window.Quarto = {
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds(axis<span class="op">=</span><span class="dv">1</span>):</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">+</span>Δd <span class="op">*</span> jσ<span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>For “<span class="math inline">\(p\)</span>-wave spin-triplet superconductors”, the pairing <span class="math inline">\(\Delta_{ij}\)</span> can become very complicated due to the many different degrees of freedom involved. In the literature, this is often described in terms of a <span class="math inline">\(d\)</span>-vector (see e.g.&nbsp;<a href="https://dx.doi.org/10.1103/revmodphys.75.657">this review paper</a>). Bodge can take in a <span class="math inline">\(d\)</span>-vector expression like e.g.&nbsp;<span class="math inline">\(\boldsymbol{d}(\boldsymbol{p}) = \mathbf{e}_z p_x\)</span> and construct the correct matrix expression for <span class="math inline">\(\Delta_{ij}\)</span> for you. Here is an example:</p>
-<div id="6f321955" class="cell" data-execution_count="6">
+<p>For “<span class="math inline">\(p\)</span>-wave triplet superconductors”, the pairing <span class="math inline">\(\Delta_{ij}\)</span> can become very complicated due to the many different degrees of freedom involved. In the literature, this is often described in terms of a <a href="https://dx.doi.org/10.1103/revmodphys.75.657"><span class="math inline">\(d\)</span>-vector</a>: <span class="math inline">\(\Delta_{ij} = [\mathbf{d}(\mathbf{p})\cdot\boldsymbol{\sigma}]i\sigma_2\)</span> where <span class="math inline">\(\mathbf{d}(\mathbf{p})\)</span> is a linear-in-momentum function that describes the spin dependence. Bodge can take in a <span class="math inline">\(d\)</span>-vector expression like e.g.&nbsp;<span class="math inline">\(\mathbf{d}(\mathbf{p}) = \mathbf{e}_z p_x\)</span> and construct the correct matrix expression for <span class="math inline">\(\Delta_{ij}\)</span> for you. Here is an example:</p>
+<div id="42639f51" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -406,7 +406,7 @@ window.Quarto = {
 <span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
 <span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="dv">51</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="dv">101</span>)</span>
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
 <span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
@@ -417,7 +417,7 @@ window.Quarto = {
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="TUTORIAL_files/figure-html/cell-6-output-1.png" width="595" height="427" class="figure-img"></p>
+<p><img src="tutorial_files/figure-html/cell-6-output-1.png" width="597" height="429" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -429,7 +429,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="magnetic-materials">Magnetic materials</h2>
 <p>Let us now consider a superconductor exposed to a strong magnetic field, where the Zeeman effect can result in a spin splitting. Alternatively, the same physics would arise in e.g.&nbsp;superconductor/ferromagnet bilayers, and Bodge can model these as well (you just need some simple <code>if</code> tests to determine which fields apply to which lattice sites).</p>
 <p>Magnetism can be modeled by introducing a spin-dependent term <span class="math inline">\(-\mathbf{M} \cdot \boldsymbol{\sigma}\)</span> into the on-site Hamiltonian <span class="math inline">\(H_{ii}\)</span>. In the simple case <span class="math inline">\(\mathbf{M} = M_z \mathbf{e}_z\)</span> of a homogeneous magnetic field, we are simply left with a term <span class="math inline">\(-M_z \sigma_3\)</span> in the Hamiltonian. Modifying the code for the <a href="#conventional-superconductor">conventional superconductor</a>, we get:</p>
-<div id="3f3c21e0" class="cell" data-execution_count="7">
+<div id="d8f959ad" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -457,7 +457,7 @@ window.Quarto = {
 <span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
 <span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">51</span>)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
 <span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
@@ -468,7 +468,7 @@ window.Quarto = {
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="TUTORIAL_files/figure-html/cell-7-output-1.png" width="587" height="427" class="figure-img"></p>
+<p><img src="tutorial_files/figure-html/cell-7-output-1.png" width="589" height="429" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -495,7 +495,7 @@ window.Quarto = {
 <p>One of the main goals of Bodge is that it should be fast, and scale well even to very large systems (i.e.&nbsp;even for millions of lattice sites). In practice, this is achieved using sparse matrices internally. This is important because most tight-binding models result in extremely sparse Hamiltonians.</p>
 <p>For instance, consider a 2D square lattice with side lengths <span class="math inline">\(L\)</span>, which has in total <span class="math inline">\(N = L \times L\)</span> lattice sites. The Hamiltonian matrix <span class="math inline">\(\check{H}\)</span> of this system contains <span class="math inline">\(\mathcal{O}(N^2)\)</span> elements. However, there are only <span class="math inline">\(N\)</span> on-site terms and <span class="math inline">\(4N\)</span> nearest-neighbor terms, resulting in only <span class="math inline">\(\mathcal{O}(N)\)</span> non-zero elements in this matrix. Thus, the proportion of non-zero elements in the matrix scales as <span class="math inline">\(\mathcal{O}(1/N)\)</span>, resulting in a huge waste of CPU and RAM for large <span class="math inline">\(N\)</span>. If we use sparse matrices, then only the non-zero elements are actually stored in memory and used in e.g.&nbsp;matrix multiplications, thus providing an <span class="math inline">\(\mathcal{O}(N)\)</span> improvement of many matrix algorithms. Internally, Bodge represents the Hamiltonian matrix as a <code>scipy.sparse.bsr_matrix</code> with block size 4, since we know that the <span class="math inline">\(4N \times 4N\)</span> Hamiltonian is constructed from <span class="math inline">\(4\times4\)</span> matrix blocks. Methods are however provided to convert this into either an <code>numpy.array</code> (dense matrix) or other relevant <code>scipy.sparse</code> matrix format.</p>
 <p>Below, I show some results generated using <code>misc/benchmark.py</code>. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with <span class="math inline">\(N\)</span> atomic sites using both Bodge and <a href="https://kwant-project.org/">Kwant</a>. The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark. As you can see, both libraries construct the Hamiltonian in <span class="math inline">\(\mathcal{O}(N)\)</span> time, in contrast to the <span class="math inline">\(\mathcal{O}(N^2)\)</span> time one might have expected if one used dense matrices.</p>
-<div id="bc4db02e" class="cell" data-execution_count="8">
+<div id="9ca8ed98" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -511,7 +511,7 @@ window.Quarto = {
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="TUTORIAL_files/figure-html/cell-8-output-1.png" width="597" height="431" class="figure-img"></p>
+<p><img src="tutorial_files/figure-html/cell-8-output-1.png" width="597" height="431" class="figure-img"></p>
 </figure>
 </div>
 </div>
