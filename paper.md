@@ -28,11 +28,17 @@ bibliography: paper.bib
 
 Although general tight-binding models can be constructed with this package, the main focus is on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian which is used to model superconductivity in the clean limit [@zhu_bdg_2016; @degennes_bdg_1966]. The package is designed to be extensible and flexible, and can easily be used to model heterostructures containing e.g. conventional and unconventional superconductors, ferromagnets and antiferromagnets, altermagnetism and spin-orbit coupling, etc. In other words: If you want a lattice model for superconducting nanostructures, and want something that is computationally efficient yet easy to use, I believe that Bodge is a good choice.
 
-Examples of research problems that have been studied with it include superconductor/altermagnet heterostructures [@ouassou_alt_2023] and RKKY interactions in unconventional superconductors [@ouassou_rkky_2024; @ouassou_dmi_2024].
-
 # Statement of need
 
 TODO
+
+# Features
+
+TODO
+
+# Examples
+
+Introductory examples of how to use Bodge are provided in the [official documentation](https://jabirali.github.io/bodge/). Examples of research problems that have been studied using Bodge include superconductor/altermagnet heterostructures [@ouassou_alt_2023] and RKKY interactions in unconventional superconductors [@ouassou_rkky_2024; @ouassou_dmi_2024].
 
 # Acknowledgements
 
