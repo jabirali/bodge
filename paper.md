@@ -1,5 +1,5 @@
 ---
-title: 'Bodge: A Python package for large-scale tight-binding modeling of superconductors'
+title: 'Bodge: Python package for efficient tight-binding modeling of superconducting nanostructures'
 tags:
   - python
   - numerical physics
@@ -16,7 +16,7 @@ authors:
 affiliations:
  - name: Department of Computer Science, Electrical Engineering and Mathematical Sciences, Western Norway University of Applied Sciences, NO-5528 Haugesund, Norway
    index: 1
- - name: Center for Quantum Spintronics, Department of Physics, Norwegian University of Science and Technology, NO-7491 Trondheim, Norway
+ [[-]] name: Center for Quantum Spintronics, Department of Physics, Norwegian University of Science and Technology, NO-7491 Trondheim, Norway
    index: 2
 date: 12 July 2024
 bibliography: paper.bib
@@ -24,7 +24,9 @@ bibliography: paper.bib
 
 # Summary
 
-TODO
+[Bodge](https://github.com/jabirali/bodge) is Python package for constructing large-scale real-space tight-binding models. "Large-scale" means that it uses sparse matrices to scale well to lattices with millions of atoms, and "real-space" means that the model is formulated in terms of individual lattice sites and not in e.g. momentum space. Although quite general tight-binding models can be constructed using this package, the main focus is on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian which is used to model superconductivity in the clean limit. The package is designed to be extensible and flexible, and can easily be used to model heterostructures containing e.g. conventional and unconventional superconductors, ferromagnets and antiferromagnets, altermagnetism and spin-orbit coupling, etc.
+
+In other words: If you want a lattice model for superconducting nanostructures, and want something that is computationally efficient yet easy to use, I believe that Bodge is a good choice. See [@ouassou_alt_2023; @ouassou_rkky_2024; @ouassou_dmi_2024] for examples of research papers where Bodge has been applied.
 
 # Statement of need
 
