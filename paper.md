@@ -74,7 +74,7 @@ with system as (H, Δ):
 
 H = system.matrix(format="csr")
 ```
-Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the density of states, free energy, etc. More such convenience methods are currently under development.
+Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the density of states, free energy, etc. More such methods are currently under development.
 
 # Acknowledgements
 
