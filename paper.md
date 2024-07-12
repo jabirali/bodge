@@ -38,7 +38,7 @@ To do anything useful with that Hamiltonian *on a computer*, however, you typica
 
 - It provides an easy-to-use Pythonic interface for constructing the Hamiltonian of a tight-binding system. Particular focus has been placed on making it easy to describe systems that include various forms of superconductivity and magnetism, making it a great choice for modeling e.g. superconductivity in magnetic heterostructures.
 - It scales well to large systems. For efficiency, it uses SciPy sparse matrices internally [@scipy_2020], and it constructs large Hamiltonians in $\mathcal{O}(N)$ time and memory where $N$ is the number of sites. According to [my benchmarks](https://jabirali.github.io/bodge/tutorial.html#numerical-details), the performance is similar to [Kwant](https://kwant-project.org/) [@groth_kwant_2014], which is the state of the art for numerical condensed matter physics. The results can be returned in most NumPy or SciPy matrix formats.
-- It is designed to be extensible. For instance, while Bodge currently only implements square and cubic lattices (via the `CubicLattice` class), it can be used to construct Hamiltonians on e.g. triangular or hexagonal lattices if you want: you just need to subclass `Lattice` and implement 2-3 short iterators that describe what your lattice looks like.
+- It is designed to be extensible. For instance, while Bodge currently only implements square and cubic lattices (via the `CubicLattice` class), it can be used to construct Hamiltonians on e.g. triangular or hexagonal lattices if you want: you just need to subclass `Lattice` and implement 2-3 short iterators that describe your lattice.
 - Some convenience methods are provided to help you with the next steps of your calculations: Extracting the local density of states (LDOS), calculating the free energy, diagonalizing the Hamiltonian, etc. (Some more advanced algorithms live on the `development` branch, but have not yet been assimilated into the `main` branch.)
 - The code itself follows modern software development practices: Full test coverage with continuous integration (via `pytest`), fast runtime type checking (via `beartype`), and PEP-8 compliance (via `black`).
 
@@ -47,6 +47,34 @@ There are two main alternatives that arguably fill a similar niche to Bodge: Kwa
 # Examples
 
 Introductory examples of how to use Bodge are provided in the [official documentation](https://jabirali.github.io/bodge/). Examples of research problems that have been studied using Bodge include superconductor/altermagnet heterostructures [@ouassou_alt_2023] and RKKY interactions in unconventional superconductors [@ouassou_rkky_2024; @ouassou_dmi_2024].
+
+For a simple example of how this package can be used, consider a $64a\times64a$ square lattice. Let's assume that the whole system is a metal with chemical potential $\mu = 1.5t$, where $t=1$ is the hopping amplitude. Moreover, let's assume that half the system ($x < 32a$) is a conventional $s$-wave superconductor with an order parameter $\Delta_s = 0.1t$, whereas the other half is a ferromagnet with exchange field $\mathbf{M} = M_z \mathbf{e}_z$. To construct the Hamiltonian matrix for such a system in the CSR sparse format, we can use the following code:
+```python
+from bodge import *
+
+# Tight-binding parameters
+t = 1
+μ = 1.5 * t
+Δs = 0.1 * t
+Mz = 0.5 * Δs
+
+# Construct the Hamiltonian
+lattice = CubicLattice((64, 64, 1))
+system = Hamiltonian(lattice)
+
+with system as (H, Δ):
+    for i in lattice.sites():
+        if i[0] < 32:
+            H[i, i] = -μ * σ0
+            Δ[i, i] = -Δs * jσ2
+        else:
+            H[i, i] = -μ * σ0 - Mz * σ3
+    for i, j in lattice.bonds():
+        H[i, j] = -t * σ0
+
+H = system.matrix(format="csr")
+```
+You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the local density of states, free energy, etc. of the system for you. More such convenience methods are currently under development.
 
 # Acknowledgements
 
