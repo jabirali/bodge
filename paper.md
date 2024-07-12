@@ -14,10 +14,10 @@ authors:
     email: jabir.ali.ouassou@hvl.no
     affiliation: "1, 2"
 affiliations:
- - name: Department of Computer Science, Electrical Engineering and Mathematical Sciences, Western Norway University of Applied Sciences, NO-5528 Haugesund, Norway
-   index: 1
- [[-]] name: Center for Quantum Spintronics, Department of Physics, Norwegian University of Science and Technology, NO-7491 Trondheim, Norway
-   index: 2
+  - name: Department of Computer Science, Electrical Engineering and Mathematical Sciences, Western Norway University of Applied Sciences, NO-5528 Haugesund, Norway
+    index: 1
+  - name: Center for Quantum Spintronics, Department of Physics, Norwegian University of Science and Technology, NO-7491 Trondheim, Norway
+    index: 2
 date: 12 July 2024
 bibliography: paper.bib
 ---
