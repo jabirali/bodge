@@ -1,9 +1,8 @@
 import numpy as np
-from pytest import raises
-from scipy.linalg import eigh
-
 from bodge import *
 from bodge.common import *
+from pytest import raises
+from scipy.linalg import eigh
 
 
 def test_hermitian():
@@ -339,3 +338,35 @@ def test_free_energy():
     F1 = system.free_energy(0.0)
     F2 = (1 / 2) * np.sum(ε[ε < 0])
     assert np.allclose(F1, F2)
+
+
+def test_ldos():
+    # Instantiate a normal metal.
+    lattice = CubicLattice((16, 16, 1))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ):
+        for i in lattice.sites():
+            H[i, i] = -1.5 * σ0
+        for i, j in lattice.bonds():
+            H[i, j] = -1.0 * σ0
+
+    # Calculate the central LDOS.
+    Δs = 0.5
+    i = (8, 8, 0)
+    ω = np.array([-1.2 * Δs, -0.8 * Δs, +0.8 * Δs, 1.2 * Δs])
+    ρ1 = system.ldos(i, ω)
+
+    # Add superconductivity.
+    with system as (H, Δ):
+        for i in lattice.sites():
+            Δ[i, i] = Δs * jσ2
+    ρ2 = system.ldos(i, ω)
+
+    # The LDOS should decrease inside the gap of a superconductor.
+    assert ρ2[1] < ρ1[1]
+    assert ρ2[2] < ρ1[2]
+
+    # The LDOS should increase outside the gap of a superconductor.
+    assert ρ2[0] > ρ1[0]
+    assert ρ2[3] > ρ1[3]
