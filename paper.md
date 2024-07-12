@@ -24,9 +24,11 @@ bibliography: paper.bib
 
 # Summary
 
-[Bodge](https://github.com/jabirali/bodge) is Python package for constructing *large-scale real-space tight-binding models* for calculations in condensed matter physics. "Large-scale" means that it uses SciPy sparse matrices [@scipy_2020] to scale to lattices with millions of atoms, and "real-space" means that the model is formulated in terms of individual lattice sites and not in e.g. momentum space.
+[Bodge](https://github.com/jabirali/bodge) is Python package for constructing *large-scale real-space tight-binding models* for calculations in condensed matter physics. "Large-scale" means that it should remain performant even for lattices with millions of atoms, and "real-space" means that the model is formulated in terms of individual lattice sites and not in e.g. momentum space.
 
-Although general tight-binding models can be constructed with this package, the main focus is on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian which is used to model superconductivity in the clean limit [@zhu_bdg_2016; @degennes_bdg_1966]. The package is designed to be extensible and flexible, and can easily be used to model heterostructures containing e.g. conventional and unconventional superconductors, ferromagnets and antiferromagnets, altermagnetism and spin-orbit coupling, etc. In other words: If you want a lattice model for superconducting nanostructures, and want something that is computationally efficient yet easy to use, I believe that Bodge is a good choice.
+Although general tight-binding models can be constructed with this package, the main focus is on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian used to model superconductivity in the clean limit [@zhu_bdg_2016; @degennes_bdg_1966]. The package is designed to be easy to use, flexible, and extensible – and very few lines of code are required to model heterostructures containing e.g. conventional and unconventional superconductors, ferromagnets and antiferromagnets, altermagnetism and spin-orbit coupling, etc.
+
+In other words: If you want a lattice model for superconducting nanostructures, and want something that is computationally efficient yet easy to use, I believe that Bodge is a good choice.
 
 # Statement of need
 
