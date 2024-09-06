@@ -1,8 +1,9 @@
 import numpy as np
-from bodge import *
-from bodge.common import *
 from pytest import raises
 from scipy.linalg import eigh
+
+from bodge import *
+from bodge.common import *
 
 
 def test_hermitian():
