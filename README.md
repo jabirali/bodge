@@ -96,6 +96,7 @@ and Bodge will warn you if the Hamiltonian is non-Hermitian.
 For more information on usage, please see [the full documentation][0].
 
 ## Development
+
 After cloning the [Git repository][5] on a Unix-like system, you can run:
 
 	make install

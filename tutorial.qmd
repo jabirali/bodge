@@ -5,7 +5,7 @@ author:
   - name: Jabir Ali Ouassou
     email: jabir.ali.ouassou@hvl.no
     url: https://scholar.google.com/citations?user=SbyugkkAAAAJ
-abstract: > 
+abstract: >
   Bodge is a Python package for constructing large real-space tight-binding models. Although quite general tight-binding models can be constructed, we focus on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is most commonly used to model superconductivity in clean materials and heterostructures. So if you want a lattice model for superconducting nanostructures, and want something that is efficient yet easy to use, then you've come to the right place.
 ---
 
@@ -24,6 +24,11 @@ I believe the easiest way to get started is "learning by doing", so in this sect
 
 For a better understanding of the mathematics behind these examples, as well as how Bodge handles them internally, please see the more detailed explanations under [Mathematical details][] and [Numerical details][] below. For more advanced usage, I would recommend looking through the source code itself, which is well-documented in the form of docstrings and comments. Some real-world use cases of Bodge live on the [development branch](https://github.com/jabirali/bodge/tree/develop), but keep in mind that those functions have not received the same level of polish and testing as the [main branch](https://github.com/jabirali/bodge/tree/main) and therefore may contain bugs.
 
+Please note that to follow the examples below, you need to install Matplotlib:
+
+	pip install matplotlib
+
+Depending on how you are running the code (e.g. in a Jupyter notebook or in a terminal), you might need to run `plt.show()` after each example to actually see the generated plots. (Alternatively, `plt.savefig('filename.png')` to save the plots to file instead.)
 
 ## Normal metal
 
