@@ -119,10 +119,18 @@ Afterwards, mention what Python version to use when installing Bodge:
 
 	make install PYTHON=python3.11
 
-Run `make` without any command-line arguments to see how to proceed
-further. This should provide information on how to run the bundled
-unit tests, run scripts that use the Bodge package, or run the
-autoformatter after you have updated the code. PRs are welcome!
+After running `make install`, you can run the unit tests as follows:
+
+	make test
+
+This is generally useful both right after installation (to ensure that
+everything works), as well as after modifying the code (to check that
+everything still works as expected). Run `make` without command-line
+arguments to see how to see how proceed further after that; this
+should provide information on how to e.g. run scripts that use the
+Bodge package, or run the autoformatter after updating the code.
+
+PRs are welcome! See the [contribution guidelines](CONTRIBUTING.md) for more information.
 
 ## Acknowledgements
 
