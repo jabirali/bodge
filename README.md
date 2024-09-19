@@ -1,5 +1,10 @@
 # Bodge
 
+[![JOSS](https://joss.theoj.org/papers/18b48f694511e8c02a6b56375855fd0c/status.svg)](https://joss.theoj.org/papers/18b48f694511e8c02a6b56375855fd0c)
+[![PyPI](https://img.shields.io/pypi/v/bodge?logo=python&logoColor=white&label=PyPI)](https://pypi.org/project/bodge/)
+[![Docs](https://img.shields.io/badge/Docs-tutorial-blue?logo=readme&logoColor=white)](https://jabirali.github.io/bodge/)
+[![Tests](https://github.com/jabirali/bodge/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/jabirali/bodge/actions/workflows/unit-tests.yml)
+
 Bodge is a Python package for constructing large real-space tight-binding
 models. Although quite general tight-binding models can be constructed, we focus
 on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is used to model
