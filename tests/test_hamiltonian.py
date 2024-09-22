@@ -6,7 +6,7 @@ from bodge import *
 from bodge.common import *
 
 
-def test_hermitian():
+def test_matrix_hermitian():
     # Instantiate a somewhat dense complex Hamiltonian. Note that
     # the submatrices need to be Hermitian for the whole to be so.
     lattice = CubicLattice((3, 5, 7))
@@ -36,7 +36,7 @@ def test_hermitian():
             H[i, i] = 1j * σ1
 
 
-def test_compilation():
+def test_matrix_export():
     # Instantiate a somewhat random test system.
     lattice = CubicLattice((3, 5, 7))
     system = Hamiltonian(lattice)
@@ -47,12 +47,18 @@ def test_compilation():
             Δ[i, j] = 2 * σ3 + 5 * σ2
 
     # Construct matrix instances in different formats.
+    H_DNS = system.matrix(format="dense")
     H_BSR = system.matrix(format="bsr")
     H_CSR = system.matrix(format="csr")
     H_CSC = system.matrix(format="csc")
-    H_DNS = system.matrix(format="dense")
 
-    # Check that the dense matrix looks right.
+    # Check that each matrix has the right format.
+    assert isinstance(H_DNS, np.ndarray)
+    assert H_BSR.getformat() == 'bsr'
+    assert H_CSR.getformat() == 'csr'
+    assert H_CSC.getformat() == 'csc'
+
+    # Check that the dense matrix has correct elements.
     assert np.real(H_DNS[0, 0]) == 3
     assert np.imag(H_DNS[0, 1]) == 4
     assert np.real(H_DNS[0, 2]) == 2
@@ -66,7 +72,7 @@ def test_compilation():
     # Check that the BSR blocksize is correct.
     assert H_BSR.blocksize == (4, 4)
 
-    # Test error handling.
+    # Test the error handling.
     with raises(Exception):
         H = system.matrix(format="blah")
     with raises(Exception):
@@ -93,7 +99,10 @@ def test_swave_hermitian():
 
 
 def test_pwave_basic():
-    """Brute-force test all d(p) = e_i p_j cases."""
+    """Brute-force test all p-wave superconducting order parameters.
+
+    These have "d-vectors" of various kinds d(p) = e_i p_j.
+    """
     Δ = pwave("e_x * p_x")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ1 @ jσ2 / 2)
     assert np.allclose(Δ((0, 0, 0), (0, 1, 0)), 0)
@@ -141,7 +150,7 @@ def test_pwave_basic():
 
 
 def test_pwave_symmetries():
-    """Check the p-wave property Δ(i, j) = -Δ(j, i)."""
+    """Check the p-wave superconductor property Δ(i, j) = -Δ(j, i)."""
     for desc in [
         "e_x * p_x",
         "e_z * p_y",
