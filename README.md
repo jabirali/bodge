@@ -1,5 +1,10 @@
 # Bodge
 
+[![JOSS](https://joss.theoj.org/papers/18b48f694511e8c02a6b56375855fd0c/status.svg)](https://joss.theoj.org/papers/18b48f694511e8c02a6b56375855fd0c)
+[![PyPI](https://img.shields.io/pypi/v/bodge?logo=python&logoColor=white&label=PyPI)](https://pypi.org/project/bodge/)
+[![Docs](https://img.shields.io/badge/Docs-tutorial-blue?logo=readme&logoColor=white)](https://jabirali.github.io/bodge/)
+[![Tests](https://github.com/jabirali/bodge/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/jabirali/bodge/actions/workflows/unit-tests.yml)
+
 Bodge is a Python package for constructing large real-space tight-binding
 models. Although quite general tight-binding models can be constructed, we focus
 on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian, which is used to model
@@ -114,10 +119,18 @@ Afterwards, mention what Python version to use when installing Bodge:
 
 	make install PYTHON=python3.11
 
-Run `make` without any command-line arguments to see how to proceed
-further. This should provide information on how to run the bundled
-unit tests, run scripts that use the Bodge package, or run the
-autoformatter after you have updated the code. PRs are welcome!
+After running `make install`, you can run the unit tests as follows:
+
+	make test
+
+This is generally useful both right after installation (to ensure that
+everything works), as well as after modifying the code (to check that
+everything still works as expected). Run `make` without command-line
+arguments to see how to see how proceed further after that; this
+should provide information on how to e.g. run scripts that use the
+Bodge package, or run the autoformatter after updating the code.
+
+PRs are welcome! See the [contribution guidelines](CONTRIBUTING.md) for more information.
 
 ## Acknowledgements
 
