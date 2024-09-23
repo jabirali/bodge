@@ -1,3 +1,10 @@
+"""Unit tests for the `Lattice` class and its derivatives.
+
+In this set of tests, we mainly try to verify that the implementation
+is mathematically correct. For more physically minded tests, please
+see the integration tests in `test_physics.py`.
+"""
+
 from pytest import raises
 
 from bodge.common import *
@@ -5,6 +12,7 @@ from bodge.lattice import *
 
 
 def test_abc():
+    """Test that `Lattice` is an "abstract base class"."""
     # Abstract base class should not be constructable.
     with raises(ValueError):
         lat = Lattice((1, 1, 1))
@@ -28,6 +36,7 @@ def test_abc():
 
 
 def test_cubic_sites():
+    """Test the iteration over sites in a cubic lattice."""
     lat = CubicLattice((3, 5, 7))
     tot = 0
     for ind, site in enumerate(lat.sites()):
@@ -60,6 +69,7 @@ def test_cubic_sites():
 
 
 def test_cubic_bonds():
+    """Test the iteration over bonds in a cubic lattice."""
     tot = 0
     lat = CubicLattice((2, 3, 5))
 
@@ -85,6 +95,7 @@ def test_cubic_bonds():
 
 
 def test_cubic_edges():
+    """Test the iteration over edges in a cubic lattice."""
     tot = 0
     lat = CubicLattice((2, 3, 5))
 

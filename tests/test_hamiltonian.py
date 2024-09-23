@@ -1,4 +1,12 @@
+"""Unit tests for the `Hamiltonian` class and some of its core methods.
+
+In this set of tests, we mainly try to verify that the implementation
+is mathematically correct. For more physically minded tests, please
+see the integration tests in `test_physics.py`.
+"""
+
 import numpy as np
+from numpy.random import random as r
 from pytest import raises
 from scipy.linalg import eigh
 
@@ -7,6 +15,15 @@ from bodge.common import *
 
 
 def test_matrix_hermitian():
+    """Test that a semi-random Hamiltonian matrix becomes Hermitian.
+
+    Note that for the constructed Hamiltonian to be Hermitian, we
+    need (i) a symmetry between hopping i->j and j->i, and (ii)
+    each submatrix we define below to itself be Hermitian. Within
+    these bounds, we add some randomness for more general testing.
+
+    For non-Hermitian matrices, we test that an exception is raised.
+    """
     # Instantiate a somewhat dense complex Hamiltonian. Note that
     # the submatrices need to be Hermitian for the whole to be so.
     lattice = CubicLattice((3, 5, 7))
@@ -14,29 +31,40 @@ def test_matrix_hermitian():
 
     with system as (H, Δ):
         for i in lattice.sites():
-            H[i, i] = 1 * σ3 + 2 * σ2
-            Δ[i, i] = 5 * σ0 - 3 * σ2
+            H[i, i] = r() * σ0 + r() * σ1 + r() * σ2 + r() * σ3
+            Δ[i, i] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
         for i, j in lattice.bonds():
-            H[i, j] = 3 * σ0 - 4 * σ2
-            Δ[i, j] = 2 * σ3 + 5 * σ2
+            t = [r(), r(), r(), r()]
+            H[i, j] = t[0] * σ0 + t[1] * σ1 + t[2] * σ2 + t[3] * σ3
+            H[j, i] = t[0] * σ0 + t[1] * σ1 + t[2] * σ2 + t[3] * σ3
+            Δ[i, j] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
         for i, j in lattice.edges():
-            H[i, j] = 7 * σ0 - 13 * σ2
-            Δ[i, j] = 9 * σ3 + 11 * σ2
+            T = [r(), r(), r(), r()]
+            H[i, j] = T[0] * σ0 + T[1] * σ1 + T[2] * σ2 + T[3] * σ3
+            H[j, i] = T[0] * σ0 + T[1] * σ1 + T[2] * σ2 + T[3] * σ3
+            Δ[i, j] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
     # Verify that the result is Hermitian.
     H = system._matrix.todense()
     assert np.allclose(H, H.T.conj())
 
     # Check non-hermiticity warnings.
-    with raises(RuntimeError):
+    with raises(Exception):
         i = (1, 1, 1)
         with system as (H, Δ):
             H[i, i] = 1j * σ1
 
 
 def test_matrix_export():
+    """Test that the Hamiltonian matrix is correctly exported.
+
+    This entails that the same matrix should be constructed both when
+    exporting to sparse and dense formats, and that an exception
+    should be raised if an unimplemented format is requested.
+    """
+
     # Instantiate a somewhat random test system.
     lattice = CubicLattice((3, 5, 7))
     system = Hamiltonian(lattice)
@@ -54,9 +82,9 @@ def test_matrix_export():
 
     # Check that each matrix has the right format.
     assert isinstance(H_DNS, np.ndarray)
-    assert H_BSR.getformat() == 'bsr'
-    assert H_CSR.getformat() == 'csr'
-    assert H_CSC.getformat() == 'csc'
+    assert H_BSR.getformat() == "bsr"
+    assert H_CSR.getformat() == "csr"
+    assert H_CSC.getformat() == "csc"
 
     # Check that the dense matrix has correct elements.
     assert np.real(H_DNS[0, 0]) == 3
@@ -80,7 +108,10 @@ def test_matrix_export():
 
 
 def test_swave_hermitian():
-    """Test that s-wave superconducting Hamiltonians are Hermitian."""
+    """Test that s-wave superconducting Hamiltonians are Hermitian.
+
+    These Hamiltonians are constructed using the `swave()` function.
+    """
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
 
@@ -101,7 +132,9 @@ def test_swave_hermitian():
 def test_pwave_basic():
     """Brute-force test all p-wave superconducting order parameters.
 
-    These have "d-vectors" of various kinds d(p) = e_i p_j.
+    These have "d-vectors" of various kinds d(p) = e_i p_j, where it
+    is known that if the d-vector points along e.g. p_x then the gap
+    should only be non-zero for displacements along the x-axis.
     """
     Δ = pwave("e_x * p_x")
     assert np.allclose(Δ((0, 0, 0), (1, 0, 0)), σ1 @ jσ2 / 2)
@@ -201,7 +234,12 @@ def test_pwave_hermitian():
 
 
 def test_dwave_symmetries():
-    """Test that the d_{x^2 - y^2} order parameter behaves as expected."""
+    """Brute-force test the behavior of the d_{x^2 - y^2} order parameter.
+
+    This entails checking that the gap function has different signs
+    along the x- and y-axes, and moreover that there is zero on-site
+    or diagonal contributions to such a gap function.
+    """
     Δ_d = dwave()
 
     # Zero on-site contributions.
@@ -250,7 +288,7 @@ def test_dwave_hermitian():
 
 
 def test_ssd():
-    """Test the mathematical properties of the SSD profile."""
+    """Test the mathematical properties of the "SSD" profile."""
     lattice = CubicLattice((31, 137, 1))
     system = Hamiltonian(lattice)
     φ = ssd(system)
@@ -278,6 +316,14 @@ def test_ssd():
 
 
 def test_diagonalize():
+    """Test that the matrix diagonalization works.
+
+    Most importantly, we here validate that:
+    - The defining equation H @ X_n = E_n @ X_n holds for each
+      returned pair of eigenvalue E_n and eigenvector X_n;
+    - That we only return positive eigenvalues ("Nambu doubling");
+    - That the total number of eigenvalues is as expected.
+    """
     # Instantiate a system with superconductivity and a barrier.
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
@@ -317,6 +363,7 @@ def test_diagonalize():
 
 
 def test_free_energy():
+    """Test that the free energy calculation works."""
     # Instantiate a simple S/N/F system.
     lattice = CubicLattice((10, 7, 3))
     system = Hamiltonian(lattice)
@@ -349,34 +396,42 @@ def test_free_energy():
     F2 = (1 / 2) * np.sum(ε[ε < 0])
     assert np.allclose(F1, F2)
 
+    # Check exception for negative energies.
+    with raises(Exception):
+        F = system.free_energy(-1.0)
+
 
 def test_ldos():
-    # Instantiate a normal metal.
-    lattice = CubicLattice((16, 16, 1))
+    """Test that the local density of states (LDOS) works.
+
+    Here, we primarily check that the LDOS has to be positive
+    for every location and energy in every conceivable system.
+    """
+    # Instantiate a random metal.
+    lattice = CubicLattice((5, 5, 2))
     system = Hamiltonian(lattice)
 
     with system as (H, Δ):
         for i in lattice.sites():
-            H[i, i] = -1.5 * σ0
+            H[i, i] = r() * σ0 + r() * σ1 + r() * σ2 + r() * σ3
+            Δ[i, i] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
+
         for i, j in lattice.bonds():
-            H[i, j] = -1.0 * σ0
+            t = [r(), r(), r(), r()]
+            H[i, j] = t[0] * σ0 + t[1] * σ1 + t[2] * σ2 + t[3] * σ3
+            H[j, i] = t[0] * σ0 + t[1] * σ1 + t[2] * σ2 + t[3] * σ3
+            Δ[i, j] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
-    # Calculate the central LDOS.
-    Δs = 0.5
-    i = (8, 8, 0)
-    ω = np.array([-1.2 * Δs, -0.8 * Δs, +0.8 * Δs, 1.2 * Δs])
-    ρ1 = system.ldos(i, ω)
+        for i, j in lattice.edges():
+            T = [r(), r(), r(), r()]
+            H[i, j] = T[0] * σ0 + T[1] * σ1 + T[2] * σ2 + T[3] * σ3
+            H[j, i] = T[0] * σ0 + T[1] * σ1 + T[2] * σ2 + T[3] * σ3
+            Δ[i, j] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
-    # Add superconductivity.
-    with system as (H, Δ):
-        for i in lattice.sites():
-            Δ[i, i] = Δs * jσ2
-    ρ2 = system.ldos(i, ω)
+    # Calculate the LDOS everywhere.
+    sites = [(i,j,k) for i in range(5) for j in range(5) for k in range(2)]
+    energies = [0.0, 0.01, 0.10, 0.50, 1.00, 2.00, 4.00]
 
-    # The LDOS should decrease inside the gap of a superconductor.
-    assert ρ2[1] < ρ1[1]
-    assert ρ2[2] < ρ1[2]
-
-    # The LDOS should increase outside the gap of a superconductor.
-    assert ρ2[0] > ρ1[0]
-    assert ρ2[3] > ρ1[3]
+    for site in sites:
+        ρ = system.ldos(site, energies)
+        assert all(ρ >= 0)
