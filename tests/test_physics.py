@@ -292,3 +292,91 @@ def test_energy_temperature():
     # Compare the results.
     for T1, T2 in zip(free_energies[:-1], free_energies[1:]):
         assert T1 > T2
+
+def test_pwave_edge_states():
+    """In a p-wave superconductor, check that the gap disappears at edges.
+
+    Specifically, it is known that for a pₓ-wave superconductor, the
+    gap vanishes at edges perpedicular to the x axis but not elsewhere.
+    """
+    lattice = CubicLattice((31, 31, 1))
+    system = Hamiltonian(lattice)
+
+    # Instantiate the Hamiltonian.
+    t = 1.0
+    Δ0 = 0.1 * t
+    σp = pwave("e_z * p_x")
+    with system as (H, Δ):
+        for i, j in lattice.bonds():
+            H[i,j] = -t * σ0
+            Δ[i,j] = -Δ0 * σp(i,j)
+
+    # Calculate the LDOS at the center and edges.
+    energies = [0.0, Δ0/4]
+
+    i1 = (15, 15, 0)
+    i2 = (15, 0, 0)
+    i3 = (0, 15, 0)
+    i4 = (0, 0, 0)
+
+    ρ1 = system.ldos(i1, energies)[0]
+    ρ2 = system.ldos(i2, energies)[0]
+    ρ3 = system.ldos(i3, energies)[0]
+    ρ4 = system.ldos(i4, energies)[0]
+
+    # The LDOS should be HIGHEST where there is no gap. The
+    # superconducting gap vanishes at edges perpendicular to the x
+    # axis for a pₓ-wave superconductor, which means the gap vanishes
+    # at points i3 and i4 but NOT at i1 and i2. Therefore, we conclude
+    # that we should expect {ρ3, ρ4} > {ρ1, ρ2} in such materials.
+    assert ρ3 > ρ1
+    assert ρ3 > ρ2
+    assert ρ4 > ρ1
+    assert ρ4 > ρ2
+
+def test_josephson_minigap():
+    """Test how the gap in an S/N/S Josephson junction varies with phase.
+
+    For 0 phase difference between two superconductors, there should be a
+    "minigap" in the central layer. For π phase difference, this gap should
+    close completely. An intermediate gap appears for π/2 phase difference.
+
+    This can, for example, be measured using the lowest energy eigenvalue.
+    """
+    lattice = CubicLattice((128, 1, 1))
+
+    # Model parameters.
+    t = 1.0
+    Δ0 = 3.0 * t
+
+    # Function to perform the calculations.
+    def josephson(ϕ):
+        system = Hamiltonian(lattice)
+
+        with system as (H, Δ):
+            for i in lattice.sites():
+                if i[0] < 32:
+                    Δ[i,i] = -Δ0 * jσ2 * np.exp(-1j * ϕ / 2)
+                if i[0] >= 128-32:
+                    Δ[i,i] = -Δ0 * jσ2 * np.exp(+1j * ϕ / 2)
+            for i, j in lattice.bonds():
+                H[i,j] = -t * σ0
+
+        E, _ = system.diagonalize()
+
+        return np.min(E)
+
+    # Perform the calculations.
+    Δ1 = josephson(0.0 * π)
+    Δ2 = josephson(0.5 * π)
+    Δ3 = josephson(1.0 * π)
+    Δ4 = josephson(1.5 * π)
+    Δ5 = josephson(2.0 * π)
+
+    # Minigap closes for ϕ → π.
+    assert Δ1 > Δ2
+    assert Δ2 > Δ3
+
+    # Symmetry for ϕ → 2π - ϕ.
+    assert np.allclose(Δ1, Δ5)
+    assert np.allclose(Δ2, Δ4)
