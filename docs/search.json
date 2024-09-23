@@ -39,6 +39,6 @@
     "href": "tutorial.html#footnotes",
     "title": "Bodge tutorial",
     "section": "Footnotes",
-    "text": "Footnotes\n\n\nExamples: Vim has built-in “digraphs” where you can press &lt;C-k&gt;s* in insert mode to type σ. Emacs has a built-in “TeX input method”, which means that after pressing C-\\ you can type \\sigma to insert the symbol σ. Most other editors code have third-party plugins for this, e.g. Unicode Latex for VSCode. Another option is to use an OS-wide snippet expander (e.g. TextExpander), which you can setup to e.g. convert ;s to σ in any application. There are many alternatives!↩︎"
+    "text": "Footnotes\n\n\nExamples: Vim has built-in “digraphs” where you can press &lt;C-k&gt;s* in insert mode to type σ. Emacs has a built-in “TeX input method”, which means that after pressing C-\\ you can type \\sigma to insert the symbol σ. Most other editors code have third-party plugins for this, e.g. Unicode Latex for VSCode. Another option is to use an OS-wide snippet expander (e.g. TextExpander), which you can setup to e.g. convert ;s to a in any application. Another alternative is to just enable a Greek keyboard layout in your OS settings, with a hotkey to switch between the layouts. There are many alternatives!↩︎"
   }
 ]

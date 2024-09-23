@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-"""Benchmarking of Bodge vs. Kwant for constructing a Bogoliubov-deGennes Hamiltonian."""
+"""Benchmarking of Bodge vs. Kwant for constructing a Bogoliubov-deGennes Hamiltonian.
+
+Note that this requires a `pip install kwant` to get the library benchmarked against.
+"""
 
 from time import sleep
 
@@ -117,9 +120,9 @@ def bench_bodge(L, W, sparse=True):
 
     # Compile the Hamiltonian object to a matrix.
     if sparse:
-        H = system(format="csr")
+        H = system.matrix(format="csr")
     else:
-        H = system(format="dense")
+        H = system.matrix(format="dense")
 
     # Benchmark results.
     T = timer()

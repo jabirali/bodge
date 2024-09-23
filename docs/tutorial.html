@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.53">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -239,51 +239,54 @@ window.Quarto = {
 <h1>Getting started</h1>
 <p>I believe the easiest way to get started is “learning by doing”, so in this section we jump straight into some examples of how one can use Bodge in practice. This introduction assumes that you are somewhat familiar with tight-binding models in condensed matter physics.</p>
 <p>For a better understanding of the mathematics behind these examples, as well as how Bodge handles them internally, please see the more detailed explanations under <a href="#mathematical-details">Mathematical details</a> and <a href="#numerical-details">Numerical details</a> below. For more advanced usage, I would recommend looking through the source code itself, which is well-documented in the form of docstrings and comments. Some real-world use cases of Bodge live on the <a href="https://github.com/jabirali/bodge/tree/develop">development branch</a>, but keep in mind that those functions have not received the same level of polish and testing as the <a href="https://github.com/jabirali/bodge/tree/main">main branch</a> and therefore may contain bugs.</p>
+<p>Please note that to follow the examples below, you need to install Matplotlib:</p>
+<pre><code>pip install matplotlib</code></pre>
+<p>Depending on how you are running the code (e.g.&nbsp;in a Jupyter notebook or in a terminal), you might need to run <code>plt.show()</code> after each example to actually see the generated plots. (Alternatively, <code>plt.savefig('filename.png')</code> to save the plots to file instead.)</p>
 <section id="normal-metal" class="level2">
 <h2 class="anchored" data-anchor-id="normal-metal">Normal metal</h2>
 <p>The simplest electronic tight-binding model is arguably a one-dimensional normal-metal wire. As an introductory example, let’s therefore try to calculate the local density of states (LDOS) in the middle of such a wire.</p>
 <p>A wire can be considered an <span class="math inline">\(L_x \times L_y \times L_z\)</span> cubic lattice in the limit that <span class="math inline">\(L_x \gg  L_y = L_z\)</span>. The tight-binding model for normal metals contains only a chemical potential <span class="math inline">\(\mu\)</span> and a hopping amplitude <span class="math inline">\(t\)</span>, and is often written as: <span class="math display">\[\mathcal{H} = -\mu \sum_{i\sigma} c^\dagger_{i\sigma} c_{i\sigma} -t \sum_{\langle ij \rangle \sigma} c^\dagger_{i\sigma} c_{j\sigma}.\]</span> Bodge however requires that it be written in the form: <span class="math display">\[\mathcal{H} = \sum_{i\sigma\sigma'} c^\dagger_{i\sigma} (H_{ii})_{\sigma\sigma'} c_{i\sigma'} + \sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (H_{ij})_{\sigma\sigma'} c_{j\sigma'},\]</span> where <span class="math inline">\(H_{ii}\)</span> and <span class="math inline">\(H_{ij}\)</span> are <span class="math inline">\(2\times2\)</span> matrices that represents spin dependence. From this, we basically see that the system above can be summarized as: <span class="math display">\[H_{ij} = \begin{cases} -\mu\sigma_0 &amp; \text{if $i = j$,} \\ -t\sigma_0 &amp; \text{otherwise.} \end{cases}\]</span> This is precisely what we need to tell Bodge to create the desired Hamiltonian. The following code performs the calculations we want:</p>
-<div id="f79ab2f5" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standard imports in every numerical Python code</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Bodge is designed to be imported in this way, but you can</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># of course `import bodge as bdg` if you really want to</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the tight-binding model parameters</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">512</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>Lz <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="fl">1.5</span> <span class="op">*</span> t</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, Lz))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, _):</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># If you need the Hamiltonian matrix itself, you could use:</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># H = system.matrix()  # NumPy dense array</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co"># H = system.matrix(format="csr")  # SciPy sparse matrix</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the central density of states</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, Lz<span class="op">//</span><span class="dv">2</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span>μ<span class="op">-</span><span class="dv">4</span><span class="op">*</span>t, <span class="op">-</span>μ<span class="op">+</span><span class="dv">4</span><span class="op">*</span>t, <span class="dv">101</span>)</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the density of states at the system center</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="aed0a45e" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standard imports in every numerical Python code</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Bodge is designed to be imported in this way, but you can</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># of course `import bodge as bdg` if you really want to</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the tight-binding model parameters</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">512</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>Lz <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="fl">1.5</span> <span class="op">*</span> t</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, Lz))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, _):</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co"># If you need the Hamiltonian matrix itself, you could use:</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co"># H = system.matrix()  # NumPy dense array</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co"># H = system.matrix(format="csr")  # SciPy sparse matrix</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the central density of states</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, Lz<span class="op">//</span><span class="dv">2</span>)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span>μ<span class="op">-</span><span class="dv">4</span><span class="op">*</span>t, <span class="op">-</span>μ<span class="op">+</span><span class="dv">4</span><span class="op">*</span>t, <span class="dv">101</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the density of states at the system center</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -305,41 +308,41 @@ window.Quarto = {
 <p>Let’s now consider a two-dimensional conventional (BCS) superconductor, which has an <span class="math inline">\(s\)</span>-wave singlet order parameter <span class="math inline">\(Δ_s\)</span>. In this case, we want to consider a medium-large <span class="math inline">\(101\times101\)</span> lattice, but are only interested in the density of states in a narrow energy range around the “superconducting gap” at the Fermi level – since this is the part of the energy spectrum that is relevant for most transport phenomena.</p>
 <p>Conventional superconductors can be described by a Hamiltonian operator <span class="math inline">\(\mathcal{H} = \mathcal{H}_N + \mathcal{H}_S\)</span> that contain both the normal-metal contributions <span class="math inline">\(\mathcal{H}_N\)</span> described under <a href="#normal-metal">normal metal</a> and an additional pairing term <span class="math display">\[\mathcal{H}_S = -\sum_{i\sigma\sigma'} c^\dagger_{i\sigma} (\Delta_s i\sigma_2)_{\sigma\sigma'} c^\dagger_{i\sigma'} + \text{h.c.,}\]</span> where <span class="math inline">\(\Delta_s\)</span> is a complex number that can in general be a function of position. The matrix <span class="math inline">\(i\sigma_2\)</span> simply produces a spin structure of the form <span class="math inline">\(\uparrow\downarrow - \downarrow\uparrow\)</span>, which is appropriate for a spin-singlet state.</p>
 <p>To model this using Bodge, we simply use a <code>with system as (H, Δ)</code> block to access the Hamiltonian object, and set the on-site terms <code>Δ[i, i]</code> to the contents <span class="math inline">\(\Delta_s i\sigma_2\)</span> of the parentheses above:</p>
-<div id="385b8570" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">201</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">201</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="dv">3</span> <span class="op">*</span> t</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>Δs <span class="op">=</span> <span class="fl">0.2</span> <span class="op">*</span> t</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δs <span class="op">*</span> jσ<span class="dv">2</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="20a81863" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">201</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">201</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="dv">3</span> <span class="op">*</span> t</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>Δs <span class="op">=</span> <span class="fl">0.2</span> <span class="op">*</span> t</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δs <span class="op">*</span> jσ<span class="dv">2</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -350,70 +353,70 @@ window.Quarto = {
 </div>
 <p>The rest of the code is the same as for the normal metal. We correctly get a “superconducting gap” of width <span class="math inline">\(2Δ_s\)</span> at the Fermi level <span class="math inline">\(\omega=0\)</span>.</p>
 <p>It is also quite straight-forward if you want to consider a current-carrying superconductor: you just need to introduce a complex phase winding into the superconducting gap. For instance, to get one full phase winding across the system along the <span class="math inline">\(x\)</span> direction, we can let <span class="math inline">\(\Delta_s \to \Delta_s e^{2 \pi i x/L_x}\)</span>. To ensure that charge current is conserved at the system’s edges, you may however want to turn on periodic boundary conditions as well. Bodge can facilitate this using another iterator <code>lattice.edges()</code>, which returns pairs of lattice sites <code>(i, j)</code> on opposite ends of the lattice so that we can add hopping terms that “wrap around” the lattice. This is usually a decent model for the behavior of a large bulk superconductor with an applied electric current:</p>
-<div id="6a2bb127" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        Δi <span class="op">=</span> Δs <span class="op">*</span> np.exp(<span class="dv">2</span><span class="op">*</span>π<span class="op">*</span><span class="ot">1j</span><span class="op">*</span>i[<span class="dv">0</span>]<span class="op">/</span>Lx)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δi <span class="op">*</span> jσ<span class="dv">2</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.edges():</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="4a9c4df2" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        Δi <span class="op">=</span> Δs <span class="op">*</span> np.exp(<span class="dv">2</span><span class="op">*</span>π<span class="op">*</span><span class="ot">1j</span><span class="op">*</span>i[<span class="dv">0</span>]<span class="op">/</span>Lx)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δi <span class="op">*</span> jσ<span class="dv">2</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.edges():</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="unconventional-superconductors" class="level2">
 <h2 class="anchored" data-anchor-id="unconventional-superconductors">Unconventional superconductors</h2>
 <p>In unconventional superconductors, the electrons that form a Cooper pair reside on different lattice sites. Moreover, they often have a complex dependence on directionality, such that pairing terms along different cardinal axes on the lattice have different complex phases. Generally, this kind of pairing term contributes as follows to the Hamiltonian: <span class="math display">\[\mathcal{H}_S = -\sum_{\langle ij \rangle \sigma\sigma'} c^\dagger_{i\sigma} (\Delta_{ij})_{\sigma\sigma'} c^\dagger_{j\sigma'} + \text{h.c.,}\]</span> where we have to specify some pairing function <span class="math inline">\(\Delta_{ij}\)</span>.</p>
 <p>One example of such a state is a “<span class="math inline">\(d\)</span>-wave singlet superconductor”, which describes e.g.&nbsp;high-temperature cuprates. This can be modeled as: <span class="math display">\[\Delta_{ij} = \begin{cases} -\Delta_d i\sigma_2 &amp; \text{if $i, j$ are neighbors along the $x$ axis,}\\ +\Delta_d i\sigma_2 &amp; \text{if $i, j$ are neighbors along the $y$ axis.}\end{cases}\]</span> Implementing this kind of system in Bodge is straight-forward:</p>
-<div id="c1d84b56" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Δd <span class="op">=</span> <span class="fl">0.1</span> <span class="op">*</span> t</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds(axis<span class="op">=</span><span class="dv">0</span>):</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">-</span>Δd <span class="op">*</span> jσ<span class="dv">2</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds(axis<span class="op">=</span><span class="dv">1</span>):</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">+</span>Δd <span class="op">*</span> jσ<span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="ab4e9f1e" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Δd <span class="op">=</span> <span class="fl">0.1</span> <span class="op">*</span> t</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds(axis<span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">-</span>Δd <span class="op">*</span> jσ<span class="dv">2</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds(axis<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">+</span>Δd <span class="op">*</span> jσ<span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>For “<span class="math inline">\(p\)</span>-wave triplet superconductors”, the pairing <span class="math inline">\(\Delta_{ij}\)</span> can become very complicated due to the many different degrees of freedom involved. In the literature, this is often described in terms of a <a href="https://dx.doi.org/10.1103/revmodphys.75.657"><span class="math inline">\(d\)</span>-vector</a>: <span class="math inline">\(\Delta_{ij} = [\mathbf{d}(\mathbf{p})\cdot\boldsymbol{\sigma}]i\sigma_2\)</span> where <span class="math inline">\(\mathbf{d}(\mathbf{p})\)</span> is a linear-in-momentum function that describes the spin dependence. Bodge can take in a <span class="math inline">\(d\)</span>-vector expression like e.g.&nbsp;<span class="math inline">\(\mathbf{d}(\mathbf{p}) = \mathbf{e}_z p_x\)</span> and construct the correct matrix expression for <span class="math inline">\(\Delta_{ij}\)</span> for you. Here is an example:</p>
-<div id="42639f51" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">101</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">101</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="dv">3</span> <span class="op">*</span> t</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>Δp <span class="op">=</span> <span class="fl">0.3</span> <span class="op">*</span> t</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>σp <span class="op">=</span> pwave(<span class="st">"e_z * p_x"</span>)</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">-</span>Δp <span class="op">*</span> σp(i, j)</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="dv">101</span>)</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="457c37a7" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">101</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">101</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="dv">3</span> <span class="op">*</span> t</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>Δp <span class="op">=</span> <span class="fl">0.3</span> <span class="op">*</span> t</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>σp <span class="op">=</span> pwave(<span class="st">"e_z * p_x"</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        Δ[i, j] <span class="op">=</span> <span class="op">-</span>Δp <span class="op">*</span> σp(i, j)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="fl">1.5</span> <span class="op">*</span> Δp, <span class="dv">101</span>)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -429,42 +432,42 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="magnetic-materials">Magnetic materials</h2>
 <p>Let us now consider a superconductor exposed to a strong magnetic field, where the Zeeman effect can result in a spin splitting. Alternatively, the same physics would arise in e.g.&nbsp;superconductor/ferromagnet bilayers, and Bodge can model these as well (you just need some simple <code>if</code> tests to determine which fields apply to which lattice sites).</p>
 <p>Magnetism can be modeled by introducing a spin-dependent term <span class="math inline">\(-\mathbf{M} \cdot \boldsymbol{\sigma}\)</span> into the on-site Hamiltonian <span class="math inline">\(H_{ii}\)</span>. In the simple case <span class="math inline">\(\mathbf{M} = M_z \mathbf{e}_z\)</span> of a homogeneous magnetic field, we are simply left with a term <span class="math inline">\(-M_z \sigma_3\)</span> in the Hamiltonian. Modifying the code for the <a href="#conventional-superconductor">conventional superconductor</a>, we get:</p>
-<div id="d8f959ad" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">201</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">201</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="fl">3.0</span> <span class="op">*</span> t</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>Δs <span class="op">=</span> <span class="fl">0.20</span> <span class="op">*</span> t</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>Mz <span class="op">=</span> <span class="fl">0.25</span> <span class="op">*</span> Δs</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span> <span class="op">-</span> Mz <span class="op">*</span> σ<span class="dv">3</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δs <span class="op">*</span> jσ<span class="dv">2</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="25a3f4eb" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bodge <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Model parameters</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>Lx <span class="op">=</span> <span class="dv">201</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>Ly <span class="op">=</span> <span class="dv">201</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>μ <span class="op">=</span> <span class="op">-</span><span class="fl">3.0</span> <span class="op">*</span> t</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>Δs <span class="op">=</span> <span class="fl">0.20</span> <span class="op">*</span> t</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>Mz <span class="op">=</span> <span class="fl">0.25</span> <span class="op">*</span> Δs</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the Hamiltonian</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>lattice <span class="op">=</span> CubicLattice((Lx, Ly, <span class="dv">1</span>))</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>system <span class="op">=</span> Hamiltonian(lattice)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> system <span class="im">as</span> (H, Δ):</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> lattice.sites():</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        H[i, i] <span class="op">=</span> <span class="op">-</span>μ <span class="op">*</span> σ<span class="dv">0</span> <span class="op">-</span> Mz <span class="op">*</span> σ<span class="dv">3</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        Δ[i, i] <span class="op">=</span> <span class="op">-</span>Δs <span class="op">*</span> jσ<span class="dv">2</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, j <span class="kw">in</span> lattice.bonds():</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        H[i, j] <span class="op">=</span> <span class="op">-</span>t <span class="op">*</span> σ<span class="dv">0</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density of states</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> (Lx<span class="op">//</span><span class="dv">2</span>, Ly<span class="op">//</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="fl">1.5</span> <span class="op">*</span> Δs, <span class="dv">101</span>)</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>ρ <span class="op">=</span> system.ldos(i, ω)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the results</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Quasiparticle energy ω/t"</span>)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Density of states ρ(ω)"</span>)</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>plt.plot(ω, ρ)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -495,18 +498,18 @@ window.Quarto = {
 <p>One of the main goals of Bodge is that it should be fast, and scale well even to very large systems (i.e.&nbsp;even for millions of lattice sites). In practice, this is achieved using sparse matrices internally. This is important because most tight-binding models result in extremely sparse Hamiltonians.</p>
 <p>For instance, consider a 2D square lattice with side lengths <span class="math inline">\(L\)</span>, which has in total <span class="math inline">\(N = L \times L\)</span> lattice sites. The Hamiltonian matrix <span class="math inline">\(\check{H}\)</span> of this system contains <span class="math inline">\(\mathcal{O}(N^2)\)</span> elements. However, there are only <span class="math inline">\(N\)</span> on-site terms and <span class="math inline">\(4N\)</span> nearest-neighbor terms, resulting in only <span class="math inline">\(\mathcal{O}(N)\)</span> non-zero elements in this matrix. Thus, the proportion of non-zero elements in the matrix scales as <span class="math inline">\(\mathcal{O}(1/N)\)</span>, resulting in a huge waste of CPU and RAM for large <span class="math inline">\(N\)</span>. If we use sparse matrices, then only the non-zero elements are actually stored in memory and used in e.g.&nbsp;matrix multiplications, thus providing an <span class="math inline">\(\mathcal{O}(N)\)</span> improvement of many matrix algorithms. Internally, Bodge represents the Hamiltonian matrix as a <code>scipy.sparse.bsr_matrix</code> with block size 4, since we know that the <span class="math inline">\(4N \times 4N\)</span> Hamiltonian is constructed from <span class="math inline">\(4\times4\)</span> matrix blocks. Methods are however provided to convert this into either an <code>numpy.array</code> (dense matrix) or other relevant <code>scipy.sparse</code> matrix format.</p>
 <p>Below, I show some results generated using <code>misc/benchmark.py</code>. This benchmark essentially constructs a non-trivial sparse Hamiltonian matrix for a superconducting system with <span class="math inline">\(N\)</span> atomic sites using both Bodge and <a href="https://kwant-project.org/">Kwant</a>. The latter is basically the state of the art when it comes to numerical calculations in condensed matter physics and therefore a reasonable benchmark. As you can see, both libraries construct the Hamiltonian in <span class="math inline">\(\mathcal{O}(N)\)</span> time, in contrast to the <span class="math inline">\(\mathcal{O}(N^2)\)</span> time one might have expected if one used dense matrices.</p>
-<div id="9ca8ed98" class="cell" data-execution_count="8">
+<div id="6a23999f" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">"bmh"</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"misc/benchmark.csv"</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>sns.lineplot(df, x<span class="op">=</span><span class="st">"Atoms"</span>, y<span class="op">=</span><span class="st">"Seconds"</span>, hue<span class="op">=</span><span class="st">"Package"</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">"bmh"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"misc/benchmark.csv"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>sns.lineplot(df, x<span class="op">=</span><span class="st">"Atoms"</span>, y<span class="op">=</span><span class="st">"Seconds"</span>, hue<span class="op">=</span><span class="st">"Package"</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -526,7 +529,7 @@ window.Quarto = {
 <div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>Examples: Vim has built-in “digraphs” where you can press <code>&lt;C-k&gt;s*</code> in insert mode to type <code>σ</code>. Emacs has a built-in “TeX input method”, which means that after pressing <code>C-\</code> you can type <code>\sigma</code> to insert the symbol <code>σ</code>. Most other editors code have third-party plugins for this, e.g.&nbsp;<a href="https://marketplace.visualstudio.com/items?itemName=oijaz.unicode-latex">Unicode Latex</a> for VSCode. Another option is to use an OS-wide snippet expander (e.g.&nbsp;TextExpander), which you can setup to e.g.&nbsp;convert <code>;s</code> to <code>σ</code> in any application. There are many alternatives!<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>Examples: Vim has built-in “digraphs” where you can press <code>&lt;C-k&gt;s*</code> in insert mode to type <code>σ</code>. Emacs has a built-in “TeX input method”, which means that after pressing <code>C-\</code> you can type <code>\sigma</code> to insert the symbol <code>σ</code>. Most other editors code have third-party plugins for this, e.g.&nbsp;<a href="https://marketplace.visualstudio.com/items?itemName=oijaz.unicode-latex">Unicode Latex</a> for VSCode. Another option is to use an OS-wide snippet expander (e.g.&nbsp;TextExpander), which you can setup to e.g.&nbsp;convert <code>;s</code> to <code>a</code> in any application. Another alternative is to just enable a Greek keyboard layout in your OS settings, with a hotkey to switch between the layouts. There are many alternatives!<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
