@@ -27,8 +27,8 @@ Internally, Bodge uses a sparse matrix (`scipy.sparse`) to represent the Hamilto
 which allows you to efficiently construct tight-binding models with millions of
 lattice sites if needed. However, you can also easily convert the result to a
 dense matrix (`numpy.array`) if that's more convenient. The package follows
-modern software development practices: near-complete test coverage (`pytest`),
-fast runtime type checking (`beartype`), and mostly PEP-8 compliant (`black`).
+modern software development practices: full test coverage (`pytest`), fast
+runtime type checking (`beartype`), and mostly PEP-8 compliant (`black`).
 
 The full documentation of the Bodge package is available [here][0].
 

@@ -429,7 +429,7 @@ def test_ldos():
             Δ[i, j] = (r() * σ1 + r() * σ2 + r() * σ3) @ jσ2
 
     # Calculate the LDOS everywhere.
-    sites = [(i,j,k) for i in range(5) for j in range(5) for k in range(2)]
+    sites = [(i, j, k) for i in range(5) for j in range(5) for k in range(2)]
     energies = [0.0, 0.01, 0.10, 0.50, 1.00, 2.00, 4.00]
 
     for site in sites:

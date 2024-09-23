@@ -66,6 +66,7 @@ def test_superconducting_gap_existence():
     # The lowest energy eigenvalue should increase in a superconductor.
     assert ε2 > ε1
 
+
 def test_superconducting_gap_scaling():
     """The superconducting energy gap is given by its order parameter.
 
@@ -110,6 +111,7 @@ def test_superconducting_gap_scaling():
     for Δ1, Δ2 in zip(Δ_out[:-1], Δ_out[1:]):
         assert Δ1 < Δ2
 
+
 def test_magnetic_isotropy():
     """Test that the direction of a magnetic field is irrelevant.
 
@@ -135,9 +137,9 @@ def test_magnetic_isotropy():
     # Superconductor without a magnetic field.
     with system as (H, Δ):
         for i in lattice.sites():
-            Δ[i,i] = -Δ0 * jσ2
+            Δ[i, i] = -Δ0 * jσ2
         for i, j in lattice.bonds():
-            H[i,j] = -t * σ0
+            H[i, j] = -t * σ0
 
     F0 = system.free_energy(T)
     ρ0 = system.ldos(i0, E0)[0]
@@ -152,7 +154,7 @@ def test_magnetic_isotropy():
 
         with system as (H, Δ):
             for i in lattice.sites():
-                H[i,i] = -M0 * σ
+                H[i, i] = -M0 * σ
 
         Fs.append(system.free_energy(T))
         ρs.append(system.ldos(i0, E0)[0])
@@ -266,6 +268,7 @@ def test_odd_frequency():
     assert Z1 >= 0
     assert Z2 >= Z1
 
+
 def test_energy_temperature():
     """Test that the free energy decreases as a function of temperature.
 
@@ -293,6 +296,7 @@ def test_energy_temperature():
     for T1, T2 in zip(free_energies[:-1], free_energies[1:]):
         assert T1 > T2
 
+
 def test_pwave_edge_states():
     """In a p-wave superconductor, check that the gap disappears at edges.
 
@@ -308,11 +312,11 @@ def test_pwave_edge_states():
     σp = pwave("e_z * p_x")
     with system as (H, Δ):
         for i, j in lattice.bonds():
-            H[i,j] = -t * σ0
-            Δ[i,j] = -Δ0 * σp(i,j)
+            H[i, j] = -t * σ0
+            Δ[i, j] = -Δ0 * σp(i, j)
 
     # Calculate the LDOS at the center and edges.
-    energies = [0.0, Δ0/4]
+    energies = [0.0, Δ0 / 4]
 
     i1 = (15, 15, 0)
     i2 = (15, 0, 0)
@@ -333,6 +337,7 @@ def test_pwave_edge_states():
     assert ρ3 > ρ2
     assert ρ4 > ρ1
     assert ρ4 > ρ2
+
 
 def test_josephson_minigap():
     """Test how the gap in an S/N/S Josephson junction varies with phase.
@@ -356,11 +361,11 @@ def test_josephson_minigap():
         with system as (H, Δ):
             for i in lattice.sites():
                 if i[0] < 32:
-                    Δ[i,i] = -Δ0 * jσ2 * np.exp(-1j * ϕ / 2)
-                if i[0] >= 128-32:
-                    Δ[i,i] = -Δ0 * jσ2 * np.exp(+1j * ϕ / 2)
+                    Δ[i, i] = -Δ0 * jσ2 * np.exp(-1j * ϕ / 2)
+                if i[0] >= 128 - 32:
+                    Δ[i, i] = -Δ0 * jσ2 * np.exp(+1j * ϕ / 2)
             for i, j in lattice.bonds():
-                H[i,j] = -t * σ0
+                H[i, j] = -t * σ0
 
         E, _ = system.diagonalize()
 
