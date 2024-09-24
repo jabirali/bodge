@@ -249,7 +249,8 @@ class Hamiltonian:
 
         return F
 
-    def ldos(self, site: Coord, energies: Matrix) -> tuple[Matrix, Matrix]:
+    @typecheck
+    def ldos(self, site: Coord, energies: Matrix | list[float]) -> Matrix:
         """Calculate the local density of states via a resolvent operator approach.
 
         We define the resolvent operator as [(ε+iη)I - H] R(ε) = I, which can be
@@ -315,6 +316,7 @@ class Hamiltonian:
         return ρ
 
 
+@typecheck
 def swave() -> Callable:
     """Hamiltonian terms for s-wave superconducting order.
 
@@ -333,6 +335,7 @@ def swave() -> Callable:
     return σ_s
 
 
+@typecheck
 def pwave(dvector: str) -> Callable:
     """Hamiltonian terms for p-wave superconducting order.
 
@@ -384,6 +387,7 @@ def pwave(dvector: str) -> Callable:
     return σ_p
 
 
+@typecheck
 def dwave() -> Callable:
     """Generate the d-wave superconducting order parameter.
 
@@ -409,6 +413,7 @@ def dwave() -> Callable:
     return σ_d
 
 
+@typecheck
 def ssd(system: Hamiltonian) -> Callable:
     """Sine-Squared Deformation of a Hamiltonian on a cubic lattice.
 
