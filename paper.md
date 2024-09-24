@@ -18,6 +18,7 @@ affiliations:
     index: 1
   - name: Center for Quantum Spintronics, Department of Physics, Norwegian University of Science and Technology, NO-7491 Trondheim, Norway
     index: 2
+
 date: 12 July 2024
 bibliography: paper.bib
 ---
@@ -43,6 +44,8 @@ To do anything useful with that Hamiltonian *on a computer*, however, you typica
 - The code itself follows modern software development practices: Full test coverage with continuous integration (via `pytest`), fast runtime type checking (via `beartype`), and PEP-8 compliance (via `black`).
 
 There are two main alternatives that arguably fill a similar niche to Bodge: Kwant [@groth_kwant_2014] and Pybinding [@moldovan_pybinding_2020]. Compared to these packages, the main benefit of Bodge is the focus on the BdG Hamiltonian in particular. For instance, using Kwant, it is up to the user to declare that each lattice site has 4 degrees of freedom (spin-up electrons, spin-down electrons, spin-up holes, and spin-down holes), and to ensure that you construct a Hamiltonian with the correct particle-hole symmetries. Bodge, however, *assumes* that these are the only relevant degrees of freedom, and enforces the relevant symmetries by default. In practice, this means that Kwant can be used to study a broader variety of physical systems, whereas Bodge can provide a friendlier syntax for users who work specifically on superconducting systems. Both packages support both NumPy arrays and SciPy sparse matrices as output formats, and both provide similar performance in the limit of large systems.
+
+*Sparse matrix formats*, such as e.g. the *Compressed Sparse Row* (CSR) format used in the example below, have the advantage that they basically only store the non-zero elements of a matrix. In the case of a typical tight-binding model with nearest-neighbor hopping terms, the Hamiltonian matrix of a system of $N$ atoms has $\mathcal{O}(N^2)$ elements where only $\mathcal{O}(N)$ are actually non-zero. Thus, algorithms that leverage sparse matrices often result in at least an $\mathcal{O}(N)$ numerical speed-up, which becomes highly significant for large systems. With additional approximations, even larger speed-ups can in some cases be possible [@nagai2020a], although it depends on your system size and the strength of its interactions whether such approximations provide a good trade-off between accuracy and speed. However, *dense matrices* allow for simpler solution algorithms (e.g. via full matrix diagonalization), and can be as fast as sparse matrices for smaller systems or GPU calculations. For this reason, both sparse and dense matrices are fully supported by Bodge, allowing the user to pick the most suitable matrix format for their task.
 
 # Examples
 
@@ -78,7 +81,7 @@ Note the use of a context manager (`with`-block) to provide an intuitive array s
 
 # Acknowledgements
 
-I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism. I also acknowledge useful discussions with Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen on tight-binding modeling in general.
+I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism. I also acknowledge useful discussions with Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen on tight-binding modeling in general. I also want to thank Mayeul d'Avezac and Yue-Wen Fang for providing helpful input during the referee process, which improved the Bodge software package.
 
 This work was supported by the Research Council of Norway through Grant No. 323766 and its Centres of Excellence funding scheme Grant No. 262633 "QuSpin." During the development of this package, some numerical calculations were performed on resources provided by Sigma2 – the National Infrastructure for High Performance Computing and Data Storage in Norway, Project No. NN9577K. The work presented in this paper has also benefited from the Experimental Infrastructure for Exploration of Exascale Computing (eX3), which is financially supported by the Research Council of Norway under contract 270053.
 
