@@ -75,7 +75,7 @@ with system as (H, Δ):
         else:
             H[i, i] = -μ * σ0 - Mz * σ3
 ```
-Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. Afterwards, there are several different ways to use the resulting `Hamiltonian` object.
+Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. Afterwards, there are many different ways to use the resulting object.
 
 Some physical observables can be directly calculated using the methods provided in Bodge. For instance, one can use the method `system.ldos` to directly calculate the local density of states, which can then be used to check for spectral features such as e.g. a *superconducting gap* or a *zero-energy peak*. There is also a method `system.free_energy` which calculates the *free energy* of the system. By varying parameters in the Hamiltonian (e.g. the orientation of a magnetic field) and then minimizing this free energy, one can e.g. determine the ground state of the system.
 
