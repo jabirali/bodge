@@ -47,7 +47,7 @@ There are two main alternatives that arguably fill a similar niche to Bodge: Kwa
 
 *Sparse matrix formats*, such as e.g. the *Compressed Sparse Row* (CSR) format used in the example below, have the advantage that they basically only store the non-zero elements of a matrix. In the case of a typical tight-binding model with nearest-neighbor hopping terms, the Hamiltonian matrix of a system of $N$ atoms has $\mathcal{O}(N^2)$ elements where only $\mathcal{O}(N)$ are actually non-zero. Thus, algorithms that leverage sparse matrices often result in at least an $\mathcal{O}(N)$ numerical speed-up, which becomes highly significant for large systems. With additional approximations, even larger speed-ups can in some cases be possible [@nagai_krylov_2020], although it depends on your system size and the strength of its interactions whether such approximations provide a good trade-off between accuracy and speed. However, *dense matrices* (i.e. NumPy arrays) allow for simpler solution algorithms based on e.g. full matrix diagonalization, and can become faster than sparse matrix algorithms for small systems or when leveraging GPU calculations. For this reason, both sparse and dense matrices are fully supported by Bodge, allowing the user to pick the most suitable matrix format for the task at hand.
 
-# Examples
+# Examples and workflows
 
 Introductory examples of how to use Bodge are provided in the [official documentation](https://jabirali.github.io/bodge/). Examples of research problems that have been studied using Bodge include superconductor/altermagnet heterostructures [@ouassou_alt_2023] and RKKY interactions in unconventional superconductors [@ouassou_rkky_2024; @ouassou_dmi_2024]. These papers also describe some sparse matrix algorithms that have been used to speed up numerical calculations based on Bodge, including Chebyshev expansion of the Fermi matrix [@weisse_chebyshev_2006; @benfenati_fermi_2022; @goedecker_fermi_1994] and a quick way to calculate the local density of states [@nagai_ldos_2017].
 
@@ -74,10 +74,24 @@ with system as (H, Δ):
             Δ[i, i] = -Δs * jσ2
         else:
             H[i, i] = -μ * σ0 - Mz * σ3
+```
+Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. Afterwards, there are several different ways to use the resulting `Hamiltonian` object.
 
+Some physical observables can be directly calculated using the methods provided in Bodge. For instance, one can use the method `system.ldos` to directly calculate the local density of states, which can then be used to check for spectral features such as e.g. a *superconducting gap* or a *zero-energy peak*. There is also a method `system.free_energy` which calculates the *free energy* of the system. By varying parameters in the Hamiltonian (e.g. the orientation of a magnetic field) and then minimizing this free energy, one can e.g. determine the ground state of the system.
+
+Most calculations of interest, however, requires that the user implements some code themselves. There are then two main approaches one can take. The classic approach is *matrix diagonalization* which uses dense matrices internally.[^1] Bodge provides the method `diagonalize` for this purpose:
+```python
+E, X = system.diagonalize()
+```
+The results above contain the positive energies $E_n$ and corresponding  $\mathbf{X}_n$ which satisfy the eigenvalue equation $\mathbf{H} \mathbf{X}_n = E_n \mathbf{X}_n$ [^2]. Once the eigenvalues and eigenvectors have been obtained, the user can themselves calculate physical properties of interest from on these using equations from standard textbooks on the "Bogoliubov–de Gennes" approach to modeling superconductivity [@zhu_bdg_2016]. It is a future goal to incorporate more calculation methods of this kind into the Bodge package itself.
+
+Examples of physical observables that can be calculated from the eigenvalues and eigenvectors include e.g. the superconducting order parameter, electric currents, and spin currents. Indirectly, these can in turn be used to calculate even more physical observables. For instance, the critical current of a Josephson junction can be defined as the largest electric current that can flow through it for any phase difference, and the critical temperature of a bulk superconductor can be defined as the largest temperature at which the superconducting order parameter remains non-zero.
+
+A modern alternative to matrix diagonalization is a series of algorithms based on Chebyshev expansion of the Hamiltonian matrix [@ouassou_alt_2023; @benfenati_fermi_2022; @covaci_cbdg_2010; @nagai_krylov_2020; @weisse_chebyshev_2006]. These algorithms take advantage of the extreme sparsity of the Hamiltonian matrix, and thus typically provide a performance benefit for very large lattices. One of the main design goals behind Bodge has been to make it trivial to construct sparse representations of the Hamiltonian matrix for this purpose, and it is therefore straight-forward to export the result as e.g. a CSR matrix:
+```python
 H = system.matrix(format="csr")
 ```
-Note the use of a context manager (`with`-block) to provide an intuitive array syntax for accessing the relevant parts of the Hamiltonian matrix, while abstracting away the underlying sparse matrix details. You can use this Hamiltonian to easily implement your own sparse matrix algorithms. Alternatively, Bodge provides several convenience methods to e.g. calculate the density of states, free energy, etc. More such methods are currently under development.
+The user can then easily use the resulting matrix $\mathbf{H}$ to formulate their own sparse matrix algorithms of this kind.[^3]
 
 # Acknowledgements
 
@@ -86,3 +100,7 @@ I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Li
 This work was supported by the Research Council of Norway through Grant No. 323766 and its Centres of Excellence funding scheme Grant No. 262633 "QuSpin." During the development of this package, some numerical calculations were performed on resources provided by Sigma2 – the National Infrastructure for High Performance Computing and Data Storage in Norway, Project No. NN9577K. The work presented in this paper has also benefited from the Experimental Infrastructure for Exploration of Exascale Computing (eX3), which is financially supported by the Research Council of Norway under contract 270053.
 
 # References
+
+[^1] Diagonalization implies finding *every* eigenvalue and eigenvector of the system, in which case sparse matrices offer less benefits. The most performant approach is to use a GPU for the matrix diagonalization, and CUDA support for Bodge is currently under development.
+
+[^2] Only positive eigenvalues are kept because of the *Nambu doubling* that affects the BdG formalism, whereby the positive-energy and negative-energy solutions are really redundant descriptions of the same degrees of freedom.
