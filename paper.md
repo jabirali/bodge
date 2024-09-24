@@ -79,11 +79,11 @@ Note the use of a context manager (`with`-block) to provide an intuitive array s
 
 Some physical observables can be directly calculated using the methods provided in Bodge. For instance, one can use the method `system.ldos` to directly calculate the local density of states, which can then be used to check for spectral features such as e.g. a *superconducting gap* or a *zero-energy peak*. There is also a method `system.free_energy` which calculates the *free energy* of the system. By varying parameters in the Hamiltonian (e.g. the orientation of a magnetic field) and then minimizing this free energy, one can e.g. determine the ground state of the system.
 
-Most calculations of interest, however, requires that the user implements some code themselves. There are then two main approaches one can take. The classic approach is *matrix diagonalization* which uses dense matrices internally.[^1] Bodge provides the method `diagonalize` for this purpose:
+Most calculations of interest, however, requires that the user implements some code themselves. There are then two main approaches one can take. The classic approach is *matrix diagonalization* which uses dense matrices internally. Bodge provides the method `diagonalize` for this purpose:
 ```python
 E, X = system.diagonalize()
 ```
-The results above contain the positive energies $E_n$ and corresponding  $\mathbf{X}_n$ which satisfy the eigenvalue equation $\mathbf{H} \mathbf{X}_n = E_n \mathbf{X}_n$ [^2]. Once the eigenvalues and eigenvectors have been obtained, the user can themselves calculate physical properties of interest from on these using equations from standard textbooks on the "Bogoliubov–de Gennes" approach to modeling superconductivity [@zhu_bdg_2016]. It is a future goal to incorporate more calculation methods of this kind into the Bodge package itself.
+The results above contain the positive energies $E_n$ and corresponding  $\mathbf{X}_n$ which satisfy the eigenvalue equation $\mathbf{H} \mathbf{X}_n = E_n \mathbf{X}_n$. (Only positive eigenvalues are returned due to the so-called "Nambu doubling" of degrees of freedom in superconducting systems.) Once the eigenvalues and eigenvectors have been obtained, the user can themselves calculate physical properties of interest from on these using equations from standard textbooks on the "Bogoliubov–de Gennes" approach to modeling superconductivity [@zhu_bdg_2016]. It is a future goal to incorporate more calculation methods of this kind into the Bodge package itself. Moreover, support for matrix diagonalization using GPUs (via the CuPy package) is currently under development since it offers orders of magnitude faster computation when the right hardware is available.
 
 Examples of physical observables that can be calculated from the eigenvalues and eigenvectors include e.g. the superconducting order parameter, electric currents, and spin currents. Indirectly, these can in turn be used to calculate even more physical observables. For instance, the critical current of a Josephson junction can be defined as the largest electric current that can flow through it for any phase difference, and the critical temperature of a bulk superconductor can be defined as the largest temperature at which the superconducting order parameter remains non-zero.
 
@@ -91,7 +91,7 @@ A modern alternative to matrix diagonalization is a series of algorithms based o
 ```python
 H = system.matrix(format="csr")
 ```
-The user can then easily use the resulting matrix $\mathbf{H}$ to formulate their own sparse matrix algorithms of this kind.[^3]
+The user can then easily use the resulting matrix $\mathbf{H}$ to formulate their own sparse matrix algorithms of this kind.
 
 # Acknowledgements
 
@@ -100,7 +100,3 @@ I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Li
 This work was supported by the Research Council of Norway through Grant No. 323766 and its Centres of Excellence funding scheme Grant No. 262633 "QuSpin." During the development of this package, some numerical calculations were performed on resources provided by Sigma2 – the National Infrastructure for High Performance Computing and Data Storage in Norway, Project No. NN9577K. The work presented in this paper has also benefited from the Experimental Infrastructure for Exploration of Exascale Computing (eX3), which is financially supported by the Research Council of Norway under contract 270053.
 
 # References
-
-[^1] Diagonalization implies finding *every* eigenvalue and eigenvector of the system, in which case sparse matrices offer less benefits. The most performant approach is to use a GPU for the matrix diagonalization, and CUDA support for Bodge is currently under development.
-
-[^2] Only positive eigenvalues are kept because of the *Nambu doubling* that affects the BdG formalism, whereby the positive-energy and negative-energy solutions are really redundant descriptions of the same degrees of freedom.
