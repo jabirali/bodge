@@ -25,7 +25,7 @@ bibliography: paper.bib
 
 # Summary
 
-[Bodge](https://github.com/jabirali/bodge) is Python package for constructing *large-scale real-space tight-binding models* for calculations in condensed matter physics. "Large-scale" means that it should remain performant even for lattices with millions of atoms, and "real-space" means that the model is formulated in terms of individual lattice sites and not in e.g. momentum space.
+[Bodge](https://github.com/jabirali/bodge) is a Python package for constructing *large-scale real-space tight-binding models* for calculations in condensed matter physics. "Large-scale" means that it should remain performant even for lattices with millions of atoms, and "real-space" means that the model is formulated in terms of individual lattice sites and not in e.g. momentum space.
 
 Although general tight-binding models can be constructed with this package, the main focus is on the Bogoliubov-DeGennes ("BoDGe") Hamiltonian used to model superconductivity in the clean limit [@zhu_bdg_2016; @degennes_bdg_1966]. The package is designed to be easy to use, flexible, and extensible – and very few lines of code are required to model heterostructures containing e.g. conventional and unconventional superconductors, ferromagnets and antiferromagnets, altermagnetism and spin-orbit coupling, etc.
 
@@ -95,7 +95,7 @@ The user can then easily use the resulting matrix $\mathbf{H}$ to formulate thei
 
 # Acknowledgements
 
-I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism. I also acknowledge useful discussions with Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen on tight-binding modeling in general. I also want to thank Mayeul d'Avezac and Yue-Wen Fang for providing helpful input during the referee process, which improved the Bodge software package.
+I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism. I also thank Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen for useful discussions on tight-binding modeling in general. Finally, I want to thank Mayeul d'Avezac and Yue-Wen Fang for their constructive input during the referee process, which has improved the Bodge software package and its documentation.
 
 This work was supported by the Research Council of Norway through Grant No. 323766 and its Centres of Excellence funding scheme Grant No. 262633 "QuSpin." During the development of this package, some numerical calculations were performed on resources provided by Sigma2 – the National Infrastructure for High Performance Computing and Data Storage in Norway, Project No. NN9577K. The work presented in this paper has also benefited from the Experimental Infrastructure for Exploration of Exascale Computing (eX3), which is financially supported by the Research Council of Norway under contract 270053.
 
