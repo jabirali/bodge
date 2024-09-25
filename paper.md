@@ -93,7 +93,7 @@ H = system.matrix(format="csr")
 ```
 The user can then easily use the resulting matrix $\mathbf{H}$ to formulate their own sparse matrix algorithms of this kind. For instance, arbitrary matrix functions can typically be evaluated as a Chebyshev expansion $f(\mathbf{H}) = \sum_{m=0}^{M-1} f_m T_m(\mathbf{H})$, where the Chebyshev moments $f_m$ of the function $f(\,\cdot\,)$ are computationally inexpensive to obtain, whereas the Chebyshev matrix polynomials $T_m(\,\cdot\,)$ can be obtained via the recursion relation [@weisse_chebyshev_2006]
 $$T_m(\mathbf{H}) = \begin{cases} \mathbf{H}^m & \text{if $0 \leq m \leq 1$,} \\ 2\mathbf{H}T_{m-1}(\mathbf{H}) - T_{m-2}(\mathbf{H}) & \text{if $m > 1$.} \end{cases}$$
-Since matrix multiplication is an efficient process for CSR sparse matrices, the trick is simply to determine what matrix functions $f(\mathbf{H})$ that can provide useful insights about a given system.
+The trick is then to find a suitable matrix function $f(\mathbf{H})$ to study your physical system.
 
 # Acknowledgements
 
