@@ -92,7 +92,7 @@ A modern alternative to matrix diagonalization is a series of algorithms based o
 H = system.matrix(format="csr")
 ```
 The user can then easily use the resulting matrix $\mathbf{H}$ to formulate their own sparse matrix algorithms of this kind. For instance, arbitrary matrix functions can typically be evaluated as a Chebyshev expansion $f(\mathbf{H}) = \sum_n f_n T_n(\mathbf{H})$, where the Chebyshev moments $f_n$ of the function $f$ are computationally inexpensive to obtain, whereas the Chebyshev matrix polynomials are obtained via the recursion relations
-$$T_n(\mathbf{H}) = \begin{cases} \mathbf{H}^n & \text{if $n \neq 1$,} \\ 2\mathbf{H}T_{n-1}(\mathbf{H}) - \mathbf{T}_{n-2}(\mathbf{H}) & \text{for $n > 1$.}$$
+$$T_n(\mathbf{H}) = \begin{cases} \mathbf{H}^n & \text{if $n \neq 1$,} \\ 2\mathbf{H}T_{n-1}(\mathbf{H}) - \mathbf{T}_{n-2}(\mathbf{H}) & \text{for $n > 1$.} \end{cases}$$
 Since matrix multiplication is an efficient process for sparse matrices, the trick is simply to determine what matrix functions $f(\mathbf{H})$ provide useful information about the physical observables in a system of interest.
 
 # Acknowledgements
