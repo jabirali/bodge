@@ -97,7 +97,7 @@ The trick is then to find a suitable matrix function $f(\mathbf{H})$ to study yo
 
 # Acknowledgements
 
-I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism. I also thank Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen for useful discussions on tight-binding modeling in general. Finally, I want to thank Mayeul d'Avezac and Yue-Wen Fang for their constructive input during the referee process, which has improved the Bodge software package and its documentation.
+I acknowledge very helpful discussions with my PostDoc supervisor Prof. Jacob Linder when learning the BdG formalism, without which the Bodge package would not exist today. I also thank Morten Amundsen, Henning G. Hugdal, and Sol H. Jacobsen for useful discussions on tight-binding modeling in general. Finally, I want to thank Mayeul d'Avezac and Yue-Wen Fang for their constructive input during the referee process, which has improved the Bodge software package and its documentation.
 
 This work was supported by the Research Council of Norway through Grant No. 323766 and its Centres of Excellence funding scheme Grant No. 262633 "QuSpin." During the development of this package, some numerical calculations were performed on resources provided by Sigma2 – the National Infrastructure for High Performance Computing and Data Storage in Norway, Project No. NN9577K. The work presented in this paper has also benefited from the Experimental Infrastructure for Exploration of Exascale Computing (eX3), which is financially supported by the Research Council of Norway under contract 270053.
 
