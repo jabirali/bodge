@@ -171,7 +171,7 @@ class Hamiltonian:
 
     @typecheck
     def diagonalize(
-        self, cuda=False, format="reshape"
+        self, cuda: bool = False, format: str = "reshape"
     ) -> tuple[Matrix, Matrix] | dict[float, tuple[Matrix, Matrix, Matrix, Matrix]]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
@@ -286,7 +286,7 @@ class Hamiltonian:
         raise RuntimeError(f"Eigenstate format '{format}' is not yet supported.")
 
     @typecheck
-    def free_energy(self, temperature: float = 0.0) -> float:
+    def free_energy(self, temperature: float = 0.0, cuda: bool = False) -> float:
         """Calculate the Landau free energy for a given Hamiltonian.
 
         This is done by computing all the positive eigenvalues ε_n of the matrix,
@@ -303,6 +303,11 @@ class Hamiltonian:
         function of the mean fields, you need to add it to the return value of
         this function for selfconsistent calculations to be correct.
 
+        If you have an NVIDIA GPU available and install the optional dependency
+        `cupy`, you can set `cuda=True` when running this function to enable a
+        very fast GPU-accelerated eigenvalue calculation. Keep in mind that this
+        only works if the Hamiltonian matrix fits into your video memory.
+
         The algorithm implemented here is explained in Appendix C of:
 
             Ouassou et al. PRB 109, 174506 (2024).
@@ -311,9 +316,25 @@ class Hamiltonian:
         T = temperature
         H = self.matrix(format="dense")
 
-        # Calculate the eigenvalues via a dense parallel algorithm. My benchmarks
-        # have shown that this is usually faster than using the sparse solver.
-        ε = la.eigh(H, overwrite_a=True, eigvals_only=True, driver="evr")
+        # Calculate the eigenvalues via a dense parallel algorithm. My
+        # benchmarks have shown that this is usually faster than using the
+        # sparse solver. If `cuda` is set, use a GPU instead of a CPU.
+        if cuda:
+            # GPU-accelerated branch using CuPy.
+            try:
+                # Import libraries.
+                import cupy as cp
+                import cupy.linalg as cla
+
+                # Calculate eigenvalues (and skip eigenvectors).
+                ε = cp.asnumpy(cla.eigvalsh(cp.asarray(H)))
+            except ModuleNotFoundError:
+                raise RuntimeError(
+                    "Optional dependency `cupy` must be installed to use the flag `cuda=True`."
+                )
+        else:
+            # CPU fallback branch using SciPy.
+            ε = la.eigvalsh(H)
 
         # Extract the positive eigenvalues.
         ε = ε[ε > 0]

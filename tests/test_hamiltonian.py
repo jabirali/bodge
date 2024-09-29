@@ -418,6 +418,12 @@ def test_cuda():
         X_n = eigvec_gpu[..., n]
         assert np.allclose(H @ X_n, E_n * X_n)
 
+    # Test that free energy vs. temperature is the same for GPU and CPU.
+    for T in [0.001, 0.01, 0.1, 1.0]:
+        F1 = system.free_energy(T, cuda=False)
+        F2 = system.free_energy(T, cuda=True)
+        assert np.allclose(F1, F2)
+
 
 def test_free_energy():
     """Test that the free energy calculation works."""
