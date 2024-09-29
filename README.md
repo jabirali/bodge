@@ -38,7 +38,7 @@ This package is [published on PyPi][4], and is easily installed via `pip`:
     pip install bodge
 
 Or if you have an NVIDIA GPU and want to use that for computations (note that
-this requires you to have installed CUDA support on your system beforehand):
+this requires you to install CUDA support on your system first):
 
     pip install bodge[cuda]
 
