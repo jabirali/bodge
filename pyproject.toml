@@ -23,11 +23,23 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "flit",
     "isort",
     "pytest",
     "pytest-cov",
     "quarto",
+]
+cuda = [
+    "cupy",
+]
+all = [
+    "black",
+    "cupy",
     "flit",
+    "isort",
+    "pytest",
+    "pytest-cov",
+    "quarto",
 ]
 
 [tool.black]

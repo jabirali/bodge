@@ -7,7 +7,7 @@ see the integration tests in `test_physics.py`.
 
 import numpy as np
 from numpy.random import random as r
-from pytest import raises
+from pytest import importorskip, raises
 from scipy.linalg import eigh
 
 from bodge import *
@@ -322,10 +322,11 @@ def test_diagonalize():
     - The defining equation H @ X_n = E_n @ X_n holds for each
       returned pair of eigenvalue E_n and eigenvector X_n;
     - That we only return positive eigenvalues ("Nambu doubling");
-    - That the total number of eigenvalues is as expected.
+    - That the total number of eigenvalues is what we would expect.
     """
-    # Instantiate a system with superconductivity and a barrier.
-    lattice = CubicLattice((10, 10, 1))
+    # Instantiate a system with superconductivity and a magnetic barrier. Note
+    # that magnetism breaks spin degeneracy, which is required for some tests.
+    lattice = CubicLattice((10, 3, 2))
     system = Hamiltonian(lattice)
 
     with system as (H, Δ):
@@ -334,34 +335,40 @@ def test_diagonalize():
             if i[0] > 5:
                 Δ[i, i] = 1 * jσ2
             elif i[0] > 3:
-                H[i, i] += 6 * σ0
+                H[i, i] = 6 * σ0 + 2 * σ3
         for i, j in lattice.bonds():
             H[i, j] = -1 * σ0
 
     # Calculate the eigenvalues the manual way.
     H = system.matrix(format="dense")
     E, X = eigh(H, subset_by_value=(0, np.inf))
-    X = X.T
+
+    # If we ask for "raw" eigenvectors, this is what we want.
+    E_raw, X_raw = system.diagonalize(format="raw")
+    assert np.allclose(E, E_raw)
+    assert np.allclose(X, X_raw)
 
     # Confirm that we got positive eigenvalues and that we have
     # interpreted the corresponding eigenvector matrix correctly.
-    assert E.size == 200
+    assert E.size == 2 * (10 * 3 * 2)
     for n, E_n in enumerate(E):
         assert E_n > 0
-        assert np.allclose(H @ X[n, :], E_n * X[n, :])
+        assert np.allclose(H @ X[:, n], E_n * X[:, n])
 
     # Calculate the same eigenvalues via the package, and ensure
     # that the eigenvalues and eigenvectors are consistent.
     eigval, eigvec = system.diagonalize()
     assert np.allclose(eigval, E)
     for n, E_n in enumerate(E):
-        for m in range(100):
-            assert np.allclose(eigvec[n, m, 0], X[n, 4 * m + 0])
-            assert np.allclose(eigvec[n, m, 1], X[n, 4 * m + 1])
-            assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
-            assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
+        for m in range(10 * 3 * 2):
+            assert np.allclose(eigvec[n, m, 0], X[4 * m + 0, n])
+            assert np.allclose(eigvec[n, m, 1], X[4 * m + 1, n])
+            assert np.allclose(eigvec[n, m, 2], X[4 * m + 2, n])
+            assert np.allclose(eigvec[n, m, 3], X[4 * m + 3, n])
 
-    # Let's now test a different eigenvector format.
+    # Let's now test a different eigenvector format. This is the more intuitive
+    # "wave function" format, which is supposed to to tell us the wave function
+    # components at each lattice site corresponding to each particle species.
     eig = system.diagonalize(format="wave")
     for ε, (e_up, e_dn, h_up, h_dn) in eig.items():
         n = np.argwhere(eigval == ε)[0]
@@ -373,6 +380,44 @@ def test_diagonalize():
             assert np.allclose(e_dn[*coord], eigvec[n, i, 1])
             assert np.allclose(h_up[*coord], eigvec[n, i, 2])
             assert np.allclose(h_dn[*coord], eigvec[n, i, 3])
+
+    # Exception should be raised for "weird" eigenvector formats.
+    with raises(Exception):
+        system.diagonalize(format="foo")
+
+
+def test_cuda():
+    """Test that using CUDA support doesn't change results."""
+    cupy = importorskip("cupy", reason="CuPy is not installed")
+
+    # Instantiate a test system.
+    lattice = CubicLattice((2, 3, 5))
+    system = Hamiltonian(lattice)
+
+    with system as (H, Δ):
+        for i in lattice.sites():
+            H[i, i] = 4 * σ0
+            if i[0] == 0:
+                Δ[i, i] = 1 * jσ2
+            else:
+                H[i, i] = 4 * σ0 + 1 * σ2
+        for i, j in lattice.bonds():
+            H[i, j] = -1 * σ0 + 2 * σ1
+
+    # Solve with CPU and GPU.
+    eigval_cpu, eigvec_cpu = system.diagonalize(format="raw", cuda=False)
+    eigval_gpu, eigvec_gpu = system.diagonalize(format="raw", cuda=True)
+
+    # Check that the same eigenvalues are found (but possibly in a different order).
+    assert eigval_cpu.size == eigval_gpu.size
+    assert np.allclose(np.sort(eigval_cpu), np.sort(eigval_gpu))
+
+    # Check that the GPU eigenvectors satisfy their defining equation.
+    H = system.matrix(format="dense")
+    for n, E_n in enumerate(eigval_gpu):
+        X_n = eigvec_gpu[..., n]
+        assert np.allclose(H @ X_n, E_n * X_n)
+
 
 def test_free_energy():
     """Test that the free energy calculation works."""

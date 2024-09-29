@@ -38,6 +38,11 @@ This package is [published on PyPi][4], and is easily installed via `pip`:
 
     pip install bodge
 
+Or if you have an NVIDIA GPU and want to use that for computations (note that
+this requires you to have installed CUDA support on your system beforehand):
+
+    pip install bodge[cuda]
+
 Bodge should be quite easy to use if all you want is a real-space lattice
 Hamiltonian with superconductivity. For instance, consider a $100a\times100a$
 s-wave superconductor with a chemical potential $μ = -3t$, superconducting gap

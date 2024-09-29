@@ -171,7 +171,7 @@ class Hamiltonian:
 
     @typecheck
     def diagonalize(
-        self, cuda=False, format="classic"
+        self, cuda=False, format="reshape"
     ) -> tuple[Matrix, Matrix] | dict[float, tuple[Matrix, Matrix, Matrix, Matrix]]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
@@ -181,10 +181,11 @@ class Hamiltonian:
         last one means that at a given lattice site `i`, `v[n, i, 0:3]` will give
         you the eigenvector components corresponding to indices {e↑, e↓, h↑, h↓}.
 
-        This default behavior is referred to as `format="classic"`, and is
+        This default behavior above is referred to as `format="reshape"`, and is
         obtained by reshaping the 4N-element long vectors that actually satisfy
-        the eigenvalue equation `H @ v[n] == E[n] * v[n]`. To obtain the "actual"
-        eigenvectors instead, pass the argument `format="raw"` to this method.
+        the eigenvalue equation `H @ v[..., n] == E[n] * v[..., n]`. To obtain
+        these "actual" eigenvectors, in the same way as if you had used SciPy
+        or CuPy to calculate them directly, pass `format="raw"` to this method.
 
         There is one more option available, namely `format="wave"`. This results
         in the return value being a dictionary. This is structured such that if
@@ -209,6 +210,7 @@ class Hamiltonian:
         this function to enable a very fast GPU-accelerated diagonalization.
         Keep in mind that this only works if the Hamiltonian matrix and all its
         eigenvectors fit into your available video memory.
+
         """
         # Convert to a dense matrix.
         H = self.matrix(format="dense")
@@ -246,13 +248,16 @@ class Hamiltonian:
         if format == "raw":
             return eigval, eigvec
 
+        # Transpose eigenvectors such that eigvec[n, ...] corresponds to eigval[n].
+        eigvec = eigvec.T
+
         # Restructure the eigenvectors to have the format eigvec[n, i, α],
         # where n corresponds to eigenvalue E[n], i is a position index, and
         # α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
-        eigvec = eigvec.T.reshape((eigval.size, -1, 4))
+        eigvec = eigvec.reshape((eigval.size, -1, 4))
 
         # Maybe return the eigenvalues and reshaped eigenvectors.
-        if format == "classic":
+        if format == "reshape":
             return eigval, eigvec
 
         # Split the eigenvectors into 4 vectors.
@@ -262,12 +267,10 @@ class Hamiltonian:
         h_dn = eigvec[:, :, 3]
 
         # Reshape the eigenvectors to fit the lattice.
-        # NOTE: THIS PART NEEDS SOME SERIOUS TESTING!
-        N = len(eigval)
-        e_up = e_up.reshape((N, *self.lattice.shape))
-        e_dn = e_dn.reshape((N, *self.lattice.shape))
-        h_up = h_up.reshape((N, *self.lattice.shape))
-        h_dn = h_dn.reshape((N, *self.lattice.shape))
+        e_up = e_up.reshape((eigval.size, *self.lattice.shape))
+        e_dn = e_dn.reshape((eigval.size, *self.lattice.shape))
+        h_up = h_up.reshape((eigval.size, *self.lattice.shape))
+        h_dn = h_dn.reshape((eigval.size, *self.lattice.shape))
 
         # Construct a dict that maps energies to wave functions.
         eig = {
