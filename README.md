@@ -19,9 +19,8 @@ Research papers where this code has been used include:
 
 Bodge can be used on anything from a normal laptop to an HPC cluster, as long as
 it runs an operating system where the SciPy stack is available (e.g. Linux,
-MacOS, or Windows). It is mainly meant for CPU-based calculations on one node
-(i.e. no MPI support), however some functions on the `development` branch
-contains optional support for GPU-based calculations via CuPy (CUDA).
+MacOS, or Windows). It is mainly meant for CPU-based or GPU-based calculations
+on one computer or node (so there is currently no support for e.g. MPI).
 
 Internally, Bodge uses a sparse matrix (`scipy.sparse`) to represent the Hamiltonian,
 which allows you to efficiently construct tight-binding models with millions of
@@ -42,6 +41,8 @@ Or if you have an NVIDIA GPU and want to use that for computations (note that
 this requires you to have installed CUDA support on your system beforehand):
 
     pip install bodge[cuda]
+
+Some functions then accept an argument `cuda=True` to enable GPU support.
 
 Bodge should be quite easy to use if all you want is a real-space lattice
 Hamiltonian with superconductivity. For instance, consider a $100a\times100a$
