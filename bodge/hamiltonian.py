@@ -171,7 +171,7 @@ class Hamiltonian:
 
     @typecheck
     def diagonalize(
-        self, cuda=False, format="reshaped"
+        self, cuda=False, format="classic"
     ) -> tuple[Matrix, Matrix] | dict[float, tuple[Matrix, Matrix, Matrix, Matrix]]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
@@ -181,12 +181,12 @@ class Hamiltonian:
         last one means that at a given lattice site `i`, `v[n, i, 0:3]` will give
         you the eigenvector components corresponding to indices {e↑, e↓, h↑, h↓}.
 
-        This default behavior is referred to as `format="reshaped"` since it is
+        This default behavior is referred to as `format="classic"`, and is
         obtained by reshaping the 4N-element long vectors that actually satisfy
         the eigenvalue equation `H @ v[n] == E[n] * v[n]`. To obtain the "actual"
         eigenvectors instead, pass the argument `format="raw"` to this method.
 
-        There is one more option available, namely `format="dict"`. This results
+        There is one more option available, namely `format="wave"`. This results
         in the return value being a dictionary. This is structured such that if
         you run `eig = system.diagonalize(format="dict")`, then you can use
         `for E, (e_up, e_dn, h_up, h_dn) in eig.items(): ...` to iterate through
@@ -252,7 +252,7 @@ class Hamiltonian:
         eigvec = eigvec.T.reshape((eigval.size, -1, 4))
 
         # Maybe return the eigenvalues and reshaped eigenvectors.
-        if format == "reshaped":
+        if format == "classic":
             return eigval, eigvec
 
         # Split the eigenvectors into 4 vectors.
@@ -263,19 +263,20 @@ class Hamiltonian:
 
         # Reshape the eigenvectors to fit the lattice.
         # NOTE: THIS PART NEEDS SOME SERIOUS TESTING!
-        e_up = e_up.reshape((*self.lattice.shape, -1))
-        e_dn = e_dn.reshape((*self.lattice.shape, -1))
-        h_up = h_up.reshape((*self.lattice.shape, -1))
-        h_dn = h_dn.reshape((*self.lattice.shape, -1))
+        N = len(eigval)
+        e_up = e_up.reshape((N, *self.lattice.shape))
+        e_dn = e_dn.reshape((N, *self.lattice.shape))
+        h_up = h_up.reshape((N, *self.lattice.shape))
+        h_dn = h_dn.reshape((N, *self.lattice.shape))
 
         # Construct a dict that maps energies to wave functions.
         eig = {
-            E_n: (e_up[n, :], e_dn[n, :], h_up[n, :], h_dn[n, :])
-            for E_n, n in enumerate(eigval)
+            E_n: (e_up[n, ...], e_dn[n, ...], h_up[n, ...], h_dn[n, ...])
+            for n, E_n in enumerate(eigval)
         }
 
         # Maybe return the eigenstates as such a dict.
-        if format == "dict":
+        if format == "wave":
             return eig
 
         # If we ever get here, the user didn't specify a valid format...

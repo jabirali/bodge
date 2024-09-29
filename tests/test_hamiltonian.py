@@ -361,6 +361,18 @@ def test_diagonalize():
             assert np.allclose(eigvec[n, m, 2], X[n, 4 * m + 2])
             assert np.allclose(eigvec[n, m, 3], X[n, 4 * m + 3])
 
+    # Let's now test a different eigenvector format.
+    eig = system.diagonalize(format="wave")
+    for ε, (e_up, e_dn, h_up, h_dn) in eig.items():
+        n = np.argwhere(eigval == ε)[0]
+        assert np.allclose(ε, eigval[n])
+
+        for coord in lattice.sites():
+            i = lattice.index(coord)
+            assert np.allclose(e_up[*coord], eigvec[n, i, 0])
+            assert np.allclose(e_dn[*coord], eigvec[n, i, 1])
+            assert np.allclose(h_up[*coord], eigvec[n, i, 2])
+            assert np.allclose(h_dn[*coord], eigvec[n, i, 3])
 
 def test_free_energy():
     """Test that the free energy calculation works."""
