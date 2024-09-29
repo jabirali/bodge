@@ -170,35 +170,116 @@ class Hamiltonian:
         return Index(k[0, 0])
 
     @typecheck
-    def diagonalize(self) -> tuple[Matrix, Matrix]:
+    def diagonalize(
+        self, cuda=False, format="reshaped"
+    ) -> tuple[Matrix, Matrix] | dict[float, tuple[Matrix, Matrix, Matrix, Matrix]]:
         """Calculate the exact eigenstates of the system via direct diagonalization.
 
-        This calculates and returns the eigenvalues and eigenvectors of the system.
         If you run it as `E, v = system.diagonalize()`, then the eigenvalue `E[n]`
         corresponds to the eigenvector `v[n, :, :]`, where the remaining indices
         of the vector correspond to a position index and a Nambu⊗Spin index. The
         last one means that at a given lattice site `i`, `v[n, i, 0:3]` will give
         you the eigenvector components corresponding to indices {e↑, e↓, h↑, h↓}.
 
-        Please note that this function uses *dense* matrices and thus requires
-        a lot of compute power and memory for large matrices. Many computations
+        This default behavior is referred to as `format="reshaped"` since it is
+        obtained by reshaping the 4N-element long vectors that actually satisfy
+        the eigenvalue equation `H @ v[n] == E[n] * v[n]`. To obtain the "actual"
+        eigenvectors instead, pass the argument `format="raw"` to this method.
+
+        There is one more option available, namely `format="dict"`. This results
+        in the return value being a dictionary. This is structured such that if
+        you run `eig = system.diagonalize(format="dict")`, then you can use
+        `for E, (e_up, e_dn, h_up, h_dn) in eig.items(): ...` to iterate through
+        the eigenvalues and eigenvectors in the system. For each eigenvalue `E`,
+        we then return wave functions `(e_up, e_dn, h_up, h_dn)` that correspond
+        to respectively {e↑, e↓, h↑, h↓} states. These have been reshaped such
+        that `e_up[x, y, z]` corresponds to the spin-up electron wave function
+        at coordinates `(x, y, z)` on the lattice, and so forth. This variant
+        may be a bit slower than the other formats, but is likely the easiest
+        to use as a base for calculating various physical observables in the
+        system due to the close similarity to the analytical BdG equations.
+
+        Please note that this function uses *dense* matrices and thus requires a
+        lot of compute power and memory for large matrices. Many computations
         can be performed using sparse matrix algorithms instead, so if you have
         a lattice with millions of sites I would consider alternative methods.
+
+        Alternatively, if you have an NVIDIA GPU available and install the
+        optional dependency `cupy`, then you can set `cuda=True` when running
+        this function to enable a very fast GPU-accelerated diagonalization.
+        Keep in mind that this only works if the Hamiltonian matrix and all its
+        eigenvectors fit into your available video memory.
         """
         # Convert to a dense matrix.
         H = self.matrix(format="dense")
 
-        # Calculate the relevant eigenvalues and eigenvectors.
-        eigval, eigvec = la.eigh(H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr")
-        eigval = np.array(eigval)
-        eigvec = np.array(eigvec)
+        # Calculate eigenvalues and eigenvectors.
+        if cuda:
+            # GPU-accelerated branch using CuPy.
+            try:
+                # Import libraries.
+                import cupy as cp
+                import cupy.linalg as cla
+
+                # Diagonalize using CUDA.
+                H = cp.asarray(H)
+                eigval, eigvec = cla.eigh(H)
+                eigval = cp.asnumpy(eigval)
+                eigvec = cp.asnumpy(eigvec)
+
+                # Extract positive eigenvalues.
+                ind = np.where(eigval > 0)
+                eigval, eigvec = eigval[ind], eigvec[:, ind]
+            except ModuleNotFoundError:
+                raise RuntimeError(
+                    "Optional dependency `cupy` must be installed to use the flag `cuda=True`."
+                )
+        else:
+            # CPU fallback branch using SciPy.
+            eigval, eigvec = la.eigh(
+                H, subset_by_value=(0.0, np.inf), overwrite_a=True, driver="evr"
+            )
+            eigval = np.array(eigval)
+            eigvec = np.array(eigvec)
+
+        # Maybe return the raw eigenvalues and eigenvectors as-is.
+        if format == "raw":
+            return eigval, eigvec
 
         # Restructure the eigenvectors to have the format eigvec[n, i, α],
         # where n corresponds to eigenvalue E[n], i is a position index, and
         # α represents the combined particle and spin index {e↑, e↓, h↑, h↓}.
         eigvec = eigvec.T.reshape((eigval.size, -1, 4))
 
-        return eigval, eigvec
+        # Maybe return the eigenvalues and reshaped eigenvectors.
+        if format == "reshaped":
+            return eigval, eigvec
+
+        # Split the eigenvectors into 4 vectors.
+        e_up = eigvec[:, :, 0]
+        e_dn = eigvec[:, :, 1]
+        h_up = eigvec[:, :, 2]
+        h_dn = eigvec[:, :, 3]
+
+        # Reshape the eigenvectors to fit the lattice.
+        # NOTE: THIS PART NEEDS SOME SERIOUS TESTING!
+        e_up = e_up.reshape((*self.lattice.shape, -1))
+        e_dn = e_dn.reshape((*self.lattice.shape, -1))
+        h_up = h_up.reshape((*self.lattice.shape, -1))
+        h_dn = h_dn.reshape((*self.lattice.shape, -1))
+
+        # Construct a dict that maps energies to wave functions.
+        eig = {
+            E_n: (e_up[n, :], e_dn[n, :], h_up[n, :], h_dn[n, :])
+            for E_n, n in enumerate(eigval)
+        }
+
+        # Maybe return the eigenstates as such a dict.
+        if format == "dict":
+            return eig
+
+        # If we ever get here, the user didn't specify a valid format...
+        raise RuntimeError(f"Eigenstate format '{format}' is not yet supported.")
 
     @typecheck
     def free_energy(self, temperature: float = 0.0) -> float:
