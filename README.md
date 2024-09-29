@@ -20,7 +20,7 @@ Research papers where this code has been used include:
 Bodge can be used on anything from a normal laptop to an HPC cluster, as long as
 it runs an operating system where the SciPy stack is available (e.g. Linux,
 MacOS, or Windows). It is mainly meant for CPU-based or GPU-based calculations
-on one computer or node (so there is currently no support for e.g. MPI).
+on one computer (so there is no support for e.g. MPI).
 
 Internally, Bodge uses a sparse matrix (`scipy.sparse`) to represent the Hamiltonian,
 which allows you to efficiently construct tight-binding models with millions of
