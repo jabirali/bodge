@@ -42,7 +42,8 @@ this requires you to install CUDA support on your system first):
 
     pip install bodge[cuda]
 
-Some functions then accept an argument `cuda=True` to enable GPU support.
+Some functions in this package then accept an argument `cuda=True` to enable
+GPU acceleration of the numerical calculations.
 
 Bodge should be quite easy to use if all you want is a real-space lattice
 Hamiltonian with superconductivity. For instance, consider a $100a\times100a$
