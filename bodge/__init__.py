@@ -9,7 +9,7 @@ from .hamiltonian import *
 from .lattice import *
 
 __author__ = "Jabir Ali Ouassou"
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __all__ = [
     # Core library
     "Lattice",
