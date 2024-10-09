@@ -12,7 +12,23 @@ superconductivity in clean materials. In other words: If you want a lattice
 model for superconducting nanostructures, and want something that is
 computationally efficient yet easy to use, you've come to the right place.
 
+An introduction to the Bodge software package has been [published in the
+Journal of Open Source Software (JOSS)][7]. If you find this software
+useful for your research, please consider citing that article:
+```bib
+@article{ouassou2024,
+    author = {Ouassou, Jabir Ali},
+    doi = {10.21105/joss.07134},
+    journal = {Journal of Open Source Software},
+    number = {102},
+    pages = {7134},
+    title = {{Bodge: Python package for efficient tight-binding modeling of superconducting nanostructures}},
+    volume = {9},
+    year = {2024}
+}
+```
 Research papers where this code has been used include:
+
 - [DC Josephson effect in altermagnets][2]
 - [RKKY interaction in triplet superconductors][3]
 - [Dzyaloshinskii-Moriya spin-spin interaction from mixed-parity superconductivity][6]
@@ -29,7 +45,7 @@ dense matrix (`numpy.array`) if that's more convenient. The package follows
 modern software development practices: full test coverage (`pytest`), fast
 runtime type checking (`beartype`), and mostly PEP-8 compliant (`black`).
 
-The full documentation of the Bodge package is available [here][0].
+In addition to the [JOSS paper][7] you can find a Bodge tutorial [here][0].
 
 ## Quickstart
 
@@ -153,3 +169,4 @@ package – and before that, to the theory superconductivity in general.
 [4]: https://pypi.org/project/bodge/
 [5]: https://github.com/jabirali/bodge
 [6]: https://doi.org/10.48550/arXiv.2407.07144
+[7]: https://doi.org/10.21105/joss.07134
