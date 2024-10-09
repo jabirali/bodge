@@ -1,0 +1,31 @@
+cff-version: "1.2.0"
+authors:
+- email: jabir.ali.ouassou@hvl.no
+  family-names: Ouassou
+  given-names: Jabir Ali
+  orcid: "https://orcid.org/0000-0002-3725-0885"
+doi: 10.5281/zenodo.13839641
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - email: jabir.ali.ouassou@hvl.no
+    family-names: Ouassou
+    given-names: Jabir Ali
+    orcid: "https://orcid.org/0000-0002-3725-0885"
+  date-published: 2024-10-09
+  doi: 10.21105/joss.07134
+  issn: 2475-9066
+  issue: 102
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 7134
+  title: "Bodge: Python package for efficient tight-binding modeling of
+    superconducting nanostructures"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.07134"
+  volume: 9
+title: "Bodge: Python package for efficient tight-binding modeling of
+  superconducting nanostructures"
+
