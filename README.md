@@ -1,33 +1,13 @@
-# Bodge
-Bodge is a Python solver for large-scale tight-binding models. Although quite
-general models of this type are supported, we target the BOgoliubov-DeGEnnes
-equations for superconductivity, which is where the project name comes from.
+# Development branch
 
-## Installation
-To use the default Python version on your system, simply run:
+You have found the old development branch of Bodge. Feel free to look
+around, but keep in mind that the code you find here is not meant for use
+by others and may be undocumented, untested, broken, buggy, or even wrong.
 
-	make install
+Most users should probably head over to the [main branch][main] instead.
 
-If you prefer to use a newer Python version (recommended), first install
-this via your package manager of choice. For example:
+Since the `main` branch went through some serious refactoring before Bodge
+was uploaded to PyPI and submitted to JOSS, much of the code here is quite
+outdated as well. New development of `bodge` now happens in feature branches.
 
-	brew install python@3.11          # macOS with HomeBrew
-	sudo apt install python3.11-full  # Ubuntu GNU/Linux
-
-Afterwards, mention what Python version to use when installing Bodge:
-
-	make install PYTHON=python3.11
-
-Run `make` without any command-line arguments to see how to proceed further.
-This should provide information on how to run the bundled unit tests, run
-scripts that use the Bodge package, or run the autoformatter after updates.
-
-For a significant performance improvement on Intel-based computers,
-I would recommend the official [IntelPython distribution][1]. This
-distribution includes a SciPy variant that uses the Intel Math Kernel
-Library as its backend, which significantly speeds up e.g. eigenvalue
-computations. To use this, follow Intel's official instructions and
-then install the dependencies listed in `pyproject.toml`. Afterwards,
-simply run the various Bodge scripts directly in that environment.
-
-[1]: https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html#gs.h2ajdj
+[main]: https://github.com/jabirali/bodge/tree/main
