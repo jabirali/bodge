@@ -275,7 +275,7 @@ def test_energy_temperature():
     This can be seen from F = U - TS, where the entropy S tends to
     increase as a function of temperature in most simple systems.
     """
-    # Instantiate a system with a magnetic domain wall as a test.
+    # Instantiate a 2D metallic system as a test.
     lattice = CubicLattice((10, 10, 1))
     system = Hamiltonian(lattice)
 
