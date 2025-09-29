@@ -189,7 +189,7 @@ class Hamiltonian:
 
         There is one more option available, namely `format="wave"`. This results
         in the return value being a dictionary. This is structured such that if
-        you run `eig = system.diagonalize(format="dict")`, then you can use
+        you run `eig = system.diagonalize(format="wave")`, then you can use
         `for E, (e_up, e_dn, h_up, h_dn) in eig.items(): ...` to iterate through
         the eigenvalues and eigenvectors in the system. For each eigenvalue `E`,
         we then return wave functions `(e_up, e_dn, h_up, h_dn)` that correspond
