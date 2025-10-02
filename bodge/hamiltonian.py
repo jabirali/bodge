@@ -187,19 +187,6 @@ class Hamiltonian:
         these "actual" eigenvectors, in the same way as if you had used SciPy
         or CuPy to calculate them directly, pass `format="raw"` to this method.
 
-        There is one more option available, namely `format="wave"`. This results
-        in the return value being a dictionary. This is structured such that if
-        you run `eig = system.diagonalize(format="wave")`, then you can use
-        `for E, (e_up, e_dn, h_up, h_dn) in eig.items(): ...` to iterate through
-        the eigenvalues and eigenvectors in the system. For each eigenvalue `E`,
-        we then return wave functions `(e_up, e_dn, h_up, h_dn)` that correspond
-        to respectively {e↑, e↓, h↑, h↓} states. These have been reshaped such
-        that `e_up[x, y, z]` corresponds to the spin-up electron wave function
-        at coordinates `(x, y, z)` on the lattice, and so forth. This variant
-        may be a bit slower than the other formats, but is likely the easiest
-        to use as a base for calculating various physical observables in the
-        system due to the close similarity to the analytical BdG equations.
-
         Please note that this function uses *dense* matrices and thus requires a
         lot of compute power and memory for large matrices. Many computations
         can be performed using sparse matrix algorithms instead, so if you have
@@ -259,28 +246,6 @@ class Hamiltonian:
         # Maybe return the eigenvalues and reshaped eigenvectors.
         if format == "reshape":
             return eigval, eigvec
-
-        # Split the eigenvectors into 4 vectors.
-        e_up = eigvec[:, :, 0]
-        e_dn = eigvec[:, :, 1]
-        h_up = eigvec[:, :, 2]
-        h_dn = eigvec[:, :, 3]
-
-        # Reshape the eigenvectors to fit the lattice.
-        e_up = e_up.reshape((eigval.size, *self.lattice.shape))
-        e_dn = e_dn.reshape((eigval.size, *self.lattice.shape))
-        h_up = h_up.reshape((eigval.size, *self.lattice.shape))
-        h_dn = h_dn.reshape((eigval.size, *self.lattice.shape))
-
-        # Construct a dict that maps energies to wave functions.
-        eig = {
-            E_n: (e_up[n, ...], e_dn[n, ...], h_up[n, ...], h_dn[n, ...])
-            for n, E_n in enumerate(eigval)
-        }
-
-        # Maybe return the eigenstates as such a dict.
-        if format == "wave":
-            return eig
 
         # If we ever get here, the user didn't specify a valid format...
         raise RuntimeError(f"Eigenstate format '{format}' is not yet supported.")

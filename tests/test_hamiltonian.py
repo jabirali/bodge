@@ -369,17 +369,17 @@ def test_diagonalize():
     # Let's now test a different eigenvector format. This is the more intuitive
     # "wave function" format, which is supposed to to tell us the wave function
     # components at each lattice site corresponding to each particle species.
-    eig = system.diagonalize(format="wave")
-    for ε, (e_up, e_dn, h_up, h_dn) in eig.items():
-        n = np.argwhere(eigval == ε)[0]
-        assert np.allclose(ε, eigval[n])
+    # eig = system.diagonalize(format="wave")
+    # for ε, (e_up, e_dn, h_up, h_dn) in eig.items():
+    #     n = np.argwhere(eigval == ε)[0]
+    #     assert np.allclose(ε, eigval[n])
 
-        for coord in lattice.sites():
-            i = lattice.index(coord)
-            assert np.allclose(e_up[*coord], eigvec[n, i, 0])
-            assert np.allclose(e_dn[*coord], eigvec[n, i, 1])
-            assert np.allclose(h_up[*coord], eigvec[n, i, 2])
-            assert np.allclose(h_dn[*coord], eigvec[n, i, 3])
+    #     for coord in lattice.sites():
+    #         i = lattice.index(coord)
+    #         assert np.allclose(e_up[*coord], eigvec[n, i, 0])
+    #         assert np.allclose(e_dn[*coord], eigvec[n, i, 1])
+    #         assert np.allclose(h_up[*coord], eigvec[n, i, 2])
+    #         assert np.allclose(h_dn[*coord], eigvec[n, i, 3])
 
     # Exception should be raised for "weird" eigenvector formats.
     with raises(Exception):
